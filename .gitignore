@@ -1,0 +1,8 @@
+# Engagement workspaces hold confidential findings: never commit them.
+audit/
+engagements/
+
+# Tool indexes and caches
+.gitnexus/
+node_modules/
+.DS_Store
