@@ -1,6 +1,6 @@
 # Engagement workspaces hold confidential findings: never commit them.
-audit/
-engagements/
+/audit/
+/engagements/
 
 # Tool indexes and caches
 .gitnexus/
