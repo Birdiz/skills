@@ -9,8 +9,9 @@ content is specific to auditing.
 
 ## Status
 
-Foundation only. The four skills below are written; the audit axes,
-verification and reporting are not. See [Roadmap](#roadmap).
+Early. The foundation and a first axis (`app-security`) are written; the
+other axes, verification, reporting and tickets are not. Nothing has been run
+on a real audit yet. See [Roadmap](#roadmap).
 
 ## Install
 
@@ -28,7 +29,7 @@ Or copy the folders under `skills/audit/` into your agent's skills directory.
 1. `/audit-setup`, once per machine: the auditor profile.
 2. `/audit-kickoff`, once per audit: scope, access, authorization, audience.
 3. `recon`: one shared map of the codebase.
-4. Axes write findings in a common format (to come).
+4. Axes write findings in a common format (`app-security` so far).
 5. Verification, then reports (to come).
 
 ## Skills
@@ -46,6 +47,8 @@ Or copy the folders under `skills/audit/` into your agent's skills directory.
   rules every finding follows.
 - [recon](skills/audit/recon/SKILL.md): map an unfamiliar codebase before
   auditing it.
+- [app-security](skills/audit/app-security/SKILL.md): the application
+  security axis.
 
 A user-invoked skill may rely on model-invoked ones, never on another
 user-invoked one.
@@ -72,11 +75,17 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 
 ## Roadmap
 
-- Axes: `app-security` first, to test the finding schema end to end, then
-  `code-quality`, `architecture`, `infra-security`, `privacy`,
+- Run `app-security` on a real codebase and fix the finding schema where it
+  hurts, before writing the other axes
+- Axes: `code-quality`, `architecture`, `infra-security`, `privacy`,
   `accessibility`, `seo`, `performance`
 - `verify-findings`: refutation pass by a context that did not produce them
-- `audit-report` and `remediation-prompt`
+- Remediations: group findings by fix, then render each one as a ticket, a
+  vendor brief or an executable prompt
+- Tickets: at kickoff, detect whether the target has an issue tracker and ask
+  whether the agent may create tasks there; local files otherwise. Sensitive
+  findings never go to a tracker that is not access-restricted
+- `audit-report`
 - A script that validates finding files against the schema
 
 ## License
