@@ -87,6 +87,8 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
   findings never go to a tracker that is not access-restricted
 - `audit-report`
 - A script that validates finding files against the schema
+- Ship as a plugin once the skills have settled, so they install under their
+  own namespace instead of generic names
 
 ## License
 
