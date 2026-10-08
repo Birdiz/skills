@@ -5,6 +5,8 @@ description: Map an unfamiliar codebase before auditing it (stacks, entry points
 
 # recon
 
+Version: 0.2.0 (audit skills, see CHANGELOG)
+
 Build the **codebase map** once, so every axis works from the same
 understanding instead of rebuilding its own.
 
@@ -17,18 +19,37 @@ the running target shows, and say so at the top.
 ## Working copy
 
 Work on a dedicated clone at the audited commit, never on the client's
-working tree. Index files, caches and tool output (for example a `.gitnexus/`
-directory) stay in that clone or in the workspace.
+working tree. Record its path as `working_copy` in the engagement file. Index
+files, caches and tool output (for example a `.gitnexus/` directory) stay in
+that clone or in the workspace.
+
+### Dependency source code
+
+Framework defaults decide many security questions, so the map is better with
+the dependencies' code at hand. In order of preference:
+
+1. An existing install whose lockfile is byte-identical to the audited one
+   (check with `diff`, record the path).
+2. An install into the dedicated clone that runs no project or package code:
+   `composer install --no-scripts --no-plugins`, `npm ci --ignore-scripts`, or
+   the ecosystem's equivalent. Check afterwards that the lockfile is unchanged
+   (`git status`). This downloads third-party code; nothing executes.
+3. Neither: list the questions this leaves open under Unknowns.
+
+Record which one was used at the top of the map.
 
 ## Strategy
 
 Check the auditor profile for `graph_tool`.
 
 - **Graph tool available**: use it for structure (clusters, call chains,
-  execution flows), then read the code at every point the map relies on.
-- **No graph tool**: go breadth first. Manifests and lockfiles, then entry
-  points, then follow each entry point inward. Stop descending when a module's
-  role is clear.
+  execution flows), then read the code at every point the map relies on. A
+  graph can be wrong, not only incomplete: verify each edge the map uses, and
+  record any wrong edge under Unknowns.
+- **No graph tool**, or its server unreachable: use its CLI if there is one,
+  otherwise go breadth first. Manifests and lockfiles, then entry points, then
+  follow each entry point inward. Stop descending when a module's role is
+  clear.
 
 Either way the map has the same sections. The tool changes the cost, not the
 result.
@@ -39,6 +60,7 @@ result.
 # Codebase map
 commit: <sha>
 method: <graph tool name@version | search>
+dependencies: <path of identical install | installed without scripts | absent>
 generated: <YYYY-MM-DD>
 
 ## Stacks
@@ -71,8 +93,14 @@ Services, APIs, data stores, and the infrastructure definitions if present.
 Domain terms as the code uses them, one line each.
 
 ## Unknowns
-What could not be determined, and what would settle it.
+Numbered. Each one: what could not be determined, why it matters, and
+"Settled by: <agent | auditor | owner>: <how>".
 ```
+
+"Settled by" names who can act. The agent can read more code or run an
+analysis tool. Only the auditor or the owner can run the project (a console
+command, a built image) or state an intent; for an auditor-owned target, the
+auditor can paste the output of a command the agent may not run.
 
 ## Rules
 
@@ -80,8 +108,12 @@ What could not be determined, and what would settle it.
 result. A map that cannot be checked will be trusted anyway, and wrongly.
 
 **The map describes, it does not judge.** Problems noticed along the way go
-to `## Leads` in the relevant `findings/<axis>.md`, in `finding-format`. They
-are not findings yet.
+to `## Leads` in the relevant `findings/<axis>.md`, in `finding-format`. Keep
+them short: the observation, the pointers, and the check that would settle
+it. The investigation belongs to the axis, which closes every lead.
+
+**Leads for axes outside the plan** go to that axis's file too, with coverage
+`not-requested`, so they are not lost and not mistaken for an assessment.
 
 **A missing edge is an unknown, not a fact.** Dependency injection, event
 subscribers, config-driven routing, reflection and templates do not show up

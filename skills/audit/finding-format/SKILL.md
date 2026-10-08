@@ -5,18 +5,28 @@ description: The schema and rules every audit finding must follow (evidence, sev
 
 # finding-format
 
+Version: 0.2.0 (audit skills, see CHANGELOG)
+
 One schema for every finding, whatever the axis. Reports are projections of
 the same findings, so a finding is written once and never re-authored per
 deliverable.
 
 ## Where findings live
 
-`<workspace>/findings/<axis>.md`, one file per axis. Each file has three
-sections, in this order:
+`<workspace>/findings/<axis>.md`, one file per axis, including axes outside
+the plan when leads were noted for them. Each file has these sections, in
+this order:
 
 1. `## Coverage` (what was and was not evaluated)
 2. `## Findings`
-3. `## Leads` (suspicions without evidence)
+3. `## Leads` (suspicions without evidence, and what became of them)
+4. `## Questions for the auditor` (only if some answer is needed)
+
+## Language
+
+Section headings, the bold labels inside a finding and every YAML key and
+value stay in English: they are the contract other skills and scripts parse.
+Titles and prose are written in the engagement's `language`.
 
 ## A finding
 
@@ -33,20 +43,20 @@ severity: medium          # critical | high | medium | low | info
 confidence: high          # high | medium | low
 evidence_regime: static   # static | dynamic | declarative
 effort: S                 # S (hours) | M (days) | L (weeks)
-impact: medium            # high | medium | low
 sensitive: false
 promptable: true
 locations:
   - config/packages/framework.yaml:14
 commit: a1b2c3d
 references:
-  - OWASP ASVS 3.4.1
+  - OWASP ASVS 5.0 3.3.1
 ```
 
 **Evidence.** What was observed, with enough detail to reproduce: file and
 line, the command run and its output, or the URL and the response.
 
-**Technical explanation.** For a peer: cause, consequence, conditions.
+**Technical explanation.** For a peer: cause, consequence, conditions. If the
+severity departs from the axis grid, say from what and why.
 
 **Plain-language explanation.** For a non-technical reader: what could go
 wrong and why it matters to the business. No jargon, no exploit detail.
@@ -56,9 +66,10 @@ wrong and why it matters to the business. No jargon, no exploit detail.
 
 ### IDs
 
-`F-<AXIS>-<NNN>`, never reused, never renumbered. Axis codes: `QUA` code
-quality, `ARC` architecture, `SEC` app security, `INF` infra security, `PRI`
-privacy, `A11Y` accessibility, `SEO`, `PERF` performance.
+`F-<AXIS>-<NNN>` for findings, `L-<AXIS>-<NN>` for leads, never reused, never
+renumbered. Axis codes: `QUA` code quality, `ARC` architecture, `SEC` app
+security, `INF` infra security, `PRI` privacy, `A11Y` accessibility, `SEO`,
+`PERF` performance.
 
 ## Rules
 
@@ -69,6 +80,14 @@ work and the auditor credibility.
 
 **Evidence must be reproducible by someone else.** A reader with the same
 access must be able to see the same thing. "The code seems to" is a lead.
+
+**Cite only what a reader can open.** The audited repository, the workspace,
+tool output saved in `tool-output/`, a public reference. Never the agent's
+memory, a previous conversation or a project note the reader does not have.
+
+**References are checked against their source.** A framework identifier (ASVS,
+WCAG, CWE) is copied from the framework text, not recalled. Keep the copy used
+in `tool-output/` and name the version.
 
 **Absence in a graph or a search is not proof.** Dependency injection, event
 subscribers, config-driven routing and templates hide edges. Claims of dead
@@ -87,19 +106,20 @@ stay in the file, marked, so the same false positive is not rediscovered.
 ### `sensitive`
 
 `true` when the finding, if leaked, helps an attacker or exposes personal
-data: exploitable vulnerabilities, secret locations, misconfigurations
-reachable from outside. Sensitive findings appear only in the confidential
-report.
+data: exploitable vulnerabilities, secret locations, weaknesses reachable from
+outside that are not obvious. `false` when any visitor can already observe it
+(a missing response header, a public version banner) or when it is pure
+hygiene. Sensitive findings appear only in the confidential report.
 
 ### `promptable`
 
 `true` only when a coding agent could apply the remediation in the codebase.
 `false` for human actions: rotating a key, signing a processor agreement,
-enabling MFA, changing a DNS record.
+enabling MFA, changing a DNS record, recording a decision.
 
 ### Quick win
 
-Derived, never stored: `status: confirmed`, `impact` high or medium, and
+Derived, never stored: `status: confirmed`, severity `medium` or above, and
 `effort: S`.
 
 ## Default severity scale
@@ -113,19 +133,48 @@ Derived, never stored: `status: confirmed`, `impact` high or medium, and
 | info | Observation, no action required |
 
 A custom scale from the auditor profile replaces the meanings, not the number
-of levels.
+of levels. Axes may give a more specific grid; it must map onto these levels.
+
+## Leads
+
+One bullet each, with pointers and the check that would settle it:
+
+```markdown
+- **L-SEC-04 Consent written outside the lifecycle.** Controller saves the
+  flag directly (src/...:25-31). Check: compare with the lifecycle rules.
+```
+
+Leads may be written by `recon` or by any axis. **The axis that owns a lead
+closes it** before it finishes, by rewriting the bullet's status:
+
+- `promoted to F-SEC-006`
+- `closed: <why it is not a weakness, with pointer>`
+- `open: <what would settle it, and who: agent, auditor, or owner>`
+
+No lead is left without a status. Reason: an unexplained lead reads either as
+a hidden finding or as work not done.
+
+## Questions for the auditor
+
+Questions only the auditor or the owner can answer (an intended behaviour, a
+production setting, a command the agent may not run). One per line, with the
+lead or finding it affects. The kickoff's end report collects them.
 
 ## Coverage section
 
-Every axis file starts with what the axis could not see. One line per area:
+Every axis file starts with what the axis could and could not see, area by
+area, as a list or a table. Statuses:
 
-```markdown
-## Coverage
-- evaluated: HTTP controllers, auth, session config
-- partial: background workers (no runtime access, static only)
-- not-evaluable: production headers (no URL provided)
-```
+- `evaluated`: looked at fully, with or without findings;
+- `partial`: looked at, with a stated gap;
+- `not-evaluable`: a required capability was missing (name it);
+- `not-requested`: the auditor did not ask for this axis or area.
 
-An axis that cannot be evaluated with the capabilities in the engagement file
-writes `not-evaluable` with the missing capability, and no findings. It does
-not guess.
+`not-evaluable` and `not-requested` are different facts and a report must not
+merge them. An axis that cannot be evaluated writes `not-evaluable` with the
+missing capability, and no findings. It does not guess.
+
+State the sources of evidence: commit audited, where dependency code was read
+from, which running target was observed and at which commit and environment.
+If the running target does not serve the audited commit, dynamic evidence only
+covers what the difference does not touch, and the coverage says so.

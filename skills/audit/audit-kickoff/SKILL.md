@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # audit-kickoff
 
+Version: 0.2.0 (audit skills, see CHANGELOG)
+
 Create the **engagement file**: everything that is true for this audit only.
 Every other audit skill reads it and refuses to run without it.
 
@@ -22,7 +24,8 @@ defaults.
 1. **Detect before asking.** If a repository or URL is already at hand,
    inspect it and record: languages and frameworks, presence of
    infrastructure-as-code, presence of a frontend, the commit to audit, the
-   remote host and whether it has an issue tracker.
+   remote host and whether it has an issue tracker. If a running target is
+   available, which commit and environment it serves.
 2. **Interview in batches** (see "Asking questions"). Ask only what detection
    could not settle.
 3. **Settle authorization** before going further (see "Authorization"). Never
@@ -127,8 +130,9 @@ not fill the context of the next. Otherwise run them in sequence; every step
 reads and writes files, so a new session can resume from the workspace at
 any point.
 
-At the end, report what was produced, what was skipped and why, and the
-number of findings per axis and severity.
+At the end, report what was produced, what was skipped and why, the number
+of findings per axis and severity, and every entry under `## Questions for
+the auditor` across the findings files.
 
 ## Capability matrix
 
@@ -157,14 +161,16 @@ An axis runs only at the level its capabilities allow.
 # Engagement: <name>
 created: <YYYY-MM-DD>
 confirmed: <YYYY-MM-DD | pending>
-skills_version: <version from CHANGELOG>
+skills_version: <the "Version:" line of the audit skills used>
 
 ## Target
 description: <one paragraph>
 owner: <auditor|third party: name>
 repository: <path or URL | none>
+working_copy: <path of the dedicated clone, set by recon>
 commit: <sha | n/a>
 url: <URL | none>
+url_serves: <commit and environment the running target serves | n/a>
 in_scope: [<list>]
 out_of_scope: [<list>]
 

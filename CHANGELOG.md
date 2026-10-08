@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.2.0 (unreleased)
+
+From the first real engagement (a self-audit, `app-security` only).
+
+- Every skill carries a `Version:` line, so an engagement records which
+  version produced it even when installed without this repository
+- `finding-format`: remove `impact` (it duplicated severity); quick win is now
+  confirmed, severity medium or above, effort S. Leads get IDs and a check,
+  and the owning axis closes each one. New coverage status `not-requested`.
+  New section for questions to the auditor. English headings and keys, prose
+  in the engagement language. Cite only what a reader can open; check
+  framework references against their source. Publicly observable findings
+  are not sensitive
+- `recon`: graph edges can be wrong and are verified; dependency source from
+  an identical install or an install without scripts; unknowns say who can
+  settle them; leads stay short; leads for axes outside the plan are kept
+- `app-security`: severity grid recalibrated, with an availability row;
+  scanner runs scripted and kept; the auditor's own artifacts excluded from
+  scans; owner instructions for agents are not injection; running target
+  checked against the audited commit; every lead closed
+- `audit-kickoff`: records the working copy and what the running target
+  serves; end report lists the questions for the auditor
+
 ## 0.1.0 (unreleased)
 
 - Add `audit-setup`, `audit-kickoff`, `finding-format`, `recon`
