@@ -29,7 +29,10 @@ questions on every engagement, so they stay separate.
    - Can this agent spawn sub-agents?
 2. **Confirm detections** with the auditor in one message. Do not ask about
    anything that was detected unambiguously.
-3. **Ask only what cannot be detected**, one question at a time:
+3. **Ask only what cannot be detected**, up to three questions per message,
+   numbered, each with a recommended answer, so the auditor can reply
+   "1 ok, 2 b, 3 ok". Use the agent's structured question tool if it has
+   one. The questions below are independent and fit in two batches:
    - Auditor background: technical peer (assumed default) or not.
    - Default report language.
    - Severity scale: keep the default in `finding-format`, or supply a custom
@@ -76,5 +79,5 @@ These are deliberately absent from the profile. Do not add switches for them.
   designed to be pasted into third-party tools.
 - Coverage limits are always reported. Reason: an unreported gap reads as a
   clean bill of health.
-- Active testing requires written authorization. Reason: without it the
-  auditor carries the legal risk.
+- Active testing requires a recorded authorization from the target's owner.
+  Reason: without it the auditor carries the legal risk.
