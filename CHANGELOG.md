@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.0 (unreleased)
+
+From the first report run. The report listed ten discrepancies between the
+findings and their verification notes, written before 0.4.0, and the owner's
+answers had changed two findings with no rule for it.
+
+- `finding-format`: new `resolution` key (`open`, `accepted`, `fixed`),
+  independent of `status`; quick wins require `open`. How a session records
+  an auditor's answer and applies its consequences
+- `verify-findings`: revision mode, to apply listed discrepancies to findings
+  already verified
+- `audit-report`: consistency check before writing; deliverables marked DRAFT
+  while discrepancies remain, then handed to `verify-findings` and
+  regenerated; accepted findings in their own section; skill versions
+  actually used in the provenance
+
 ## 0.5.0 (unreleased)
 
 - Add `audit-report`: peer report, plain-language summary and remediation
