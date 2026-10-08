@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 (unreleased)
+
+- Add `verify-findings`: the only step that confirms or refutes a finding,
+  run in a context that did not write it, trying to refute rather than
+  confirm. Adds a `verification` key and paragraph to every finding,
+  spot-checks closed leads, writes no new findings
+- `audit-kickoff`: runs `verify-findings` after the axes, or tells the
+  auditor to open a new session when there are no sub-agents
+- `finding-format`: status changes belong to `verify-findings`
+
 ## 0.2.0 (unreleased)
 
 From the first real engagement (a self-audit, `app-security` only).

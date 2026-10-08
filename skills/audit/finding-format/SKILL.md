@@ -5,7 +5,7 @@ description: The schema and rules every audit finding must follow (evidence, sev
 
 # finding-format
 
-Version: 0.2.0 (audit skills, see CHANGELOG)
+Version: 0.3.0 (audit skills, see CHANGELOG)
 
 One schema for every finding, whatever the axis. Reports are projections of
 the same findings, so a finding is written once and never re-authored per
@@ -99,9 +99,10 @@ value, in every file, including evidence.
 **Confidence is about the finding, severity about the consequence.** A
 critical finding with low confidence stays critical and says so.
 
-**Status starts at `unverified`.** Only a verification pass by a context that
-did not produce the finding may set `confirmed` or `refuted`. Refuted findings
-stay in the file, marked, so the same false positive is not rediscovered.
+**Status starts at `unverified`.** Only `verify-findings`, run by a context
+that did not produce the finding, may set `confirmed` or `refuted`. It adds a
+`verification` key and a `**Verification.**` paragraph. Refuted findings stay
+in the file, marked, so the same false positive is not rediscovered.
 
 ### `sensitive`
 
