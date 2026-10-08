@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0 (unreleased)
+
+From the first verification run (11 findings: 11 confirmed, 0 refuted, 10
+corrected).
+
+- `verify-findings`: corrects in place what it proved wrong, quoting the old
+  text in its note, so reports never carry a known error; a rating change
+  must give its reason and update every sentence stating the old rating;
+  passive means no guessed URLs or identifiers
+- `finding-format`: `sensitive` asks whether the finding helps an outside
+  attacker; weaknesses only a legitimate privileged user can exercise are not
+  sensitive. A reference must state what the finding says is missing; a
+  versioned URL is enough. Old keys (`impact`) are ignored
+- `app-security`: guessed identifiers are not passive
+
 ## 0.3.0 (unreleased)
 
 - Add `verify-findings`: the only step that confirms or refutes a finding,

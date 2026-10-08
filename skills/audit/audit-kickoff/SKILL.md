@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-kickoff
 
-Version: 0.3.0 (audit skills, see CHANGELOG)
+Version: 0.4.0 (audit skills, see CHANGELOG)
 
 Create the **engagement file**: everything that is true for this audit only.
 Every other audit skill reads it and refuses to run without it.

@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.3.0 (audit skills, see CHANGELOG)
+Version: 0.4.0 (audit skills, see CHANGELOG)
 
 The only step allowed to set a finding's `status` to `confirmed` or
 `refuted`. Everything downstream (quick wins, reports, tickets) stands on its
@@ -66,8 +66,15 @@ rating. Never leave a wrong severity in place because the weakness is real.
 
 ## Writing the result
 
+**Correct in place.** When verification proves part of the finding wrong (a
+pointer, a claim in the evidence, a scenario, a remediation that would not
+work, a reference that does not say what the finding claims), rewrite that
+passage in the finding itself and quote the replaced text in the note. Reason:
+reports are generated from these files; a known error left in place reaches
+the reader. Correct only what was proven wrong; do not restyle the rest.
+
 Add a `**Verification.**` paragraph after `**Remediation.**`, and two YAML
-keys, without rewriting the axis's text:
+keys:
 
 ```yaml
 status: confirmed
@@ -82,8 +89,10 @@ Severity kept at medium.
 
 - Refuted: say what makes it wrong, with pointers. The finding stays in the
   file so the same false positive is not rediscovered.
-- Rating changed: give the old and new values and the reason, and change the
-  YAML.
+- Rating changed: give the old and new values and the reason, change the
+  YAML, and change every sentence of the finding that states the old rating.
+  A rating change without a stated reason is not allowed.
+- Text corrected: quote the old passage and say what proved it wrong.
 - Left unverified: say what is missing and who can settle it, and add the
   question to `## Questions for the auditor`.
 
@@ -101,8 +110,9 @@ as a lead in the owning axis file. Reason: a finding the verifier wrote
 would have no verifier.
 
 **Same limits as the axes.** Passive unless the engagement records active
-testing, and then only on the listed hosts. Never execute the audited project.
-Never quote a secret.
+testing, and then only on the listed hosts. Passive means no guessed URLs or
+identifiers either: request only what a page links to or what the auditor
+provided. Never execute the audited project. Never quote a secret.
 
 **Every finding gets a note**, including confirmed ones. A bare status change
 cannot be audited later.

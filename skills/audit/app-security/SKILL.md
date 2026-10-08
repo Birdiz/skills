@@ -5,7 +5,7 @@ description: Audit application security of a codebase and, when available, its r
 
 # app-security
 
-Version: 0.3.0 (audit skills, see CHANGELOG)
+Version: 0.4.0 (audit skills, see CHANGELOG)
 
 Find and evidence application security weaknesses. Write them to
 `<workspace>/findings/app-security.md` in `finding-format`.
@@ -113,8 +113,8 @@ difference does not touch; say so in the coverage.
 
 **Passive (default).** What any visitor's browser would do: fetch public
 pages, read response headers, cookies, TLS configuration, and publicly linked
-resources. No authentication attempts, no crafted payloads, no directory
-guessing, no scanning.
+resources. No authentication attempts, no crafted payloads, no guessed paths
+or identifiers (an id that probably does not exist is a guess), no scanning.
 
 **Active.** Only with `testing: active` and the authorization recorded in the
 engagement file, and only on the `hosts` it lists. Even
