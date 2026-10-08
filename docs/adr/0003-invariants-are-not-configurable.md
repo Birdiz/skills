@@ -20,8 +20,13 @@ following have one, and are written into the skills with their reason:
    pasted into third-party tools and leave the confidential perimeter.
 4. **Coverage limits are always reported.** An unreported gap reads as a
    clean result.
-5. **Active testing requires written authorization.** Without it the auditor
-   carries the legal risk.
+5. **Active testing requires a recorded authorization from the target's
+   owner.** Without it the auditor carries the legal risk. When the auditor
+   owns the target, their explicit consent in the session is that
+   authorization and the agent records it; for a third-party target, only
+   the owner's written authorization counts. Amended 2026-10-08 after the
+   first real engagement: requiring a signed document from an auditor about
+   their own project blocked the flow and protected no one.
 
 ## Consequences
 
