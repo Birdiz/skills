@@ -5,7 +5,7 @@ description: The schema and rules every audit finding must follow (evidence, sev
 
 # finding-format
 
-Version: 0.3.0 (audit skills, see CHANGELOG)
+Version: 0.4.0 (audit skills, see CHANGELOG)
 
 One schema for every finding, whatever the axis. Reports are projections of
 the same findings, so a finding is written once and never re-authored per
@@ -86,8 +86,10 @@ tool output saved in `tool-output/`, a public reference. Never the agent's
 memory, a previous conversation or a project note the reader does not have.
 
 **References are checked against their source.** A framework identifier (ASVS,
-WCAG, CWE) is copied from the framework text, not recalled. Keep the copy used
-in `tool-output/` and name the version.
+WCAG, CWE) is copied from the framework text, not recalled, and the
+requirement it names must state what the finding says is missing, not merely
+exist in the same chapter. Cite the one or two most specific. Keep the copy
+used in `tool-output/` or give a versioned URL, and name the version.
 
 **Absence in a graph or a search is not proof.** Dependency injection, event
 subscribers, config-driven routing and templates hide edges. Claims of dead
@@ -101,16 +103,24 @@ critical finding with low confidence stays critical and says so.
 
 **Status starts at `unverified`.** Only `verify-findings`, run by a context
 that did not produce the finding, may set `confirmed` or `refuted`. It adds a
-`verification` key and a `**Verification.**` paragraph. Refuted findings stay
+`verification` key and a `**Verification.**` paragraph, and corrects in place
+what it proved wrong. Keys from older versions of this schema (`impact`) are
+ignored. Refuted findings stay
 in the file, marked, so the same false positive is not rediscovered.
 
 ### `sensitive`
 
-`true` when the finding, if leaked, helps an attacker or exposes personal
-data: exploitable vulnerabilities, secret locations, weaknesses reachable from
-outside that are not obvious. `false` when any visitor can already observe it
-(a missing response header, a public version banner) or when it is pure
-hygiene. Sensitive findings appear only in the confidential report.
+The test: would this finding, if leaked, help someone **outside** the
+organization attack it, or expose personal data?
+
+- `true`: exploitable vulnerabilities, where a secret is, weaknesses reachable
+  from outside that are not obvious, any personal data in the evidence.
+- `false`: what any visitor can already observe (a missing response header, a
+  public version banner); weaknesses only a legitimate privileged user can
+  exercise (missing traceability of an admin action); pure hygiene; a
+  framework's documented default behaviour.
+
+Sensitive findings appear only in the confidential report.
 
 ### `promptable`
 

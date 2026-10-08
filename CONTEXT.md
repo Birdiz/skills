@@ -25,7 +25,7 @@ findings and reports.
   evaluate, or was not asked to evaluate.
 - **Quick win**: a confirmed finding of medium severity or above and small
   effort. Derived, not stored.
-- **Sensitive**: a finding that would help an attacker or expose personal
-  data if leaked. Confidential report only.
+- **Sensitive**: a finding that would help an outside attacker or expose
+  personal data if leaked. Confidential report only.
 - **Promptable**: a finding whose remediation a coding agent could apply.
 - **Invariant**: a rule no setting can turn off.
