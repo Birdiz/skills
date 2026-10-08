@@ -15,14 +15,21 @@ The other axes, remediation grouping and tickets are not written. See [Roadmap](
 
 ## Install
 
-The layout follows the `skills/<category>/<name>/SKILL.md` convention, so the
-`skills` installer should pick it up (not yet tested against this repo):
+**Claude Code (recommended): as a plugin.** Skills are namespaced
+`birdiz-skills:<name>` and update with each release.
 
 ```
-npx skills@latest add Birdiz/skills
+/plugin marketplace add Birdiz/skills
+/plugin install birdiz-skills@birdiz
 ```
 
-Or copy the folders under `skills/audit/` into your agent's skills directory.
+To update: `/plugin marketplace update birdiz`.
+
+**Other agents, or to edit the skills:** copy the folders under
+`skills/audit/` into the agent's skills directory.
+
+Pick one: installing both, or keeping copies saved in your Claude account,
+gives you every skill twice.
 
 ## Flow
 
@@ -90,8 +97,6 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
   whether the agent may create tasks there; local files otherwise. Sensitive
   findings never go to a tracker that is not access-restricted
 - A script that validates finding files against the schema
-- Ship as a plugin once the skills have settled, so they install under their
-  own namespace instead of generic names
 
 ## License
 
