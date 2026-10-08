@@ -5,7 +5,7 @@ description: The schema and rules every audit finding must follow (evidence, sev
 
 # finding-format
 
-Version: 0.5.0 (audit skills, see CHANGELOG)
+Version: 0.6.0 (audit skills, see CHANGELOG)
 
 One schema for every finding, whatever the axis. Reports are projections of
 the same findings, so a finding is written once and never re-authored per
@@ -43,6 +43,7 @@ severity: medium          # critical | high | medium | low | info
 confidence: high          # high | medium | low
 evidence_regime: static   # static | dynamic | declarative
 effort: S                 # S (hours) | M (days) | L (weeks)
+resolution: open          # open | accepted | fixed
 sensitive: false
 promptable: true
 locations:
@@ -128,10 +129,21 @@ Sensitive findings appear only in the confidential report.
 `false` for human actions: rotating a key, signing a processor agreement,
 enabling MFA, changing a DNS record, recording a decision.
 
+### `resolution`
+
+What the owner did about the finding. Independent of `status`, which says
+whether the finding is true.
+
+- `open` (default, may be omitted): nothing decided.
+- `accepted`: the owner decided to keep the behaviour or the risk. Requires an
+  `**Auditor answer.**` paragraph with the date and the decision.
+- `fixed`: only set by verifying the fix at a later commit, never on the
+  owner's word.
+
 ### Quick win
 
-Derived, never stored: `status: confirmed`, severity `medium` or above, and
-`effort: S`.
+Derived, never stored: `status: confirmed`, `resolution: open`, severity
+`medium` or above, and `effort: S`.
 
 ## Default severity scale
 
@@ -170,6 +182,16 @@ a hidden finding or as work not done.
 Questions only the auditor or the owner can answer (an intended behaviour, a
 production setting, a command the agent may not run). One per line, with the
 lead or finding it affects. The kickoff's end report collects them.
+
+### Recording an answer
+
+Whichever session receives the answer records it in two places: under the
+question (`**Answer (YYYY-MM-DD):** ...`) and in the finding concerned, as an
+`**Auditor answer.**` paragraph after `**Verification.**`. If the answer
+changes the finding (rating, remediation, `resolution: accepted`), apply the
+change in place with its reason, under the same rules as `verify-findings`:
+every sentence stating the old value is updated. An answer cannot set
+`status`; a claim it adds that the code does not show is a lead.
 
 ## Coverage section
 

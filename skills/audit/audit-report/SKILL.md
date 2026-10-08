@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.5.0 (audit skills, see CHANGELOG)
+Version: 0.6.0 (audit skills, see CHANGELOG)
 
 Turn the findings files into the deliverables the engagement asks for. A
 report is a projection of the findings: it adds no analysis, and every claim
@@ -24,6 +24,14 @@ Output: `<workspace>/reports/`.
    (in a separate context, as that skill requires).
 3. Recompute every count from the files. Never copy a number from a previous
    summary.
+4. **Consistency check.** For each finding: does the text agree with the YAML
+   (rating stated in prose, remediation still valid after the verification
+   note)? Are all citations openable by the reader? Do the installed audit
+   skills report the same `Version:`? Collect every discrepancy.
+5. If the list is not empty, write the deliverables anyway but mark each one
+   **DRAFT** at the top, with the list, and hand over to `verify-findings` in
+   revision mode. Regenerate after it has run. A deliverable is final only when
+   the list is empty. Never fix a discrepancy in the report itself.
 
 ## Which deliverables
 
@@ -45,7 +53,8 @@ what it covers and what produced it:
 - axes requested, and for each: evaluated, partial, not evaluable or not
   requested;
 - testing regime (passive or active, on which hosts);
-- skills version and tools used (from the engagement file);
+- skills version actually used (the `Version:` line of each audit skill, and
+  the engagement file's value if it differs) and tools used;
 - confidentiality: "confidential" on the peer report and the prompts.
 
 ## Peer report
@@ -64,11 +73,14 @@ For a technical reader who will act on it or challenge it. Complete.
    verification note condensed to what it established.
 4. **Not verified**: findings left `unverified`, each with the reason and who
    can settle it. Never mixed with confirmed ones.
-5. **Open leads and questions**: every lead with status `open`, and every
-   question for the auditor, with what each would change.
-6. **Refuted**: one line each (ID, title, why). It shows the audit checked its
+5. **Accepted**: confirmed findings with `resolution: accepted`, each with the
+   owner's decision and date. Not counted among quick wins.
+6. **Open leads and questions**: every lead with status `open`, and every
+   question for the auditor, with what each would change, and the answers
+   already received.
+7. **Refuted**: one line each (ID, title, why). It shows the audit checked its
    own work.
-7. **Method and limits**: how the codebase was mapped, where dependency code
+8. **Method and limits**: how the codebase was mapped, where dependency code
    came from, what the running target was, the unknowns from the map that
    still stand.
 
@@ -90,8 +102,10 @@ For a decision maker who will not read code. Two pages at most.
 
 Rules for this document:
 
-- Only confirmed findings. No IDs in the text; put them in a short table at
-  the end so a developer can find the detail.
+- Only confirmed findings with `resolution: open`; accepted ones appear as a
+  single line ("N points were reviewed and kept as they are, by decision").
+  No IDs in the text; put them in a short table at the end so a developer can
+  find the detail.
 - A `sensitive` finding is described by its consequence only: no file, entry
   point, parameter, host or method. The detail stays in the peer report.
 - No severity labels without their meaning; explain the scale in one line if

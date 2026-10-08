@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.5.0 (audit skills, see CHANGELOG)
+Version: 0.6.0 (audit skills, see CHANGELOG)
 
 The only step allowed to set a finding's `status` to `confirmed` or
 `refuted`. Everything downstream (quick wins, reports, tickets) stands on its
@@ -95,6 +95,15 @@ Severity kept at medium.
 - Text corrected: quote the old passage and say what proved it wrong.
 - Left unverified: say what is missing and who can settle it, and add the
   question to `## Questions for the auditor`.
+
+## Revision mode
+
+When `audit-report` (or the auditor) lists discrepancies in findings that are
+already verified (text contradicting the YAML, a verification note whose
+corrections were never applied, a citation the reader cannot open), apply
+them in place under the rules above, even for `confirmed` findings. Re-check
+only what the correction touches. Add one line to the existing
+`**Verification.**` paragraph saying what was revised and when.
 
 ## Leads
 

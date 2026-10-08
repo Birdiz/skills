@@ -23,8 +23,10 @@ findings and reports.
   owning axis closes each one: promoted, closed, or open.
 - **Coverage**: what an axis evaluated, partially evaluated, could not
   evaluate, or was not asked to evaluate.
-- **Quick win**: a confirmed finding of medium severity or above and small
-  effort. Derived, not stored.
+- **Quick win**: a confirmed, unresolved finding of medium severity or above
+  and small effort. Derived, not stored.
+- **Resolution**: what the owner did about a finding: open, accepted (kept by
+  decision), or fixed (verified at a later commit). Independent of status.
 - **Sensitive**: a finding that would help an outside attacker or expose
   personal data if leaked. Confidential report only.
 - **Promptable**: a finding whose remediation a coding agent could apply.
