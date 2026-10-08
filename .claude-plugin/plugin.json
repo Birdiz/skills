@@ -1,6 +1,6 @@
 {
   "name": "birdiz-skills",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Agent skills for technical audits: recon, app security, independent verification, reports.",
   "author": {
     "name": "Thomas Bouzy",

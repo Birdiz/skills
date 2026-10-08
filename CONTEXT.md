@@ -31,6 +31,11 @@ findings and reports.
   personal data if leaked. Confidential report only.
 - **Promptable**: a finding whose remediation a coding agent could apply.
 - **Invariant**: a rule no setting can turn off.
+- **Rules of engagement**: what an audit step may touch and run: read-only
+  repository, no execution of the project, passive by default, active only on
+  authorized hosts.
+- **Projection**: a deliverable derived from the findings files alone; it adds
+  no analysis and is regenerated, never edited, when they change.
 - **Peer report**: the complete, confidential deliverable for a technical
   reader.
 - **Summary**: the plain-language deliverable for a decision maker; confirmed
