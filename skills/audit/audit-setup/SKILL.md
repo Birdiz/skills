@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 # audit-setup
 
+Version: 0.2.0 (audit skills, see CHANGELOG)
+
 Create or update the **auditor profile**: everything that is stable across
 engagements. Per-engagement facts (scope, access, client) do NOT belong here;
 they belong to `audit-kickoff`.

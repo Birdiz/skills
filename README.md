@@ -9,9 +9,9 @@ content is specific to auditing.
 
 ## Status
 
-Early. The foundation and a first axis (`app-security`) are written; the
-other axes, verification, reporting and tickets are not. Nothing has been run
-on a real audit yet. See [Roadmap](#roadmap).
+Early. The foundation and a first axis (`app-security`) are written and have
+run once on a real codebase (version 0.2.0 includes that feedback). The other
+axes, verification, reporting and tickets are not written. See [Roadmap](#roadmap).
 
 ## Install
 
@@ -75,11 +75,11 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 
 ## Roadmap
 
-- Run `app-security` on a real codebase and fix the finding schema where it
-  hurts, before writing the other axes
+- `verify-findings`: refutation pass by a context that did not produce them.
+  Next: after the first real run every finding is still `unverified`, so
+  there are no quick wins and nothing a report can stand on
 - Axes: `code-quality`, `architecture`, `infra-security`, `privacy`,
   `accessibility`, `seo`, `performance`
-- `verify-findings`: refutation pass by a context that did not produce them
 - Remediations: group findings by fix, then render each one as a ticket, a
   vendor brief or an executable prompt
 - Tickets: at kickoff, detect whether the target has an issue tracker and ask

@@ -19,10 +19,11 @@ findings and reports.
 - **Codebase map**: the shared description of the audited code, written once
   by `recon` and read by every axis.
 - **Finding**: an observed, evidenced problem in the common schema.
-- **Lead**: a suspicion without evidence. Not reportable as a finding.
-- **Coverage**: what an axis evaluated, partially evaluated, or could not
-  evaluate.
-- **Quick win**: a confirmed finding with high or medium impact and small
+- **Lead**: a suspicion without evidence. Not reportable as a finding. The
+  owning axis closes each one: promoted, closed, or open.
+- **Coverage**: what an axis evaluated, partially evaluated, could not
+  evaluate, or was not asked to evaluate.
+- **Quick win**: a confirmed finding of medium severity or above and small
   effort. Derived, not stored.
 - **Sensitive**: a finding that would help an attacker or expose personal
   data if leaked. Confidential report only.
