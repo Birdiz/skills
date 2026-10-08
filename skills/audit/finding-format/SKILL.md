@@ -5,7 +5,7 @@ description: The schema and rules every audit finding must follow (evidence, sev
 
 # finding-format
 
-Version: 0.6.0 (audit skills, see CHANGELOG)
+Version: 0.7.0 (audit skills, see CHANGELOG)
 
 One schema for every finding, whatever the axis. Reports are projections of
 the same findings, so a finding is written once and never re-authored per
@@ -175,7 +175,9 @@ closes it** before it finishes, by rewriting the bullet's status:
 - `open: <what would settle it, and who: agent, auditor, or owner>`
 
 No lead is left without a status. Reason: an unexplained lead reads either as
-a hidden finding or as work not done.
+a hidden finding or as work not done. Leads in the file of an axis outside
+the plan have no owner to close them: they carry `open: axis not requested`
+until that axis runs.
 
 ## Questions for the auditor
 
@@ -187,9 +189,10 @@ lead or finding it affects. The kickoff's end report collects them.
 
 Whichever session receives the answer records it in two places: under the
 question (`**Answer (YYYY-MM-DD):** ...`) and in the finding concerned, as an
-`**Auditor answer.**` paragraph after `**Verification.**`. If the answer
-changes the finding (rating, remediation, `resolution: accepted`), apply the
-change in place with its reason, under the same rules as `verify-findings`:
+`**Auditor answer.**` paragraph after `**Verification.**`. These labels stay in
+English like the others; the answer itself is in the engagement language. If the answer
+changes the finding (rating, remediation, `promptable`, `resolution:
+accepted`), apply the change in place with its reason, under the same rules as `verify-findings`:
 every sentence stating the old value is updated. An answer cannot set
 `status`; a claim it adds that the code does not show is a lead.
 

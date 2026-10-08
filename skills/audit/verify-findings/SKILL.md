@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.6.0 (audit skills, see CHANGELOG)
+Version: 0.7.0 (audit skills, see CHANGELOG)
 
 The only step allowed to set a finding's `status` to `confirmed` or
 `refuted`. Everything downstream (quick wins, reports, tickets) stands on its

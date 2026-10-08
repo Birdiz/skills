@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.0 (unreleased)
+
+From the second report run: the draft mechanism worked (ten discrepancies
+down to four, accepted findings in their own section, skill versions
+checked), but kept the report in draft over cosmetic issues and over a rule
+that could not be satisfied.
+
+- `audit-report`: discrepancies are blocking (what a reader acts on is wrong
+  or unreadable) or cosmetic (form only); only blocking ones keep a
+  deliverable in draft
+- `finding-format`: leads of an axis outside the plan carry `open: axis not
+  requested`; answer labels stay in English; an answer can change
+  `promptable`
+- `recon`: same status for leads outside the plan, written in the engagement
+  language
+
 ## 0.6.0 (unreleased)
 
 From the first report run. The report listed ten discrepancies between the

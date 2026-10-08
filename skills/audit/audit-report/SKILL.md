@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.6.0 (audit skills, see CHANGELOG)
+Version: 0.7.0 (audit skills, see CHANGELOG)
 
 Turn the findings files into the deliverables the engagement asks for. A
 report is a projection of the findings: it adds no analysis, and every claim
@@ -28,10 +28,17 @@ Output: `<workspace>/reports/`.
    (rating stated in prose, remediation still valid after the verification
    note)? Are all citations openable by the reader? Do the installed audit
    skills report the same `Version:`? Collect every discrepancy.
-5. If the list is not empty, write the deliverables anyway but mark each one
-   **DRAFT** at the top, with the list, and hand over to `verify-findings` in
-   revision mode. Regenerate after it has run. A deliverable is final only when
-   the list is empty. Never fix a discrepancy in the report itself.
+5. **Sort the discrepancies.** *Blocking*: something a reader would act on is
+   wrong or unreadable (a remediation that no longer fits, a rating or
+   `promptable` value contradicted by the text or by an answer, a citation the
+   reader cannot open, mixed skill versions). *Cosmetic*: form only (a label
+   in the wrong language, prose language in a file outside the plan, wording).
+6. If there is any blocking discrepancy, write the deliverables anyway but
+   mark each one **DRAFT** at the top, with the list, and hand over to
+   `verify-findings` in revision mode. Regenerate after it has run. Cosmetic
+   discrepancies never keep a report in draft: list them under "Method and
+   limits" and fix them at the next revision. Never fix a discrepancy in the
+   report itself.
 
 ## Which deliverables
 

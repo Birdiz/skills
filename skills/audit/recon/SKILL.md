@@ -5,7 +5,7 @@ description: Map an unfamiliar codebase before auditing it (stacks, entry points
 
 # recon
 
-Version: 0.6.0 (audit skills, see CHANGELOG)
+Version: 0.7.0 (audit skills, see CHANGELOG)
 
 Build the **codebase map** once, so every axis works from the same
 understanding instead of rebuilding its own.
@@ -113,7 +113,8 @@ them short: the observation, the pointers, and the check that would settle
 it. The investigation belongs to the axis, which closes every lead.
 
 **Leads for axes outside the plan** go to that axis's file too, with coverage
-`not-requested`, so they are not lost and not mistaken for an assessment.
+`not-requested` and status `open: axis not requested`, so they are not lost
+and not mistaken for an assessment. Write them in the engagement language.
 
 **A missing edge is an unknown, not a fact.** Dependency injection, event
 subscribers, config-driven routing, reflection and templates do not show up
