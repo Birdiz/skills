@@ -95,8 +95,9 @@ read and the result holds: the pattern is real, and the code is reachable.
 
 **Dependencies.** A vulnerable version in the lockfile is a finding. Whether
 the vulnerable function is reachable from this codebase sets the confidence
-and the severity, and is stated either way. Do not install dependencies in
-the working copy to find out.
+and the severity, and is stated either way. Read the dependency code `recon`
+made available (see `dependencies:` in the map); do not install anything else
+to find out.
 
 **Secrets.** Record file, line, kind of secret, and whether it appears in
 history. Never copy the value, anywhere. Do not test whether it is still
@@ -135,8 +136,9 @@ the finding.
 - Describe how the weakness can be shown to exist, not a working exploit.
   The technical explanation gives conditions and consequence; it does not
   give a payload.
-- `sensitive: true` unless the finding is pure hygiene that helps no attacker
-  (for example an outdated but unaffected dependency).
+- `sensitive` as `finding-format` defines it: `true` by default on this axis,
+  `false` when any visitor can already observe the weakness (a missing
+  response header) or when it is pure hygiene that helps no attacker.
 - `promptable: false` for anything requiring an action outside the code:
   rotating a credential, revoking a token, changing infrastructure.
 

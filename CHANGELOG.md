@@ -20,6 +20,8 @@ From the first real engagement (a self-audit, `app-security` only).
   scanner runs scripted and kept; the auditor's own artifacts excluded from
   scans; owner instructions for agents are not injection; running target
   checked against the audited commit; every lead closed
+- `app-security`: align the `sensitive` rule and dependency reading with
+  `finding-format` and `recon`
 - `audit-kickoff`: records the working copy and what the running target
   serves; end report lists the questions for the auditor
 
