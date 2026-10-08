@@ -63,6 +63,8 @@ report both sides: the gap is often the finding.
   ineffective control, each with file and line.
 - Show the weakness exists: conditions and consequence, without payload or
   working exploit.
+- A secret: file, line, kind, in history or not; value `<redacted>`, as
+  `finding-format` requires.
 - `sensitive: true` by default here; `false` when any visitor already sees it,
   or for hygiene that helps no attacker.
 - `promptable: false` for actions outside the code (rotate, revoke,

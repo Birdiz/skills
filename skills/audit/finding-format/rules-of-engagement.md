@@ -17,8 +17,8 @@ Binding on every audit step: recon, axes, verification.
   Stop at the first proof; read or keep no data that is not the auditor's. A
   step that could leave scope, touch such data, or change or degrade the target
   becomes a lead for the owner to test.
-- A secret is recorded by location, kind and presence in history; its value is
-  redacted everywhere and never tried.
+- A secret found is never used or tested for validity (recording it:
+  `finding-format`, Evidence).
 - Each scanner run (`semgrep`, `gitleaks`, `trivy`, audit commands) is scripted
   in `tool-output/run-<name>.sh` (working copy mounted read-only, images pinned
   by digest), raw output kept beside it, auditor artifacts (`.gitnexus/`,

@@ -33,6 +33,9 @@ titles and prose use the engagement's `language`.
 - **A missing edge or an empty search proves nothing**: injection,
   subscribers, config routing, reflection and templates hide calls; dead code
   or a missing check needs the code read.
+- **A secret is recorded by location**: file, line, kind, presence in
+  history. Its value is written `<redacted>` in every file, evidence and
+  questions included, never quoted in full or in part.
 - **Confidence rates the finding, severity the consequence**: a critical with
   low confidence stays critical, and says so.
 - **`status` starts `unverified`**; only `verify-findings` sets `confirmed` or
