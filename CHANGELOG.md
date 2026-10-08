@@ -2,6 +2,8 @@
 
 ## 0.7.0 (unreleased)
 
+- Ship as a Claude Code plugin (`birdiz-skills`) through a marketplace in
+  this repository
 From the second report run: the draft mechanism worked (ten discrepancies
 down to four, accepted findings in their own section, skill versions
 checked), but kept the report in draft over cosmetic issues and over a rule

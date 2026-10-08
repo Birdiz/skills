@@ -1,0 +1,17 @@
+{
+  "name": "birdiz",
+  "owner": {
+    "name": "Thomas Bouzy",
+    "url": "https://github.com/Birdiz"
+  },
+  "description": "Thomas Bouzy's agent skills, as an installable Claude Code plugin.",
+  "plugins": [
+    {
+      "name": "birdiz-skills",
+      "source": "./",
+      "description": "Agent skills for technical audits: recon, app security, independent verification, reports.",
+      "category": "engineering",
+      "keywords": ["audit", "security", "skills"]
+    }
+  ]
+}

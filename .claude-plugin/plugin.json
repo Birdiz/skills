@@ -1,0 +1,21 @@
+{
+  "name": "birdiz-skills",
+  "version": "0.7.0",
+  "description": "Agent skills for technical audits: recon, app security, independent verification, reports.",
+  "author": {
+    "name": "Thomas Bouzy",
+    "url": "https://github.com/Birdiz"
+  },
+  "repository": "https://github.com/Birdiz/skills",
+  "license": "MIT",
+  "keywords": ["audit", "security", "skills"],
+  "skills": [
+    "./skills/audit/audit-setup",
+    "./skills/audit/audit-kickoff",
+    "./skills/audit/finding-format",
+    "./skills/audit/recon",
+    "./skills/audit/app-security",
+    "./skills/audit/verify-findings",
+    "./skills/audit/audit-report"
+  ]
+}
