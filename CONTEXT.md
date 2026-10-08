@@ -29,3 +29,9 @@ findings and reports.
   personal data if leaked. Confidential report only.
 - **Promptable**: a finding whose remediation a coding agent could apply.
 - **Invariant**: a rule no setting can turn off.
+- **Peer report**: the complete, confidential deliverable for a technical
+  reader.
+- **Summary**: the plain-language deliverable for a decision maker; confirmed
+  findings only, sensitive ones by consequence only.
+- **Remediation prompt**: a self-contained instruction for a coding agent or
+  a developer, describing the target state, never the attack.

@@ -9,9 +9,9 @@ content is specific to auditing.
 
 ## Status
 
-Early. The foundation, a first axis (`app-security`) and verification are
-written; the foundation and the axis have run once on a real codebase. The
-other axes, reporting and tickets are not written. See [Roadmap](#roadmap).
+Early. The foundation, a first axis (`app-security`), verification and
+reporting are written; all but reporting have run once on a real codebase.
+The other axes, remediation grouping and tickets are not written. See [Roadmap](#roadmap).
 
 ## Install
 
@@ -32,7 +32,7 @@ Or copy the folders under `skills/audit/` into your agent's skills directory.
 4. Axes write findings in a common format (`app-security` so far).
 5. `verify-findings`, in a separate context: confirmed, refuted, or left
    unverified with a reason.
-6. Reports (to come).
+6. `audit-report`: the deliverables the engagement's audience requires.
 
 ## Skills
 
@@ -53,6 +53,8 @@ Or copy the folders under `skills/audit/` into your agent's skills directory.
   security axis.
 - [verify-findings](skills/audit/verify-findings/SKILL.md): try to refute
   every finding from a context that did not write it.
+- [audit-report](skills/audit/audit-report/SKILL.md): peer report,
+  plain-language summary and remediation prompts, from verified findings.
 
 A user-invoked skill may rely on model-invoked ones, never on another
 user-invoked one.
@@ -79,7 +81,7 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 
 ## Roadmap
 
-- Run `verify-findings` on the first engagement's findings
+- Run `audit-report` on the first engagement
 - Axes: `code-quality`, `architecture`, `infra-security`, `privacy`,
   `accessibility`, `seo`, `performance`
 - Remediations: group findings by fix, then render each one as a ticket, a
@@ -87,7 +89,6 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 - Tickets: at kickoff, detect whether the target has an issue tracker and ask
   whether the agent may create tasks there; local files otherwise. Sensitive
   findings never go to a tracker that is not access-restricted
-- `audit-report`
 - A script that validates finding files against the schema
 - Ship as a plugin once the skills have settled, so they install under their
   own namespace instead of generic names
