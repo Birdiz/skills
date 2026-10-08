@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 (unreleased)
+
+- Add `audit-report`: peer report, plain-language summary and remediation
+  prompts, chosen from the engagement's audience. A projection of the
+  findings: no new analysis, counts recomputed, stops when verification is
+  missing. Sensitive findings reach the summary by consequence only; prompts
+  describe the target state and never the attack
+- `audit-kickoff` and `verify-findings` hand over to `audit-report`
+
 ## 0.4.0 (unreleased)
 
 From the first verification run (11 findings: 11 confirmed, 0 refuted, 10

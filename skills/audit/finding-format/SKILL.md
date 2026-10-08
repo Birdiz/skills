@@ -5,7 +5,7 @@ description: The schema and rules every audit finding must follow (evidence, sev
 
 # finding-format
 
-Version: 0.4.0 (audit skills, see CHANGELOG)
+Version: 0.5.0 (audit skills, see CHANGELOG)
 
 One schema for every finding, whatever the axis. Reports are projections of
 the same findings, so a finding is written once and never re-authored per

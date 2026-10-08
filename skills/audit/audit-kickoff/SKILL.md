@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-kickoff
 
-Version: 0.4.0 (audit skills, see CHANGELOG)
+Version: 0.5.0 (audit skills, see CHANGELOG)
 
 Create the **engagement file**: everything that is true for this audit only.
 Every other audit skill reads it and refuses to run without it.
@@ -113,6 +113,7 @@ Run, in this order, without asking for permission between steps:
 3. `verify-findings`, in a context that did not write the findings (see that
    skill). Without sub-agents this means a new session: tell the auditor so,
    and stop there.
+4. `audit-report`, once every finding has been through verification.
 
 Stop and ask only for a **blocker**:
 
