@@ -31,6 +31,8 @@ defaults.
 5. **Create the workspace**, outside the client repository.
 6. **Read the engagement file back** to the auditor and get an explicit
    confirmation before any axis runs. Record it as `confirmed: <YYYY-MM-DD>`.
+7. **Carry on** (see "After confirmation"). The confirmation is the go-ahead
+   for the whole plan; do not ask again whether to start.
 
 ## Asking questions
 
@@ -97,6 +99,36 @@ passive`.
 either recorded (`active`) or explicitly declined (`passive`, and the auditor
 has been told what passive excludes). An engagement must not be confirmed
 with an open authorization question.
+
+## After confirmation
+
+Run, in this order, without asking for permission between steps:
+
+1. `recon`, unless `01-codebase-map.md` already exists for the audited
+   commit.
+2. Each axis of the plan with status `evaluated` or `partial`, in plan order.
+
+Stop and ask only for a **blocker**:
+
+- a step needs authorization that is not recorded (an active test on a host
+  not listed);
+- a required capability turns out to be missing or unreachable (the running
+  target is down, the repository cannot be read);
+- something contradicts the engagement file (wrong commit, scope unclear).
+
+An optional accelerator that is unavailable is **not** a blocker. If a graph
+tool, a scanner or sub-agents are missing, use the fallback the skill
+describes, record what was used in the output (`method:` in the codebase
+map, `tools` in the engagement file), and say in one line what the absence
+costs. The auditor can rerun a step later with the tool restored.
+
+If the agent can spawn sub-agents, run each axis in its own, so one axis does
+not fill the context of the next. Otherwise run them in sequence; every step
+reads and writes files, so a new session can resume from the workspace at
+any point.
+
+At the end, report what was produced, what was skipped and why, and the
+number of findings per axis and severity.
 
 ## Capability matrix
 
