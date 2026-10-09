@@ -5,7 +5,7 @@ description: Audit application security of a codebase and, when available, its r
 
 # app-security
 
-Version: 0.10.0 (audit skills, see CHANGELOG)
+Version: 0.11.0 (audit skills, see CHANGELOG)
 
 Find and evidence application security weaknesses in
 `<workspace>/findings/app-security.md`, in `finding-format`, bound by its

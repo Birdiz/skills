@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.11.0 (unreleased)
+
+Three dynamic axes, in the same form (skill plus `areas.md`); none has run
+yet.
+
+- Add `accessibility`: a sample of pages (main flows, one per template), an
+  automated pass whose results are leads, then the keyboard, the
+  accessibility tree, forms and visual checks by hand, each problem traced to
+  its template. WCAG or RGAA from the profile; a legal obligation is the
+  owner's to state, and raises one level
+- Add `seo`: a rate-limited crawl, robots and sitemaps against it, served
+  against rendered HTML, routes no link reaches. Rated for the documented
+  production configuration; which pages should be indexed is the owner's
+  intent, proposed from the map and asked up front
+- Add `performance`: server work per request read in the code, single-request
+  measurements and Lighthouse medians, growth with data. A measurement
+  stands alone only on a production-like configuration; expected volumes are
+  asked up front
+- Rules of engagement: signing in with an account the auditor provides is
+  ordinary use; forms are submitted only to show validation (passive) or on
+  the auditor's own data (active); crawls are sequential, one request per
+  second at most, capped; no load or stress test in any regime
+
 ## 0.10.0 (unreleased)
 
 From the 0.9.0 rerun of `code-quality` and `architecture` (fresh copy of the
