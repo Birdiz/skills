@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.9.0 (unreleased)
+
+From the first run of `code-quality` and `architecture` (gn-platform, same
+commit and map as the first engagement, axes in parallel sub-agents, then
+`verify-findings`): 8 findings, 8 confirmed, no rating changed, text
+corrected in 4. Twice a new axis settled an open `app-security` lead that
+stayed open in its file; a performance lead was closed instead of moved; two
+reasons for a severity move were wrong while the move held; both axes wrote
+the engagement file at the same time.
+
+- `finding-format`: one problem stays in one axis. A consequence for another
+  axis is appended there as a lead, even outside the plan; a finding that
+  settles another axis's lead names it; findings with one cause cite each
+  other. What was examined and dropped is a coverage note, not a lead
+- `finding-format`: pointers quote a few words of their line; "shown" means
+  every step pointed, one reasoned step caps confidence at medium; a severity
+  move gives its reason with a pointer; a system not yet in production is
+  rated for its documented deployment; `evidence_regime` defined
+- `verify-findings`: closes the leads that confirmed findings settle, in
+  their own file; checks the reason of a severity move, not only the move;
+  moves a lead closed although it belonged to another axis; a cost the audit
+  itself met counts when any newcomer would meet it
+- Rules of engagement: a tool an axis names runs from a pinned image when the
+  profile lists `docker`; read-only host commands are allowed; dependency
+  code is read where the map says, lockfile rechecked; rules and scripts
+  written for a run are kept; each step lists its tools in its own output
+  and only `audit-kickoff` writes them to the engagement file
+- `code-quality`: CI merge-blocking asked up front; whole history when
+  shorter than twelve months, merges excluded, fix commits by subject; under
+  three months, a hotspot needs reworked code; grid read where the wrong
+  result reaches a user, a rare precondition lowers one level
+- `architecture`: the map's departures and structural unknowns become leads
+  first; coarse modules split and said; coupling without merges, three
+  commits or more, supporting only under three months of history; grid row
+  for gaps that delay diagnosis or a decision; an unnoticed failure is an
+  outage of what it carries; plans in the repository count for raising a
+  level
+- `recon`: `tools:` in the map header. `audit-setup`: detects `docker` as the
+  way to run named tools
+
 ## 0.8.0 (unreleased)
 
 Rewritten for brevity, following mattpocock/skills `writing-for-agents`. No

@@ -5,7 +5,7 @@ description: Audit application security of a codebase and, when available, its r
 
 # app-security
 
-Version: 0.8.0 (audit skills, see CHANGELOG)
+Version: 0.9.0 (audit skills, see CHANGELOG)
 
 Find and evidence application security weaknesses in
 `<workspace>/findings/app-security.md`, in `finding-format`, bound by its
@@ -40,8 +40,8 @@ coverage and citation; a finding still needs evidence.
 
 ## Tools and dependencies
 
-Run what the profile lists (`semgrep`, `gitleaks`, `trivy`, the ecosystem's
-audit command), each recorded as `name@version` in the engagement file. Alerts
+Run `semgrep`, `gitleaks`, `trivy` and the ecosystem's audit command, as the
+rules of engagement allow. Alerts
 from auditor artifacts are noted in the coverage and discarded. Tool output is
 a lead until the code shows the pattern real and reachable.
 
@@ -78,4 +78,5 @@ report both sides: the gap is often the finding.
 
 Close every lead in the file, recon's included, and trace anyway: leads are a
 starting point. Coverage lists every area: `evaluated` (with or without
-findings), `partial` (what was missing) or `not-evaluable`.
+findings), `partial` (what was missing) or `not-evaluable`, with the tools
+run.

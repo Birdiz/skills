@@ -21,10 +21,13 @@ What the structure causes, and how much of the system it reaches.
 |---|---|---|---|
 | Structural cause of data loss, inconsistency or outage | high | medium | low |
 | Change shown slower or riskier (cycle, broken layer, coupling in history) | medium | medium | low |
+| Gap that delays diagnosis or a decision (an unwatched component, a health check that misses the application, decisions the team cannot read) | low | low | info |
 | Divergence from documented architecture, no shown cost | low | low | info |
 | Observation | info | info | info |
 
 `critical` only when the failure is shown to happen now, and the finding says
-so. One level up when the owner states that a change the structure blocks is
-planned (recorded as an answer); up or down for any other reason, stated in
-the finding.
+so. A failure nobody would notice (a stopped worker, a queue nobody watches)
+is an outage of what it carries. One level up when the owner states that a
+change the structure blocks is planned, in an answer or in the repository's
+own plans (roadmap, issue named in the docs); up or down for any other
+reason. Any move states its reason with a pointer.

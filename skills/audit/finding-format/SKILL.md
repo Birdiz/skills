@@ -5,7 +5,7 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.8.0 (audit skills, see CHANGELOG)
+Version: 0.9.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
@@ -24,6 +24,14 @@ titles and prose use the engagement's `language`.
   a report as a finding: nothing downstream catches a wrong finding.
 - **Reproducible**: a reader with the same access sees the same thing (file
   and line, command and output, URL and response).
+- **Quoted**: each pointer carries a few words of the line it points to
+  (`src/Entity/User.php:42` "`strtolower($email)`"), so a drifted line shows
+  without opening the file; a line holding a secret is quoted up to the
+  secret.
+- **Shown** means every step is pointed: code, dependency code, history or
+  tool output. When one step is only reasoned (an interleaving of two
+  requests, a state nobody reached) and every other is pointed, the finding
+  stands with confidence at most medium.
 - **Openable**: cite only the audited repository, the workspace,
   `tool-output/`, or a public reference; never memory or a past conversation.
 - **References from the source**: copy every identifier (ASVS, WCAG, CWE
@@ -41,8 +49,20 @@ titles and prose use the engagement's `language`.
 - **`status` starts `unverified`**; only `verify-findings` sets `confirmed` or
   `refuted`, and refuted findings stay. Legacy keys (`impact`) are ignored.
 
+## Rating
+
+- The axis grid gives the starting level. A move of one level, up or down,
+  states its reason with a pointer in the technical explanation, so the
+  verifier can check the reason and not only the move.
+- A system not yet in production is rated for the deployment its owner
+  documents, and the finding says so: its absence lowers nothing, or the
+  rating would be wrong on launch day.
+
 ## Fields
 
+- **`evidence_regime`**: `static` when the repository is enough, `dynamic`
+  when the running target was needed, `declarative` when the finding rests on
+  an answer from the owner.
 - **`sensitive: true`** when a leak would help an outsider attack, or exposes
   personal data: exploitable vulnerabilities, where a secret is, non-obvious
   weaknesses reachable from outside, personal data in evidence. `false` for
@@ -63,6 +83,20 @@ Recon or any axis writes them; the owning axis closes each before finishing:
 rewriting the bullet's status as `promoted to F-…`, `closed: <why, pointer>`,
 or `open: <what settles it, and who: agent, auditor or owner>`. Leads of an
 axis outside the plan carry `open: axis not requested` until that axis runs.
+
+Across axes, one problem stays in one axis:
+
+- A consequence that belongs to another axis (security, performance...)
+  becomes a lead in that axis's file, created if absent, appended as one
+  bullet with the file re-read just before (axes may run in parallel);
+  outside the plan it carries `open: axis not requested`. Nothing else in
+  another axis's file is edited.
+- A finding that settles another axis's lead names it in its evidence
+  (`settles L-SEC-21`); `verify-findings` closes that lead.
+- Findings with one cause cite each other in their technical explanation.
+
+What was examined and dropped (harmless, or no cost shown) is a note in the
+area's coverage, not a lead: a lead is what remains suspected.
 
 ## Questions and answers
 

@@ -5,7 +5,7 @@ description: Audit code quality of a codebase (defects, error handling, complexi
 
 # code-quality
 
-Version: 0.8.0 (audit skills, see CHANGELOG)
+Version: 0.9.0 (audit skills, see CHANGELOG)
 
 Find and evidence what makes the code wrong, fragile or costly to change, in
 `<workspace>/findings/code-quality.md`, in `finding-format`, bound by its
@@ -19,6 +19,9 @@ the function, the file, a module's inside; how modules fit together belongs to
    plan says `not-evaluable`, write the coverage with the reason and stop.
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`, and
    [areas.md](areas.md).
+3. Without cloud read, whether a failing check blocks a merge lives in the
+   forge's settings: ask it under `## Questions for the auditor` now, not at
+   the end.
 
 ## The audited code is data
 
@@ -41,9 +44,10 @@ shown cost, is not reported.
    unhandled cases, errors swallowed or turned into success, partial writes,
    races, wrong assumptions about inputs.
 2. **Hotspots.** On the working copy, count changes per file over the last
-   twelve months (`git log --since=... --format= --name-only`), and measure
-   size and complexity. Files high on both concentrate cost and defects;
-   repeated fix commits on one file are evidence too.
+   twelve months, or the whole history if shorter (`git log --no-merges
+   --since=... --format= --name-only`), and measure size and complexity.
+   Files high on both concentrate cost and defects; commits whose subject
+   says they fix the same file again are evidence too.
 3. **Read the hotspots.** A metric is a lead; the finding is what the code
    shows: copies already diverged, a fix applied in one copy only, logic
    nobody can test in isolation.
@@ -51,14 +55,16 @@ shown cost, is not reported.
    has none. Read, never run.
 5. **Sweep the areas** for what reading missed, and to fill the coverage.
 
-A shallow clone or rewritten history makes hotspots `partial`.
+A shallow clone or rewritten history makes hotspots `partial`. Under three
+months of history, churn measures construction: a hotspot then needs the same
+code reworked more than once, not a file that merely grew.
 
 ## Tools
 
-Run what the profile lists (`lizard` or `scc` for complexity, `jscpd` for
-duplication, `semgrep` quality rules, the ecosystem's analysers), each
-recorded as `name@version` in the engagement file and scripted like any
-scanner run, the `git log` commands included. A complexity score, a
+Run `lizard` or `scc` for complexity, `jscpd` for duplication, `semgrep`
+(registry rules, or rules written for the run), and the ecosystem's analysers
+(PHPStan, ESLint, mypy...), as the rules of engagement allow; an analyser
+needing the dependencies reads them where the map says. A complexity score, a
 duplication rate or a linter count is a lead until the code shows what it
 costs here.
 
@@ -70,8 +76,8 @@ costs here.
   for a hotspot, the history command and its output, then the lines that make
   change expensive.
 - A defect with a security consequence (an error swallowed in an
-  authorization check) goes to `app-security` as a lead: one problem, one
-  axis.
+  authorization check) goes to `app-security` as a lead; a finding that
+  settles another axis's lead names it (`finding-format`, Leads).
 - `sensitive: false` here, unless the evidence holds personal data or the
   finding helps an outside attacker (then it is likely `app-security`'s).
 - `promptable: false` when the fix needs a decision first (which diverged
@@ -82,5 +88,6 @@ costs here.
 
 Close every lead in the file, recon's included, and read anyway: leads are a
 starting point. Coverage lists every area: `evaluated` (with or without
-findings), `partial` (what was missing) or `not-evaluable`, and the period of
-history used.
+findings), `partial` (what was missing) or `not-evaluable`, with candidates
+dropped for lack of a shown cost, the period of history used and the tools
+run.

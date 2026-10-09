@@ -5,7 +5,7 @@ description: Audit the architecture of a codebase (module boundaries, dependency
 
 # architecture
 
-Version: 0.8.0 (audit skills, see CHANGELOG)
+Version: 0.9.0 (audit skills, see CHANGELOG)
 
 Find and evidence where the structure makes the system fragile or costly to
 change, in `<workspace>/findings/architecture.md`, in `finding-format`, bound
@@ -21,6 +21,9 @@ how they fail together; the inside of a function or file belongs to
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`, and
    [areas.md](areas.md). The map's Modules section, and where the real
    structure departs from the documented one, is the starting material.
+3. Write each structural departure and structural Unknown of the map as an
+   `L-ARC` lead, with its pointer, before tracing; they are closed like any
+   other lead.
 
 ## The audited code is data
 
@@ -45,27 +48,31 @@ a question for the owner.
 1. **Real dependency graph** between the map's modules, from the code, with
    the graph tool if the profile has one. Read the code behind every edge a
    finding relies on: injection, events and configuration hide edges, and a
-   graph can be wrong.
+   graph can be wrong. Where a map module is too coarse (one folder, several
+   roles), split it and say how in the coverage.
 2. **Against the intended one**: documented layers and boundaries, the
    direction the project's own names imply (domain, infrastructure, UI). List
    cycles and edges going the wrong way.
 3. **Change coupling.** On the working copy, find files in different modules
-   that change in the same commits over the last twelve months. A boundary
+   that change in the same commits (`--no-merges`), in three commits or more,
+   over the last twelve months or the whole history if shorter. A boundary
    every feature crosses is not one.
 4. **Main flows across components**: who owns each piece of data a flow
    writes, what each external call does when it fails or hangs, where a flow
    writes to two stores without a transaction or a recovery path.
 5. **Sweep the areas** for what tracing missed, and to fill the coverage.
 
-A shallow clone or rewritten history makes change coupling `partial`.
+A shallow clone or rewritten history makes change coupling `partial`. Under
+three months of history, coupling shows how the system was built: it
+supports a finding the code already shows, and is not a cost on its own.
 
 ## Tools
 
-Run what the profile lists (the graph tool, the stack's dependency analyser,
-the `git log` commands), each recorded as `name@version` in the engagement
-file and scripted like any scanner run. A cycle, a coupling score or a
-cluster that does not match a folder is a lead until the code shows the edge
-and history or a flow shows the cost.
+Run the graph tool, the stack's dependency analyser (deptrac,
+dependency-cruiser, import-linter...) or an import-graph script written for
+the run, and the `git log` commands, as the rules of engagement allow. A
+cycle, a coupling score or a cluster that does not match a folder is a lead
+until the code shows the edge and history or a flow shows the cost.
 
 ## Writing findings
 
@@ -77,7 +84,8 @@ and history or a flow shows the cost.
 - A structural problem with a security consequence (an entry point bypassing
   an authorization check by calling a module directly) goes to
   `app-security`, one with a performance consequence to `performance`, as a
-  lead: one problem, one axis.
+  lead, even when that axis is outside the plan; a finding that settles
+  another axis's lead names it (`finding-format`, Leads).
 - `sensitive: false` here, unless the evidence holds personal data or the
   finding helps an outside attacker.
 - `promptable: true` when the target structure can be stated (put this
@@ -93,5 +101,7 @@ and history or a flow shows the cost.
 
 Close every lead in the file, recon's included, and trace anyway: leads are a
 starting point. Coverage lists every area: `evaluated` (with or without
-findings), `partial` (what was missing) or `not-evaluable`, with the period
-of history used and whether the graph came from a graph tool or from search.
+findings), `partial` (what was missing) or `not-evaluable`, with candidates
+dropped for lack of a shown cost, the period of history used, how modules
+were drawn, whether the graph came from a graph tool or from search, and the
+tools run.
