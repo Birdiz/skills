@@ -34,6 +34,9 @@ has been checked and failed. Take every `unverified` finding, by severity.
    read in the dependency code `recon` provided.
 3. **Reachability**: who, through which entry point, under which conditions;
    an unmentioned check may leave it real but lower.
+   For `code-quality` and `architecture`: the code is on the flow the finding
+   names, and the claimed cost is shown (history, diverged copies, a failure
+   path); a preference is refuted.
 4. **Rating**: severity against the axis grid and the stated adjustment;
    confidence; `sensitive` and `promptable` against `finding-format`;
    references against their source.

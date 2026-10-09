@@ -15,8 +15,8 @@ Output: `~/.config/audit-skills/profile.md`
 
 ## Process
 
-1. **Detect**: shell; which of `semgrep`, `gitleaks`, `trivy`, `lighthouse`,
-   `pa11y`, `axe` and language-native audit commands (`composer`, `npm`,
+1. **Detect**: shell; which of `semgrep`, `gitleaks`, `trivy`, `lizard`,
+   `scc`, `jscpd`, `lighthouse`, `pa11y`, `axe` and language-native audit commands (`composer`, `npm`,
    `pip-audit`...) are on PATH; a reachable
    code-graph tool (e.g. a GitNexus MCP server); a browser automation tool;
    sub-agents.

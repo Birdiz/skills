@@ -40,6 +40,25 @@ the draft and revision loop behave as before. Fixes from the run:
   handled; behind a link only, a run requested a path it had composed. Every
   cited identifier, CWE included, comes from the framework text
 
+New axes, written in the same form (skill plus `areas.md` with the areas and
+the severity grid); neither has run on a real codebase yet:
+
+- Add `code-quality`: defects on the main flows, error handling, hotspots
+  from history and complexity, duplication, tests read but not run,
+  consistency with the project's own rules. A finding names a cost shown in
+  this codebase, never a preference
+- Add `architecture`: real dependency graph against the documented one,
+  change coupling from history, data ownership, consistency and failure
+  between components, third-party coupling, operability. Judged against the
+  system's forces, never against a style; fixes needing a decision are not
+  promptable
+- Rules of engagement: an analyser whose project configuration is code runs
+  only with a configuration the auditor wrote; `git log` commands are
+  scripted like scanner runs
+- `verify-findings`: for these two axes, refute a claimed cost that is a
+  preference
+- `audit-setup`: detect `lizard`, `scc` and `jscpd`
+
 ## 0.7.0 (unreleased)
 
 - Ship as a Claude Code plugin (`birdiz-skills`) through a marketplace in
