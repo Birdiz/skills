@@ -10,7 +10,7 @@ content is specific to auditing.
 ## Status
 
 Early. The foundation, a first axis (`app-security`), verification and
-reporting are written; all but reporting have run once on a real codebase.
+reporting are written, and have run on a real codebase.
 The other axes, remediation grouping and tickets are not written. See [Roadmap](#roadmap).
 
 ## Install
@@ -74,7 +74,8 @@ user-invoked one.
 - **Two setup levels.** Auditor profile and engagement have different
   lifetimes. See [ADR 0002](docs/adr/0002-two-level-setup.md).
 - **Invariants are not settings.** Evidence, read-only access, no exploit
-  detail in prompts, declared coverage. See
+  detail in prompts, declared coverage, recorded authorization for active
+  tests. See
   [ADR 0003](docs/adr/0003-invariants-are-not-configurable.md).
 - **One set of findings, several reports.** Peer report, plain-language
   summary and remediation prompts are projections of the same findings.
@@ -88,7 +89,6 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 
 ## Roadmap
 
-- Run `audit-report` on the first engagement
 - Axes: `code-quality`, `architecture`, `infra-security`, `privacy`,
   `accessibility`, `seo`, `performance`
 - Remediations: group findings by fix, then render each one as a ticket, a

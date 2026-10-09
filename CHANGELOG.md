@@ -1,9 +1,50 @@
 # Changelog
 
+## 0.8.0 (unreleased)
+
+Rewritten for brevity, following mattpocock/skills `writing-for-agents`. No
+behaviour change intended; file formats unchanged. 7 678 words to about
+4 950, sibling files included; the rest is mostly file templates, kept as
+they are.
+
+- History and justifications moved out of the skills (this file and the ADRs
+  keep them); each rule stated once, in the affirmative
+- Reference moved to sibling files reached by a link:
+  `audit-kickoff/engagement-template.md` (template, workspace, capability
+  matrix), `finding-format/schema.md` (finding layout, IDs, lead bullet,
+  severity scale), `app-security/areas.md` (areas, severity grid),
+  `audit-report/deliverables.md` (peer report, summary, prompts)
+- `finding-format/rules-of-engagement.md`: the single home of what an audit
+  may touch and run (read-only repository, no execution, passive and active
+  regimes, secrets, scripted tool runs, excluded artifacts), formerly spread
+  across `recon`, `app-security` and `verify-findings`
+- `audit-setup`, `audit-kickoff`: interviews in rounds over the frontier, at
+  most three questions each; the question table becomes a field-to-reader
+  line in the engagement template
+- `finding-format` description names the rules of engagement, so steps that
+  need them reach the skill
+- Leading words: rules of engagement, projection, refute, blocker, draft
+
+Regression on the first engagement (same post-recon input, `app-security`
+run with 0.8.0 and with 0.7.0 as a control): both versions find the same
+seven weaknesses and miss the same ones; verification, an auditor answer,
+the draft and revision loop behave as before. Fixes from the run:
+
+- The secret rule is stated in the rules of engagement for every workspace
+  file, default and placeholder values included, and recalled where
+  findings are written; with the rule behind a link only, a run quoted a
+  secret
+- `finding-format`: the framework text is fetched into `tool-output/` before
+  a reference is cited
+- `app-security`: the passive regime is recalled where the running target is
+  handled; behind a link only, a run requested a path it had composed. Every
+  cited identifier, CWE included, comes from the framework text
+
 ## 0.7.0 (unreleased)
 
 - Ship as a Claude Code plugin (`birdiz-skills`) through a marketplace in
   this repository
+
 From the second report run: the draft mechanism worked (ten discrepancies
 down to four, accepted findings in their own section, skill versions
 checked), but kept the report in draft over cosmetic issues and over a rule
