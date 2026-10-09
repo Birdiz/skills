@@ -27,9 +27,9 @@ titles and prose use the engagement's `language`.
 - **Openable**: cite only the audited repository, the workspace,
   `tool-output/`, or a public reference; never memory or a past conversation.
 - **References from the source**: copy the identifier (ASVS, WCAG, CWE) from
-  the framework text, citing the one or two whose requirement states what is
-  missing; keep the copy in `tool-output/` or give a versioned URL, and name
-  the version.
+  the framework text, kept in `tool-output/` (fetched when absent) or behind a
+  versioned URL, version named; cite the one or two whose requirement states
+  what is missing.
 - **A missing edge or an empty search proves nothing**: injection,
   subscribers, config routing, reflection and templates hide calls; dead code
   or a missing check needs the code read.
