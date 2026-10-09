@@ -24,10 +24,9 @@ lies.
 | Defect shown: data loss or corruption, a side effect silently not done | critical | high | low |
 | Defect shown: wrong result or crash, no data lost | high | medium | low |
 | Condition that makes a defect likely, not shown to fire | medium | low | info |
-| Change shown slower or riskier (hotspot, diverged copies, no test) | medium | low | info |
-| Hygiene, no shown consequence | low | info | info |
+| Change shown slower or riskier (hotspot, copies whose behaviour already differs, no test) | medium | low | info |
+| Misleads a reader (stale comment, wrong name), no consequence for users | low | low | info |
 
-The grid assumes a precondition met in ordinary use. A rare one (a narrow
-window, an unusual sequence of administrative actions) lowers one level; a change the problem blocks, planned by the owner (in an
-answer or in the repository's own plans), raises one. Any
-move states its reason with a pointer.
+For the last row, the column is where the code is. Copies that are merely
+alike, with the same behaviour, are not diverged. Moves of one level:
+`finding-format`, Rating.

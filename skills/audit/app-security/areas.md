@@ -29,4 +29,4 @@ Who can reach it, and what they get:
 | Limited disclosure (account existence, metadata), integrity of own data | medium | low | low |
 | Hardening gap, no direct consequence | low | low | info |
 
-Move one level up or down for a reason, stated in the finding.
+Moves of one level: `finding-format`, Rating.

@@ -15,7 +15,8 @@
 
 ## Severity grid
 
-What the structure causes, and how much of the system it reaches.
+What the structure causes, and how much of the system it reaches: "most
+main flows" is more than half of the map's flows.
 
 | | Most main flows | One module or flow | Local |
 |---|---|---|---|
@@ -27,7 +28,5 @@ What the structure causes, and how much of the system it reaches.
 
 `critical` only when the failure is shown to happen now, and the finding says
 so. A failure nobody would notice (a stopped worker, a queue nobody watches)
-is an outage of what it carries. One level up when the owner states that a
-change the structure blocks is planned, in an answer or in the repository's
-own plans (roadmap, issue named in the docs); up or down for any other
-reason. Any move states its reason with a pointer.
+is an outage of what it carries. Moves of one level: `finding-format`,
+Rating.

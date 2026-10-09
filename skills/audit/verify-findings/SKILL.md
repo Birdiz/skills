@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.9.0 (audit skills, see CHANGELOG)
+Version: 0.10.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -31,7 +31,9 @@ has been checked and failed. Take every `unverified` finding, by severity.
    pointer that does not match settles it: refute or correct.
 2. **Find the control elsewhere**: framework defaults, global listeners,
    middleware or config, an upstream check, infrastructure in the repository,
-   read in the dependency code the map names (its lockfile rechecked).
+   read in the dependency code the map names (its install rechecked) rather
+   than recalled; and the owner's own documentation of known limits and
+   planned work, which the finding must cite.
 3. **Reachability**: who, through which entry point, under which conditions;
    an unmentioned check may leave it real but lower.
    For `code-quality` and `architecture`: the code is on the flow the finding
@@ -67,7 +69,9 @@ Severity kept at medium.
 
 **Correct in place** whatever was proven wrong (pointer, claim, scenario,
 remediation, reference), quoting the replaced text in the note; reports read
-these files. The rest stays as written.
+these files. A corrected fact repeated in the coverage is corrected there
+too, and a question the repository already answers is annotated with the
+pointer. The rest stays as written.
 
 - Refuted: what makes it wrong, with pointers.
 - Rating changed: old value, new value, reason; the YAML and every sentence
@@ -92,9 +96,10 @@ reason, and a lead closed although its consequence belongs to another axis
 moves there, as `finding-format` says. Anything new becomes a lead in the
 owning axis file: a finding written by the verifier would have no verifier.
 
-Once every finding is decided, close the leads that confirmed findings say
-they settle (`settles L-…`): `closed: settled by F-…`, in the lead's own
-file. A refuted finding settles nothing. The verifier is the one step that
+Once every finding is decided, rewrite the leads that confirmed findings say
+they settle, in the lead's own file: `closed: settled by F-…`, or for a part
+(`settles L-… (part: …)`) `open: <part> settled by F-…; remains <what>,
+<who>`. A refuted finding settles nothing. The verifier is the one step that
 reads every file in turn, so these cross-axis closures fall to it.
 
 ## End report

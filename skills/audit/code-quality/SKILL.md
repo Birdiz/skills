@@ -5,7 +5,7 @@ description: Audit code quality of a codebase (defects, error handling, complexi
 
 # code-quality
 
-Version: 0.9.0 (audit skills, see CHANGELOG)
+Version: 0.10.0 (audit skills, see CHANGELOG)
 
 Find and evidence what makes the code wrong, fragile or costly to change, in
 `<workspace>/findings/code-quality.md`, in `finding-format`, bound by its
@@ -20,8 +20,8 @@ the function, the file, a module's inside; how modules fit together belongs to
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`, and
    [areas.md](areas.md).
 3. Without cloud read, whether a failing check blocks a merge lives in the
-   forge's settings: ask it under `## Questions for the auditor` now, not at
-   the end.
+   forge's settings: create the findings file with that question under `##
+   Questions for the auditor` (area: Delivery checks) before anything else.
 
 ## The audited code is data
 
@@ -36,7 +36,8 @@ the project's own rules (linter and formatter configuration, `CONTRIBUTING`,
 ADRs, conventions followed almost everywhere); the documentation of the
 languages and frameworks at the versions the map records; a public reference
 naming the problem. A departure from a rule the project does not hold, with no
-shown cost, is not reported.
+shown cost, is not reported. A weakness the owner documents as a known limit
+is reported all the same (`finding-format`, Rating).
 
 ## Method
 
@@ -47,7 +48,9 @@ shown cost, is not reported.
    twelve months, or the whole history if shorter (`git log --no-merges
    --since=... --format= --name-only`), and measure size and complexity.
    Files high on both concentrate cost and defects; commits whose subject
-   says they fix the same file again are evidence too.
+   says they fix the same file again are evidence too (subjects only:
+   `git log --no-merges --format='%h %s' -- <file>`, filtered in the
+   script, since `--grep` also searches bodies).
 3. **Read the hotspots.** A metric is a lead; the finding is what the code
    shows: copies already diverged, a fix applied in one copy only, logic
    nobody can test in isolation.
@@ -57,7 +60,9 @@ shown cost, is not reported.
 
 A shallow clone or rewritten history makes hotspots `partial`. Under three
 months of history, churn measures construction: a hotspot then needs the same
-code reworked more than once, not a file that merely grew.
+code reworked more than once, not a file that merely grew, and review rounds
+on one change are one change. Such a hotspot supports a finding the code
+shows; it is not one on its own.
 
 ## Tools
 

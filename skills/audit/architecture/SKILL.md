@@ -5,7 +5,7 @@ description: Audit the architecture of a codebase (module boundaries, dependency
 
 # architecture
 
-Version: 0.9.0 (audit skills, see CHANGELOG)
+Version: 0.10.0 (audit skills, see CHANGELOG)
 
 Find and evidence where the structure makes the system fragile or costly to
 change, in `<workspace>/findings/architecture.md`, in `finding-format`, bound
@@ -21,9 +21,11 @@ how they fail together; the inside of a function or file belongs to
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`, and
    [areas.md](areas.md). The map's Modules section, and where the real
    structure departs from the documented one, is the starting material.
-3. Write each structural departure and structural Unknown of the map as an
-   `L-ARC` lead, with its pointer, before tracing; they are closed like any
-   other lead.
+3. Each structural departure and structural Unknown of the map (one about
+   module boundaries, data ownership, dependencies between components or
+   deployment) becomes an `L-ARC` lead with its pointer, closed before
+   finishing. One that another axis already reports as a finding is closed
+   with that finding's ID: one problem, one axis.
 
 ## The audited code is data
 
@@ -41,7 +43,10 @@ documented rule the code breaks.
 
 The owner's documentation (ADRs, README, diagrams, `CONTEXT.md`) is the first
 reference. A gap between it and the code is evidence; which side is right is
-a question for the owner.
+a question for the owner. A weakness the owner lists as a known limit or
+planned work is still reported (`finding-format`, Rating). A layout the owner
+chose on purpose (layers crossed by every feature, by design) is a force, not
+a cost.
 
 ## Method
 
@@ -81,11 +86,12 @@ until the code shows the edge and history or a flow shows the cost.
 - Evidence is the edge or the path: file and line of each import or call
   relied on, the history command and its output, the flow and the step where
   data or failure crosses a boundary.
-- A structural problem with a security consequence (an entry point bypassing
-  an authorization check by calling a module directly) goes to
-  `app-security`, one with a performance consequence to `performance`, as a
-  lead, even when that axis is outside the plan; a finding that settles
-  another axis's lead names it (`finding-format`, Leads).
+- A consequence for another axis goes there as a lead, even when that axis
+  is outside the plan or running alongside: security (an entry point
+  bypassing an authorization check by calling a module directly) to
+  `app-security`, performance to `performance`, a defect inside one module to
+  `code-quality`. A finding that settles another axis's lead names it
+  (`finding-format`, Leads).
 - `sensitive: false` here, unless the evidence holds personal data or the
   finding helps an outside attacker.
 - `promptable: true` when the target structure can be stated (put this

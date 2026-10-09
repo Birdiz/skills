@@ -5,7 +5,7 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.9.0 (audit skills, see CHANGELOG)
+Version: 0.10.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
@@ -15,8 +15,9 @@ projections of it. Layout, IDs, lead bullet, severity scale:
 Findings live in `<workspace>/findings/<axis>.md`, one file per axis
 (including axes outside the plan that received leads), sections `## Coverage`,
 `## Findings`, `## Leads`, then `## Questions for the auditor` if needed.
-Headings, bold labels, YAML keys and values stay in English for the parsers;
-titles and prose use the engagement's `language`.
+Headings, bold labels, YAML keys and values, area names and status words
+(`evaluated`, `open:`, `closed:`) stay in English for the parsers; titles and
+prose use the engagement's `language`.
 
 ## Evidence
 
@@ -51,9 +52,15 @@ titles and prose use the engagement's `language`.
 
 ## Rating
 
-- The axis grid gives the starting level. A move of one level, up or down,
-  states its reason with a pointer in the technical explanation, so the
-  verifier can check the reason and not only the move.
+- The axis grid gives the starting level, for a precondition met in
+  ordinary use. A rare one (a narrow window, an unusual sequence of
+  administrative actions) lowers one level; a change the problem blocks,
+  planned by the owner (an answer, or the repository's own plans), raises
+  one. Every move states its reason with a pointer in the technical
+  explanation, so the verifier can check the reason and not only the move.
+- A weakness the owner already documents as a known limit or planned work is
+  still a finding: it exists at the audited commit. It cites that document
+  and keeps its level; only an owner's answer makes it `accepted`.
 - A system not yet in production is rated for the deployment its owner
   documents, and the finding says so: its absence lowers nothing, or the
   rating would be wrong on launch day.
@@ -74,6 +81,8 @@ titles and prose use the engagement's `language`.
 - **`resolution`**, independent of `status`: `open` (default), `accepted`
   (owner keeps it; `**Auditor answer.**` with date and decision), `fixed`
   (verified at a later commit).
+- **`references`** may be empty when no framework names the problem; a
+  reference is never stretched to fill it.
 - **Quick win**, derived and never stored: `confirmed`, `open`, medium or
   above, effort S.
 
@@ -92,7 +101,8 @@ Across axes, one problem stays in one axis:
   outside the plan it carries `open: axis not requested`. Nothing else in
   another axis's file is edited.
 - A finding that settles another axis's lead names it in its evidence
-  (`settles L-SEC-21`); `verify-findings` closes that lead.
+  (`settles L-SEC-21`, or `settles L-SEC-06 (part: <which>)` for part of
+  it); `verify-findings` rewrites that lead.
 - Findings with one cause cite each other in their technical explanation.
 
 What was examined and dropped (harmless, or no cost shown) is a note in the
@@ -101,12 +111,14 @@ area's coverage, not a lead: a lead is what remains suspected.
 ## Questions and answers
 
 One question per line, for what only the auditor or owner can settle, with the
-lead or finding concerned. An answer is recorded under the question
-(`**Answer (YYYY-MM-DD):**`) and in the finding as `**Auditor answer.**` after
-`**Verification.**`. A change it brings (rating, remediation, `promptable`,
-`resolution: accepted`) is applied in place with its reason, as
-`verify-findings` does. `status` stays with verification; an unshown claim
-becomes a lead.
+lead, finding or coverage area concerned. A question needed before the work
+(one the skill asks up front) goes in the file at once, created for it.
+
+An answer is recorded under the question (`**Answer (YYYY-MM-DD):**`) and in
+the finding as `**Auditor answer.**` after `**Verification.**`. A change it
+brings (rating, remediation, `promptable`, `resolution: accepted`) is applied
+in place with its reason, as `verify-findings` does. `status` stays with
+verification; an unshown claim becomes a lead.
 
 ## Coverage
 

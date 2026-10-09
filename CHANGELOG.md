@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.10.0 (unreleased)
+
+From the 0.9.0 rerun of `code-quality` and `architecture` (fresh copy of the
+gn-platform workspace, then `verify-findings`): 7 findings, 7 confirmed, no
+rating changed, text corrected in 6. The 0.9.0 rules held: `L-SEC-21` closed
+as settled, the performance lead moved, the engagement file untouched, the
+same problems found. New: a shell hook truncated `git log` and `grep` output
+without saying so; an identical lockfile sat over an incomplete install; the
+two grids rated the same race differently; the two axes diverged on a
+weakness the owner documents as planned work.
+
+- Rules of engagement: counts and lists cited as evidence come from a script
+  run with `bash`; an install is used only if its record of installed
+  packages lists every locked one; a map without `dependencies:` leaves the
+  search to the step, recorded; tool runs go in `tool-output/<step>/`; a
+  pinned base image may carry a tool without its own image; another clone's
+  graph index at the same commit may be queried, and said
+- `finding-format`: the rare-precondition and planned-change moves apply to
+  every grid; a weakness the owner documents as a known limit or planned
+  work is still a finding, citing the document, level kept; partial
+  settlement (`settles L-… (part: …)`); `references` may be empty; questions
+  may concern a coverage area and go in the file at once when asked up
+  front; area names and status words stay in English
+- `verify-findings`: looks for the owner's known limits and planned work;
+  corrects a fixed fact where the coverage repeats it, annotates questions
+  the repository answers; rewrites partially settled leads
+- `code-quality`: the CI question goes in a new findings file first; fix
+  commits by subject with the exact command; under three months, review
+  rounds are one change and a hotspot only supports a finding; grid row for
+  what misleads a reader replaces the hygiene row; only copies whose
+  behaviour differs are diverged
+- `architecture`: "structural Unknown" defined, leads closed before
+  finishing, those already another axis's finding closed with its ID; leads
+  to any other axis, in-plan ones included; a deliberate layout is a force;
+  "most main flows" is more than half
+- `recon`: an existing install is checked for completeness, not only its
+  lockfile
+
 ## 0.9.0 (unreleased)
 
 From the first run of `code-quality` and `architecture` (gn-platform, same

@@ -10,17 +10,23 @@ Binding on every audit step: recon, axes, verification.
   A target the auditor runs or provides (a local stack, a staging URL) may be
   observed and tested.
 - A tool an axis skill names runs when the profile lists it, or, when the
-  profile lists `docker`, from an image pinned by digest. Read-only commands
-  on the working copy (`git log`, a script reading files, graph tool queries)
-  run on the host.
+  profile lists `docker`, from an image pinned by digest (a pinned base image
+  with the tool installed at a pinned version, when the tool has no image).
+  Read-only commands on the working copy (`git log`, a script reading files,
+  graph tool queries) run on the host; a graph index built from another clone
+  at the same commit may be queried, and the output says so.
 - An analyser whose project configuration is code (`eslint.config.js`, a
   PHPStan `bootstrap`, a `conftest.py`, a build plugin) runs that code: run it
   with a configuration you wrote that loads nothing from the project, or ask
   the auditor to run the project's own and paste the output.
 - Dependency code is read where the map's `dependencies:` line says, inside
-  the workspace or not; an existing install is used only while its lockfile
-  stays byte-identical to the audited one (`cmp`), checked by each step that
-  reads it.
+  the workspace or not. An existing install is used only while its lockfile
+  stays byte-identical to the audited one (`cmp`) and its own record of what
+  is installed lists every locked package (`vendor/composer/installed.json`,
+  `node_modules/.package-lock.json`...): an identical lockfile can sit over an
+  incomplete install. Each step that reads it checks both. A map without that
+  line (an older map) leaves the search to the step, by the same rules, and
+  the step records what it used.
 - **Passive** (default): what a visitor's browser does. Request pages, what
   they link to, and URLs the auditor provided; read headers, cookies, TLS. No
   login attempts, crafted payloads or scanning; every URL and identifier comes
@@ -34,10 +40,14 @@ Binding on every audit step: recon, axes, verification.
   placeholder values included, is written `<redacted>`, never quoted in full
   or in part. A secret is never used or tested for validity.
 - Each tool run (scanners, analysers, audit commands, the `git log` commands
-  and scripts an axis relies on) is scripted in `tool-output/run-<name>.sh`,
+  and scripts an axis relies on) is scripted in
+  `tool-output/<step>/run-<name>.sh` (`<step>`: `recon`, the axis, `verify`),
   raw output kept beside it, auditor artifacts (`.gitnexus/`, caches, the
   workspace) excluded; in a container, the working copy is mounted read-only.
-  Rules or scripts written for the run are kept in `tool-output/` too.
+  Rules or scripts written for the run are kept there too.
+- A count or a list cited as evidence comes from such a script, run with
+  `bash`, never from an interactive shell: a shell hook can filter or
+  truncate output without saying so.
 - Each step lists the tools it ran, `name@version`, in its own output (the
   map's header, an axis's coverage, a verification note); only
   `audit-kickoff`, at the end, copies them into the engagement file. Axes may
