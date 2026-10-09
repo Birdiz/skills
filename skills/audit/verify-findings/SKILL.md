@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.8.0 (audit skills, see CHANGELOG)
+Version: 0.9.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -27,19 +27,21 @@ Refute: ask what would make the finding wrong; confirm only once every answer
 has been checked and failed. Take every `unverified` finding, by severity.
 
 1. **Reproduce.** Open each location at the audited commit; rerun the evidence
-   commands the rules allow. A pointer that does not match settles it: refute
-   or correct.
+   commands the rules allow; a quote shows a drifted line at a glance. A
+   pointer that does not match settles it: refute or correct.
 2. **Find the control elsewhere**: framework defaults, global listeners,
    middleware or config, an upstream check, infrastructure in the repository,
-   read in the dependency code `recon` provided.
+   read in the dependency code the map names (its lockfile rechecked).
 3. **Reachability**: who, through which entry point, under which conditions;
    an unmentioned check may leave it real but lower.
    For `code-quality` and `architecture`: the code is on the flow the finding
    names, and the claimed cost is shown (history, diverged copies, a failure
-   path); a preference is refuted.
-4. **Rating**: severity against the axis grid and the stated adjustment;
-   confidence; `sensitive` and `promptable` against `finding-format`;
-   references against their source.
+   path); a preference is refuted. A cost the audit itself met counts when
+   any newcomer to the code would meet it too.
+4. **Rating**: severity against the axis grid; a stated adjustment holds
+   only if its reason holds at its pointer (a sound move on a wrong reason is
+   kept, the reason rewritten); confidence; `sensitive` and `promptable`
+   against `finding-format`; references against their source.
 5. **Decide**:
    - `confirmed`: evidence reproduced, no control, reachability as stated;
      a wrong rating is corrected;
@@ -86,10 +88,17 @@ and when.
 
 Open leads are left to their axis, uninvestigated. Spot-check the `closed`
 ones with the weakest reasons; a wrong closure goes back to `open:` with the
-reason. Anything new becomes a lead in the owning axis file: a finding written
-by the verifier would have no verifier.
+reason, and a lead closed although its consequence belongs to another axis
+moves there, as `finding-format` says. Anything new becomes a lead in the
+owning axis file: a finding written by the verifier would have no verifier.
+
+Once every finding is decided, close the leads that confirmed findings say
+they settle (`settles L-…`): `closed: settled by F-…`, in the lead's own
+file. A refuted finding settles nothing. The verifier is the one step that
+reads every file in turn, so these cross-axis closures fall to it.
 
 ## End report
 
 Per axis: confirmed, refuted, unverified, ratings changed, text corrected,
-leads reopened; then the questions added. Continue with `audit-report`.
+leads reopened or closed as settled; then the questions added. Continue with
+`audit-report`.

@@ -44,7 +44,7 @@ prompt_executor: <vendor-brief|executable|both|none>
 language: <fr|en|...>
 
 ## Tooling
-tools: [<name@version>]
+tools: [<name@version>]   # copied at the end from each step's output
 mcp_servers: [<name@version>]
 mcp_servers_excluded: [<name>]
 

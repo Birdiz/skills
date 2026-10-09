@@ -5,7 +5,7 @@ description: Map an unfamiliar codebase before auditing it (stacks, entry points
 
 # recon
 
-Version: 0.8.0 (audit skills, see CHANGELOG)
+Version: 0.9.0 (audit skills, see CHANGELOG)
 
 Build the **codebase map** once, so every axis starts from the same
 understanding. Input: `00-engagement.md` (missing: stop, ask for
@@ -42,6 +42,7 @@ either way.
 commit: <sha>
 method: <graph tool name@version | search>
 dependencies: <path of identical install | installed without scripts | absent>
+tools: [<name@version>]
 generated: <YYYY-MM-DD>
 
 ## Stacks

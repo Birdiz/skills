@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-kickoff
 
-Version: 0.8.0 (audit skills, see CHANGELOG)
+Version: 0.9.0 (audit skills, see CHANGELOG)
 
 Write the **engagement file**, everything true for this audit only, then run
 the audit. Template, workspace and capability matrix:
@@ -66,6 +66,7 @@ one line on what it costs; the auditor can rerun the step once it is back.
 Steps communicate through files, so a new session can resume from the
 workspace.
 
-End with what was produced, what was skipped and why, findings per axis and
-severity, and every entry under `## Questions for the auditor` across the
-findings files.
+End by copying into `tools` the `name@version` each step listed in its
+output, then report what was produced, what was skipped and why, findings
+per axis and severity, and every entry under `## Questions for the auditor`
+across the findings files.
