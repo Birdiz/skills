@@ -31,6 +31,15 @@ Binding on every audit step: recon, axes, verification.
   they link to, and URLs the auditor provided; read headers, cookies, TLS. No
   login attempts, crafted payloads or scanning; every URL and identifier comes
   from a link or the auditor.
+- In either regime, signing in with an account the auditor provides for the
+  audit is a visitor's ordinary use, not a login attempt; its credentials are
+  handled like a secret. A form is submitted only to show its validation,
+  with input it rejects; never one that creates, changes or sends something
+  (passive), or only on the auditor's own account and data (active).
+- Following links across the in-scope hosts (a crawl) is sequential, at most
+  one request per second, with a page cap recorded in the output.
+- No load or stress test (traffic meant to strain the target), in any regime:
+  it degrades the target. A question that needs one is a lead for the owner.
 - **Active**: with `testing: active`, on the listed `hosts`, inside `in_scope`.
   Stop at the first proof; read or keep no data that is not the auditor's. A
   step that could leave scope, touch such data, or change or degrade the target

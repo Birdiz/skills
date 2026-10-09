@@ -9,9 +9,9 @@
     {
       "name": "birdiz-skills",
       "source": "./",
-      "description": "Agent skills for technical audits: recon, app security, code quality, architecture, independent verification, reports.",
+      "description": "Agent skills for technical audits: recon, app security, code quality, architecture, accessibility, SEO, performance, independent verification, reports.",
       "category": "engineering",
-      "keywords": ["audit", "security", "code-quality", "architecture", "skills"]
+      "keywords": ["audit", "security", "code-quality", "architecture", "accessibility", "seo", "performance", "skills"]
     }
   ]
 }

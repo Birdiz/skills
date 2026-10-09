@@ -11,8 +11,10 @@ content is specific to auditing.
 
 Early. The foundation, a first axis (`app-security`), verification and
 reporting are written, and have run on a real codebase. Two more static axes
-(`code-quality`, `architecture`) have run once, through verification.
-The other axes, remediation grouping and tickets are not written. See [Roadmap](#roadmap).
+(`code-quality`, `architecture`) have run twice, through verification. Three
+web axes (`accessibility`, `seo`, `performance`) are written and have not run
+yet. `infra-security`, `privacy`, remediation grouping and tickets are not
+written. See [Roadmap](#roadmap).
 
 ## Install
 
@@ -38,7 +40,7 @@ gives you every skill twice.
 2. `/audit-kickoff`, once per audit: scope, access, authorization, audience.
 3. `recon`: one shared map of the codebase.
 4. Axes write findings in a common format (`app-security`, `code-quality`,
-   `architecture` so far).
+   `architecture`, `accessibility`, `seo`, `performance` so far).
 5. `verify-findings`, in a separate context: confirmed, refuted, or left
    unverified with a reason.
 6. `audit-report`: the deliverables the engagement's audience requires.
@@ -64,6 +66,12 @@ gives you every skill twice.
   handling, hotspots, duplication and tests, judged by their cost.
 - [architecture](skills/audit/architecture/SKILL.md): boundaries,
   dependency direction, data ownership and failure between components.
+- [accessibility](skills/audit/accessibility/SKILL.md): keyboard, names and
+  roles, forms, contrast, reflow, against WCAG or RGAA, traced to templates.
+- [seo](skills/audit/seo/SKILL.md): indexability, crawl, duplicates, titles,
+  structured data, rated for the documented production configuration.
+- [performance](skills/audit/performance/SKILL.md): server work per request,
+  queries, remote calls, front-end loading, cost growing with data.
 - [verify-findings](skills/audit/verify-findings/SKILL.md): try to refute
   every finding from a context that did not write it.
 - [audit-report](skills/audit/audit-report/SKILL.md): peer report,
@@ -95,7 +103,8 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 
 ## Roadmap
 
-- Axes: `infra-security`, `privacy`, `accessibility`, `seo`, `performance`
+- Run `accessibility`, `seo` and `performance` on a real target
+- Axes: `infra-security`, `privacy`
 - Remediations: group findings by fix, then render each one as a ticket, a
   vendor brief or an executable prompt
 - Tickets: at kickoff, detect whether the target has an issue tracker and ask

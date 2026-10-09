@@ -5,7 +5,7 @@ description: Map an unfamiliar codebase before auditing it (stacks, entry points
 
 # recon
 
-Version: 0.10.0 (audit skills, see CHANGELOG)
+Version: 0.11.0 (audit skills, see CHANGELOG)
 
 Build the **codebase map** once, so every axis starts from the same
 understanding. Input: `00-engagement.md` (missing: stop, ask for

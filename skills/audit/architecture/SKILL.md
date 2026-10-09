@@ -5,7 +5,7 @@ description: Audit the architecture of a codebase (module boundaries, dependency
 
 # architecture
 
-Version: 0.10.0 (audit skills, see CHANGELOG)
+Version: 0.11.0 (audit skills, see CHANGELOG)
 
 Find and evidence where the structure makes the system fragile or costly to
 change, in `<workspace>/findings/architecture.md`, in `finding-format`, bound

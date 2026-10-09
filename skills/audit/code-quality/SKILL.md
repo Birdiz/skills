@@ -5,7 +5,7 @@ description: Audit code quality of a codebase (defects, error handling, complexi
 
 # code-quality
 
-Version: 0.10.0 (audit skills, see CHANGELOG)
+Version: 0.11.0 (audit skills, see CHANGELOG)
 
 Find and evidence what makes the code wrong, fragile or costly to change, in
 `<workspace>/findings/code-quality.md`, in `finding-format`, bound by its
