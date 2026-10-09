@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.0 (unreleased)
+
+- Add `code-quality`: defects on the main flows, error handling, hotspots
+  from history and complexity, duplication, tests read but not run,
+  consistency with the project's own rules. A finding names a cost shown in
+  this codebase, never a preference. Analysers whose configuration is code
+  run only with a configuration the auditor wrote
+- Add `architecture`: real dependency graph against the documented one,
+  change coupling from history, data ownership, consistency and failure
+  between components, third-party coupling, operability. Judged against the
+  system's forces, never against a style; fixes needing a decision are not
+  promptable
+- `verify-findings`: for these two axes, refute a claimed cost that is a
+  preference
+- `audit-setup`: detect `lizard`, `scc` and `jscpd`
+
 ## 0.7.0 (unreleased)
 
 - Ship as a Claude Code plugin (`birdiz-skills`) through a marketplace in

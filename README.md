@@ -9,9 +9,10 @@ content is specific to auditing.
 
 ## Status
 
-Early. The foundation, a first axis (`app-security`), verification and
-reporting are written; all but reporting have run once on a real codebase.
-The other axes, remediation grouping and tickets are not written. See [Roadmap](#roadmap).
+Early. The foundation, three static axes (`app-security`, `code-quality`,
+`architecture`), verification and reporting are written; the foundation,
+`app-security`, verification and reporting have run on a real codebase. The
+other axes, remediation grouping and tickets are not written. See [Roadmap](#roadmap).
 
 ## Install
 
@@ -36,7 +37,8 @@ gives you every skill twice.
 1. `/audit-setup`, once per machine: the auditor profile.
 2. `/audit-kickoff`, once per audit: scope, access, authorization, audience.
 3. `recon`: one shared map of the codebase.
-4. Axes write findings in a common format (`app-security` so far).
+4. Axes write findings in a common format (`app-security`, `code-quality`,
+   `architecture` so far).
 5. `verify-findings`, in a separate context: confirmed, refuted, or left
    unverified with a reason.
 6. `audit-report`: the deliverables the engagement's audience requires.
@@ -58,6 +60,10 @@ gives you every skill twice.
   auditing it.
 - [app-security](skills/audit/app-security/SKILL.md): the application
   security axis.
+- [code-quality](skills/audit/code-quality/SKILL.md): defects, error
+  handling, hotspots, duplication and tests, judged by their cost.
+- [architecture](skills/audit/architecture/SKILL.md): boundaries,
+  dependency direction, data ownership and failure between components.
 - [verify-findings](skills/audit/verify-findings/SKILL.md): try to refute
   every finding from a context that did not write it.
 - [audit-report](skills/audit/audit-report/SKILL.md): peer report,
@@ -88,9 +94,8 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 
 ## Roadmap
 
-- Run `audit-report` on the first engagement
-- Axes: `code-quality`, `architecture`, `infra-security`, `privacy`,
-  `accessibility`, `seo`, `performance`
+- Run `code-quality` and `architecture` on a real codebase
+- Axes: `infra-security`, `privacy`, `accessibility`, `seo`, `performance`
 - Remediations: group findings by fix, then render each one as a ticket, a
   vendor brief or an executable prompt
 - Tickets: at kickoff, detect whether the target has an issue tracker and ask

@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-setup
 
-Version: 0.7.0 (audit skills, see CHANGELOG)
+Version: 0.8.0 (audit skills, see CHANGELOG)
 
 Create or update the **auditor profile**: everything that is stable across
 engagements. Per-engagement facts (scope, access, client) do NOT belong here;
@@ -24,8 +24,8 @@ questions on every engagement, so they stay separate.
 
 1. **Detect before asking.** Probe the environment and record what is found:
    - Shell available? Which of these CLIs are on PATH: `semgrep`, `gitleaks`,
-     `trivy`, `lighthouse`, `pa11y`, `axe`, language-native audit commands
-     (`composer`, `npm`, `pip-audit`).
+     `trivy`, `lizard`, `scc`, `jscpd`, `lighthouse`, `pa11y`, `axe`,
+     language-native audit commands (`composer`, `npm`, `pip-audit`).
    - Any code-graph tool reachable (e.g. a GitNexus MCP server)?
    - Any browser automation tool reachable?
    - Can this agent spawn sub-agents?

@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.7.0 (audit skills, see CHANGELOG)
+Version: 0.8.0 (audit skills, see CHANGELOG)
 
 Turn the findings files into the deliverables the engagement asks for. A
 report is a projection of the findings: it adds no analysis, and every claim

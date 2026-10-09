@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.7.0 (audit skills, see CHANGELOG)
+Version: 0.8.0 (audit skills, see CHANGELOG)
 
 The only step allowed to set a finding's `status` to `confirmed` or
 `refuted`. Everything downstream (quick wins, reports, tickets) stands on its
@@ -49,7 +49,10 @@ Work through every finding with `status: unverified`, in severity order.
    available rather than recalling framework behaviour.
 3. **Check reachability and preconditions.** Who can reach it, through which
    entry point, under which conditions. A weakness behind a check the finding
-   did not mention may be real but lower.
+   did not mention may be real but lower. For `code-quality` and
+   `architecture`: whether the code is on the flow the finding says, and
+   whether the cost it claims is shown (history, diverged copies, a failure
+   path) rather than a preference. A preference is refuted.
 4. **Check the rating.** Severity against the axis grid, with the finding's
    own stated adjustment; confidence; `sensitive` and `promptable` against
    `finding-format`; references against their source.
