@@ -26,8 +26,8 @@ titles and prose use the engagement's `language`.
   and line, command and output, URL and response).
 - **Openable**: cite only the audited repository, the workspace,
   `tool-output/`, or a public reference; never memory or a past conversation.
-- **References from the source**: copy the identifier (ASVS, WCAG, CWE) from
-  the framework text, kept in `tool-output/` (fetched when absent) or behind a
+- **References from the source**: copy every identifier (ASVS, WCAG, CWE
+  alike) from the framework text, kept in `tool-output/` (fetched when absent) or behind a
   versioned URL, version named; cite the one or two whose requirement states
   what is missing.
 - **A missing edge or an empty search proves nothing**: injection,

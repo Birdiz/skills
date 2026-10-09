@@ -52,6 +52,9 @@ dependency code `recon` provided, installing nothing more.
 ## Running target
 
 With a running URL, first establish which commit and environment it serves.
+Under `testing: passive`, request only pages, the links they carry and URLs
+the auditor gave: a path or identifier you compose yourself (`/uploads/`, an
+id that probably does not exist) is a guess, and stays out.
 When code and response disagree (header set in code, absent on the wire),
 report both sides: the gap is often the finding.
 

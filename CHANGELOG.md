@@ -4,7 +4,7 @@
 
 Rewritten for brevity, following mattpocock/skills `writing-for-agents`. No
 behaviour change intended; file formats unchanged. 7 678 words to about
-4 900, sibling files included; the rest is mostly file templates, kept as
+4 950, sibling files included; the rest is mostly file templates, kept as
 they are.
 
 - History and justifications moved out of the skills (this file and the ADRs
@@ -36,6 +36,9 @@ the draft and revision loop behave as before. Fixes from the run:
   secret
 - `finding-format`: the framework text is fetched into `tool-output/` before
   a reference is cited
+- `app-security`: the passive regime is recalled where the running target is
+  handled; behind a link only, a run requested a path it had composed. Every
+  cited identifier, CWE included, comes from the framework text
 
 ## 0.7.0 (unreleased)
 
