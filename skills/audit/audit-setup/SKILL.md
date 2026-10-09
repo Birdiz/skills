@@ -8,46 +8,32 @@ disable-model-invocation: true
 
 Version: 0.8.0 (audit skills, see CHANGELOG)
 
-Create or update the **auditor profile**: everything that is stable across
-engagements. Per-engagement facts (scope, access, client) do NOT belong here;
-they belong to `audit-kickoff`.
+Write the **auditor profile**: what stays true across engagements. Scope,
+access and client belong to `audit-kickoff`.
 
 Output: `~/.config/audit-skills/profile.md`
 
-## Why two levels
-
-The profile has the lifetime of the auditor. The engagement file has the
-lifetime of one audit. Merging them forces the auditor to re-answer stable
-questions on every engagement, so they stay separate.
-
 ## Process
 
-1. **Detect before asking.** Probe the environment and record what is found:
-   - Shell available? Which of these CLIs are on PATH: `semgrep`, `gitleaks`,
-     `trivy`, `lizard`, `scc`, `jscpd`, `lighthouse`, `pa11y`, `axe`,
-     language-native audit commands (`composer`, `npm`, `pip-audit`).
-   - Any code-graph tool reachable (e.g. a GitNexus MCP server)?
-   - Any browser automation tool reachable?
-   - Can this agent spawn sub-agents?
-2. **Confirm detections** with the auditor in one message. Do not ask about
-   anything that was detected unambiguously.
-3. **Ask only what cannot be detected**, up to three questions per message,
-   numbered, each with a recommended answer, so the auditor can reply
-   "1 ok, 2 b, 3 ok". Use the agent's structured question tool if it has
-   one. The questions below are independent and fit in two batches:
-   - Auditor background: technical peer (assumed default) or not.
-   - Default report language.
-   - Severity scale: keep the default in `finding-format`, or supply a custom
-     one (must keep the same number of levels).
-   - Reference frameworks to cite by default (e.g. OWASP ASVS, WCAG 2.2 or
-     RGAA, CNIL guidance).
-   - Where engagement workspaces live on disk.
-4. **Write the profile** using the template below.
-
-Every question must have a consumer: if no skill reads the answer, do not ask
-it.
-
-## Profile template
+1. **Detect**: shell; which of `semgrep`, `gitleaks`, `trivy`, `lizard`,
+   `scc`, `jscpd`, `lighthouse`, `pa11y`, `axe` and language-native audit commands (`composer`, `npm`,
+   `pip-audit`...) are on PATH; a reachable
+   code-graph tool (e.g. a GitNexus MCP server); a browser automation tool;
+   sub-agents.
+2. **Confirm** the detections in one message, asking only about ambiguous
+   ones.
+3. **Interview in rounds**: each round asks the frontier (questions whose
+   prerequisites are settled), at most three, numbered, each with a
+   recommended answer ("1 ok, 2 b, 3 ok"), through the agent's structured
+   question tool when it has one. Two rounds cover:
+   - auditor background: technical peer (default) or not;
+   - default report language;
+   - severity scale: the `finding-format` default, or a custom one with the
+     same number of levels;
+   - frameworks cited by default (OWASP ASVS, WCAG 2.2 or RGAA, CNIL
+     guidance...);
+   - where engagement workspaces live.
+4. **Write the profile**:
 
 ```markdown
 # Auditor profile
@@ -69,17 +55,8 @@ frameworks: [<list>]
 workspace_root: <path>
 ```
 
-## Invariants (not configurable)
-
-These are deliberately absent from the profile. Do not add switches for them.
-
-- Findings require evidence. Reason: an audit finding has no test suite to
-  catch it when it is wrong.
-- The client repository is never written to. Reason: an audit must not alter
-  what it measures, and must leave no trace in client history.
-- Exploitation detail never enters a remediation prompt. Reason: prompts are
-  designed to be pasted into third-party tools.
-- Coverage limits are always reported. Reason: an unreported gap reads as a
-  clean bill of health.
-- Active testing requires a recorded authorization from the target's owner.
-  Reason: without it the auditor carries the legal risk.
+The profile holds only questions with two legitimate answers and a skill that
+reads the answer. The invariants
+have no switch: evidence for every finding, a read-only audited repository, no
+exploitation detail in remediation prompts, coverage limits always reported,
+active testing only with the owner's recorded authorization.
