@@ -5,7 +5,7 @@ description: Map an unfamiliar codebase before auditing it (stacks, entry points
 
 # recon
 
-Version: 0.9.0 (audit skills, see CHANGELOG)
+Version: 0.10.0 (audit skills, see CHANGELOG)
 
 Build the **codebase map** once, so every axis starts from the same
 understanding. Input: `00-engagement.md` (missing: stop, ask for
@@ -20,7 +20,8 @@ so at the top.
 Work in a dedicated clone at the audited commit; record it as `working_copy`
 in the engagement file. Take the dependencies' code from the first available:
 
-1. an existing install with a byte-identical lockfile (`diff`), path recorded;
+1. an existing install with a byte-identical lockfile (`cmp`) whose record
+   of installed packages lists every locked one, path recorded;
 2. an install into the clone that runs no package code (`composer install
    --no-scripts --no-plugins`, `npm ci --ignore-scripts`, or equivalent), the
    lockfile unchanged afterwards (`git status`);
