@@ -5,7 +5,7 @@ description: Audit the technical search engine optimisation of a web application
 
 # seo
 
-Version: 0.12.0 (audit skills, see CHANGELOG)
+Version: 0.13.0 (audit skills, see CHANGELOG)
 
 Find and evidence what keeps the right pages from being found, understood
 and shown well by search engines, in `<workspace>/findings/seo.md`, in

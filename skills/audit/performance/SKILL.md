@@ -5,7 +5,7 @@ description: Audit the performance of a web application on its running target an
 
 # performance
 
-Version: 0.12.0 (audit skills, see CHANGELOG)
+Version: 0.13.0 (audit skills, see CHANGELOG)
 
 Find and evidence what makes the product slow for its users, or will as its
 data grows, in `<workspace>/findings/performance.md`, in `finding-format`,

@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.13.0 (unreleased)
+
+Two axes that rest partly on the owner's answers, in the same form (skill,
+`areas.md`) plus a questionnaire (`questions.md`); neither has run yet. They
+bring the declarative evidence regime into use, with the auditor's
+decisions: development-only configuration is a finding rated for a
+developer's machine; a control the owner declares without showing it closes
+a lead as declared, not observed; answers are collected after verification,
+then taken up by a lead pass.
+
+- Add `infra-security`: an inventory of what defines the infrastructure and
+  the deployment each file applies to; scanners as leads (`trivy config`,
+  `hadolint`, `zizmor`); images, runtime and exposure, secrets delivery,
+  pipeline, cloud through read-only access, backups and detection. The
+  application's own code and configuration stay with `app-security`
+- Add `privacy`: an inventory of personal data (enters, stored, read,
+  leaves, deleted) every finding cites; the notice, legal bases and
+  consent, the visitor's browser before any choice and after a refusal,
+  third parties, rights, retention, records. The law is the owner's to
+  state; not legal advice, a legal judgment caps confidence at medium.
+  Exposure of personal data stays with the security axes
+- `finding-format`: an answer is evidence of what the owner states, quoted
+  with its question and date; a gap it reveals supports a finding, a control
+  it claims closes a lead as declared; owner documents in `client-docs/`,
+  masked. Answers recorded verbatim by whoever receives them, applied by the
+  axis's lead pass. An area waiting for an answer is `partial`
+- Rules of engagement: `docker ps` and `docker inspect` join read-only
+  inspection, resolved values filtered out; an image the auditor built may
+  be scanned; cloud read only through the owner's read-only access, store
+  contents never read; one TLS handshake per host is passive, enumeration
+  is active; personal data of real people recorded by field and location,
+  never copied
+- `audit-kickoff`: an answers step after verification (in rounds when the
+  owner is in the session, a list to send otherwise), then the lead pass
+  covers answers; questionnaires given to a third-party owner at
+  confirmation; capability matrix for the two axes; `client-docs/` in the
+  workspace
+- `verify-findings`: checks a declarative finding against its recorded
+  answer and the repository; spot-checks every lead closed as declared
+- `audit-report`: declared, unobserved controls listed apart in the peer
+  report
+- `app-security` areas name their boundary with the two new axes;
+  `audit-setup` detects `hadolint` and `zizmor`
+
 ## 0.12.0 (unreleased)
 
 From the first full run (gn-platform at a new commit: kickoff, recon, six

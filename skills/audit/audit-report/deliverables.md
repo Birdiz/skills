@@ -17,6 +17,9 @@ Complete, for a technical reader who will act on it or challenge it.
    it.
 5. **Accepted**: owner's decision and date; outside quick wins.
 6. **Open leads and questions**: what each would change; answers received.
+   Controls declared by the owner and not observed (leads closed as
+   declared), each with its question: the audit relies on them without
+   having seen them.
    Questions by ID, each once; an answer that would move several ratings
    (an obligation, a volume) says so once, with the effect on counts.
    Leads still waiting for a lead pass are named as such.

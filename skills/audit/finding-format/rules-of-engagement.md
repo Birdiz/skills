@@ -43,8 +43,21 @@ Binding on every audit step: recon, axes, verification.
   a profile another step signs in with, and remembers that another step's
   data may appear.
 - On a target the auditor runs, a container may be inspected read-only
-  (`docker exec` to read configuration and files): environment variables by
-  name only, never their values.
+  (`docker exec` to read configuration and files, `docker ps`, `docker
+  inspect`): environment variables by name only, never their values. A
+  command that prints configuration with values resolved (`docker inspect`,
+  `docker compose config`) runs through a filter that drops them before
+  anything is kept. An image the auditor built for the target may be
+  scanned, as evidence of that build.
+- **Cloud read**, with `cloud_read: yes`: only the read-only access the
+  owner gives for the audit, its credentials handled like a secret and kept
+  outside the workspace; configuration is read through the provider's API,
+  never changed, and the content of stores (objects, rows, secret values)
+  is never read. Output is masked of secrets and personal data before it is
+  kept.
+- Passive also covers one TLS handshake per host, to read the protocol and
+  the certificate. Enumerating protocols, ciphers or ports is scanning:
+  active only, on the listed hosts.
 - Development builds inject tools (debug toolbars, profilers, `/_profiler`,
   `/_wdt`): they are excluded from crawls, scans and measurements, and read
   only as the auditor's instruments. A development `robots.txt` that blocks
@@ -66,6 +79,10 @@ Binding on every audit step: recon, axes, verification.
   that masks values, and a tool that copies credentials into its report
   (session cookies, extra headers) has them removed before the report is
   kept.
+- Personal data of real people, seen in the repository, on the target or in
+  the owner's documents, is recorded by field and location and never copied
+  into a workspace file; data the project's fixtures invent is not personal
+  data.
 - Each tool run (scanners, analysers, audit commands, the `git log` commands
   and scripts an axis relies on) is scripted in
   `tool-output/<step>/run-<name>.sh` (`<step>`: `recon`, the axis, `verify`,

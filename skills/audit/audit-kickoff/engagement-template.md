@@ -64,16 +64,19 @@ remote:
   00-engagement.md
   01-codebase-map.md     # recon
   findings/              # one file per axis
+  client-docs/           # documents the owner gives, masked
   reports/
 ```
 
 ## Capability matrix
 
-- **Required**: repository for code-quality, architecture, app-security,
-  infra-security (IaC); running URL for accessibility, seo, performance;
-  client answers for privacy.
-- **Improves**: running URL for app-security and privacy; cloud read for
-  infra-security; repository for privacy, accessibility, seo, performance.
+- **Required**: repository for code-quality, architecture, app-security;
+  repository with infrastructure as code, or cloud read, for
+  infra-security; running URL for accessibility, seo, performance; client
+  answers for privacy.
+- **Improves**: running URL for app-security, infra-security and privacy;
+  cloud read and client answers for infra-security; repository for privacy,
+  accessibility, seo, performance.
 
 All required present: `evaluated`. Only improving ones present: `partial`,
 with what is missing. A required one missing: `not-evaluable`, kept in the

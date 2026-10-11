@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.12.0 (audit skills, see CHANGELOG)
+Version: 0.13.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -50,6 +50,11 @@ say so in the note.
    names, and the claimed cost is shown (history, diverged copies, a failure
    path); a preference is refuted. A cost the audit itself met counts when
    any newcomer to the code would meet it too.
+   For a declarative finding: the answer is recorded under its question,
+   dated, and says what the finding quotes; nothing in the repository or on
+   the target contradicts it; the consequence follows from it. The owner's
+   statement is not re-asked: what only the owner knows is taken as
+   answered.
 4. **Rating**: severity against the axis grid; a stated adjustment holds
    only if its reason holds at its pointer (a sound move on a wrong reason is
    kept, the reason rewritten); confidence; `sensitive` and `promptable`
@@ -103,8 +108,9 @@ and when.
 ## Leads
 
 Open leads are left to their axis, uninvestigated. Spot-check the `closed`
-ones with the weakest reasons; a wrong closure goes back to `open:` with the
-reason. Anything new becomes a lead for its axis: a finding written by the
+ones with the weakest reasons, and every one closed as declared (the answer
+says what the closure claims, and the repository does not contradict it); a
+wrong closure goes back to `open:` with the reason. Anything new becomes a lead for its axis: a finding written by the
 verifier would have no verifier.
 
 Once every finding is decided, work through the files in turn (the verifier

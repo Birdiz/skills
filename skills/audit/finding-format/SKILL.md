@@ -5,7 +5,7 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.12.0 (audit skills, see CHANGELOG)
+Version: 0.13.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
@@ -47,6 +47,16 @@ prose use the engagement's `language`.
 - **A secret is recorded by location**: file, line, kind, presence in
   history; its value is `<redacted>`, evidence and questions included (rules
   of engagement).
+- **An answer is evidence of what the owner states.** A declarative
+  finding quotes the answer with its question ID and date (`Q-PRI-03,
+  answer 2026-10-11: "…"`), and joins it to what the repository or target
+  shows wherever they can. An answer that reveals a gap is enough for a
+  finding; one that claims a control the audit cannot observe settles no
+  finding and closes a lead only as declared (Leads). The repository or
+  target wins over an answer that contradicts it, and the contradiction is
+  stated. A document the owner gives (a record, a contract) is copied into
+  `<workspace>/client-docs/`, secrets and personal data masked, and cited
+  there.
 - **Confidence rates the finding, severity the consequence**: a critical with
   low confidence stays critical, and says so.
 - **`status` starts `unverified`**; only `verify-findings` sets `confirmed` or
@@ -98,6 +108,8 @@ finishing, rewriting its status as one of:
 
 - `promoted to F-…`;
 - `closed: <why, pointer>`;
+- `closed: declared by owner (Q-…), not observed`, for a control only the
+  owner's answer shows; reports list these apart;
 - `open: <what settles it, and who: agent, auditor or owner>`;
 - for a lead settled in part, by a finding of any axis:
   `open: <part> settled by F-…; remains <what>, <who>`.
@@ -117,10 +129,11 @@ another step added):
   `verify-findings` rewrites that lead.
 - Findings with one cause (one fix removes both) cite each other in their
   technical explanation.
-- A lead moved into the file of an axis that has already run is closed by a
-  **lead pass** of that axis: it closes its open leads, as above, and
-  changes nothing else in its file; new findings then go through
-  verification.
+- A lead moved into the file of an axis that has already run, or an answer
+  recorded under one of its questions, is taken up by a **lead pass** of
+  that axis: it closes its open leads, as above, applies the answers
+  (Questions and answers), and changes nothing else in its file; new
+  findings then go through verification.
 
 What was examined and dropped (harmless, or no cost shown) is a note in the
 area's coverage, not a lead: a lead is what remains suspected.
@@ -133,16 +146,20 @@ already asked in another file is not asked again: refer to its ID. A question
 needed before the work (one the skill asks up front) goes in the file at
 once, created for it if absent.
 
-An answer is recorded under the question (`**Answer (YYYY-MM-DD):**`) and in
-the finding as `**Auditor answer.**` after `**Verification.**`. A change it
-brings (rating, remediation, `promptable`, `resolution: accepted`) is applied
-in place with its reason, as `verify-findings` does. `status` stays with
-verification; an unshown claim becomes a lead.
+An answer is recorded verbatim under the question (`**Answer
+(YYYY-MM-DD, who):**`) by whoever receives it, while no step is writing that
+file. The axis's lead pass applies it: in a finding it concerns, as
+`**Auditor answer.**` after `**Verification.**`, a change it brings (rating,
+remediation, `promptable`, `resolution: accepted`) applied in place with its
+reason, as `verify-findings` does; in a lead, closed, promoted or kept open.
+`status` stays with verification; an unshown claim becomes a lead.
 
 ## Coverage
 
 Per area: `evaluated`, `partial` (gap stated), `not-evaluable` (missing
 capability named, no findings), `not-requested`, the last two kept distinct.
+An area judged on answers names them; one waiting for an answer is
+`partial`.
 The axis as a whole is `evaluated` when every area is, `partial` with the
 partial areas named, `not-evaluable` when a required capability was missing.
 The coverage opens with the skill that wrote it (`skill: <name>@<version>`)

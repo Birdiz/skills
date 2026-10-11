@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-kickoff
 
-Version: 0.12.0 (audit skills, see CHANGELOG)
+Version: 0.13.0 (audit skills, see CHANGELOG)
 
 Write the **engagement file**, everything true for this audit only, then run
 the audit. Template, workspace and capability matrix:
@@ -32,7 +32,10 @@ Output: `<workspace_root>/<engagement-slug>/00-engagement.md`
    dedicated clone at the audited commit inside it, recorded as
    `working_copy`.
 7. **Read the file back**; explicit confirmation is recorded as `confirmed:
-   <YYYY-MM-DD>` and is the go-ahead for the whole plan.
+   <YYYY-MM-DD>` and is the go-ahead for the whole plan. For a third-party
+   owner, give the auditor the questions of each planned axis that has a
+   `questions.md` (`infra-security`, `privacy`), to send now: answers take
+   time, and the axes refine them as they run.
 
 ## Authorization
 
@@ -59,12 +62,21 @@ Run in order, without asking again:
    which commit it serves;
 3. `verify-findings` in a context that wrote no finding (no sub-agents: tell
    the auditor to open a new session, and stop);
-4. a **lead pass** of each axis that received leads from verification
-   (`finding-format`, Leads), then `verify-findings` again for any new
-   finding; one round only, what remains open stays open;
-5. copy into `tools` the skill versions and `name@version` each step listed
+4. **answers**: every question under `## Questions for the auditor` across
+   the findings files, asked of whoever can answer it. The auditor, and the
+   owner when present in the session (an auditor-owned target), answer in
+   rounds as in the interview, each question's proposal as the recommended
+   answer; each answer is recorded verbatim under its question
+   (`finding-format`, Questions and answers). Questions for an absent owner
+   go to the auditor as one list to send; the run continues without them,
+   and a later session resumes here once their answers are recorded;
+5. a **lead pass** of each axis that received leads from verification or
+   answers to its questions (`finding-format`, Leads), then
+   `verify-findings` again for any new finding; one round only, what
+   remains open stays open;
+6. copy into `tools` the skill versions and `name@version` each step listed
    in its output;
-6. `audit-report`; if it leaves a deliverable in DRAFT, `verify-findings` in
+7. `audit-report`; if it leaves a deliverable in DRAFT, `verify-findings` in
    revision mode on its list, then `audit-report` again.
 
 Stop only for a **blocker**: an active step on an unauthorized host; a
@@ -76,5 +88,5 @@ Steps communicate through files, so a new session can resume from the
 workspace.
 
 End by reporting what was produced, what was skipped and why, findings per
-axis and severity, what was created on the target, and every entry under `##
-Questions for the auditor` across the findings files.
+axis and severity, what was created on the target, and every question still
+unanswered across the findings files.
