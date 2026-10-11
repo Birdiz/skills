@@ -21,7 +21,7 @@ is a flow of the codebase map.
 | | Main flow | Other pages | One page or element |
 |---|---|---|---|
 | Blocks a task for some users (keyboard trap, control unreachable or unnamed, error never announced) | high | medium | low |
-| Task possible only with real difficulty or a workaround (focus invisible, low contrast on body text, broken reflow) | medium | medium | low |
+| Task possible only with real difficulty or a workaround (focus invisible, low contrast on body text or on information such as a status or a step, broken reflow) | medium | medium | low |
 | Degrades the experience without blocking (heading order, missing landmark, redundant link text) | low | low | info |
 | Non-conformance with no effect shown on a user | info | info | info |
 

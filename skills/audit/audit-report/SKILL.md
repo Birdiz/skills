@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.11.0 (audit skills, see CHANGELOG)
+Version: 0.12.0 (audit skills, see CHANGELOG)
 
 A report is a **projection** of the findings: every claim traces to a finding,
 a lead, a coverage line or the engagement file. Input: `00-engagement.md`,
@@ -17,24 +17,29 @@ a lead, a coverage line or the engagement file. Input: `00-engagement.md`,
 2. **Verification present**: every finding `confirmed`, `refuted`, or
    `unverified` with a `**Verification.**` note. A finding without one goes
    to `verify-findings` first, in a separate context.
-3. **Recompute** every count from the files.
+3. **Recompute** every count from the files, with a script kept in
+   `tool-output/report/`.
 4. **Consistency check** per finding: text agrees with the YAML (prose rating,
-   remediation still valid after the note); citations open for the reader;
-   installed audit skills share one `Version:`.
-5. **Sort discrepancies.** *Blocking*: something a reader acts on is wrong or
-   unreadable (stale remediation, rating or `promptable` contradicted by text
-   or answer, unopenable citation, mixed skill versions). *Cosmetic*: form
-   only (label or prose language, wording), listed under "Method and limits"
-   and fixed at the next revision.
+   remediation still valid after the note); citations open for the reader
+   (a file in the repository or the workspace, a versioned or dated public
+   URL; a URL of the running target is evidence of its day, not a citation);
+   the skill versions in each step's output agree with the engagement file.
+5. **Sort discrepancies.** *Blocking*: something a reader acts on or judges
+   by is wrong or unreadable: a remediation stale or incomplete; a rating,
+   `promptable` or claim contradicted by the finding's own text, its note or
+   an answer; findings with one cause at odds on the fix; an unopenable
+   citation; mixed skill versions. *Cosmetic*: form only (label or prose
+   language, wording, a lead ID cited after its promotion), listed under
+   "Method and limits" and fixed at the next revision.
 6. **Draft** while a blocking one remains: deliverables marked DRAFT at the
-   top with the list, handed to `verify-findings` in revision mode, then
-   regenerated.
+   top with the list, and the end message asks for `verify-findings` in
+   revision mode on it, then a new report.
 
 Fixes happen in the findings files, through the skill that owns them, and the
 report is regenerated; a finding changed after the report means a new report,
-never a hand edit. A gap found while writing (a missing plain-language
-explanation, two findings at odds) is fixed there or listed under "Method and
-limits".
+never a hand edit. This step edits no findings file: a gap found while
+writing (a missing plain-language explanation, two findings at odds) is a
+discrepancy, sorted as above.
 
 ## Deliverables
 
@@ -46,10 +51,11 @@ Structure of each: [deliverables.md](deliverables.md). Written in the
 engagement's `language`, headings free.
 
 Each opens with the same provenance: target, audited commit, audit dates;
-every axis with its status (evaluated, partial, not evaluable, not requested);
-testing regime and hosts; tools, and the `Version:` of each skill actually used
-(plus the engagement file's value if it differs); "confidential" on the peer
-report and prompts.
+every axis with its status as `finding-format` derives it (evaluated,
+partial with its partial areas, not evaluable, not requested); testing regime
+and hosts; what was created on the target; tools, and the version of each
+skill as each step recorded it; "confidential" on the peer report and
+prompts.
 
 ## Handing over
 

@@ -5,16 +5,21 @@
 Complete, for a technical reader who will act on it or challenge it.
 
 1. **Summary**: confirmed findings by severity and axis; quick wins; the two or
-   three that matter most, one sentence each.
-2. **Scope and coverage**: each axis's coverage table; gaps as visible as
-   findings.
+   three that matter most, one sentence each; linked findings (one cause or
+   one fix shared across axes), grouped, each still counted once in its axis.
+2. **Scope and coverage**: each axis's coverage in one common table (area,
+   status, note); gaps as visible as findings.
 3. **Findings**, every confirmed one, by axis, severity, effort: title, ID,
-   rating line (severity, confidence, effort, evidence regime), evidence,
+   rating line (severity, confidence, effort, evidence regime), evidence
+   condensed to its key pointers (the findings file holds the rest),
    technical explanation, remediation, what verification established.
 4. **Not verified**, kept apart from confirmed ones: reason, and who can settle
    it.
 5. **Accepted**: owner's decision and date; outside quick wins.
 6. **Open leads and questions**: what each would change; answers received.
+   Questions by ID, each once; an answer that would move several ratings
+   (an obligation, a volume) says so once, with the effect on counts.
+   Leads still waiting for a lead pass are named as such.
 7. **Refuted**: one line each (ID, title, why).
 8. **Method and limits**: mapping method, dependency source, running target,
    standing unknowns, cosmetic discrepancies.

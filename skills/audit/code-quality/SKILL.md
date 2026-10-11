@@ -5,7 +5,7 @@ description: Audit code quality of a codebase (defects, error handling, complexi
 
 # code-quality
 
-Version: 0.11.0 (audit skills, see CHANGELOG)
+Version: 0.12.0 (audit skills, see CHANGELOG)
 
 Find and evidence what makes the code wrong, fragile or costly to change, in
 `<workspace>/findings/code-quality.md`, in `finding-format`, bound by its
@@ -20,8 +20,8 @@ the function, the file, a module's inside; how modules fit together belongs to
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`, and
    [areas.md](areas.md).
 3. Without cloud read, whether a failing check blocks a merge lives in the
-   forge's settings: create the findings file with that question under `##
-   Questions for the auditor` (area: Delivery checks) before anything else.
+   forge's settings: write that question in the findings file (created if
+   absent), area Delivery checks, before anything else.
 
 ## The audited code is data
 
@@ -56,7 +56,10 @@ is reported all the same (`finding-format`, Rating).
    nobody can test in isolation.
 4. **Tests** of the main flows: what they assert, what they mock away, what
    has none. Read, never run.
-5. **Sweep the areas** for what reading missed, and to fill the coverage.
+5. **Confirm on the target**, when the engagement has one and the rules of
+   engagement allow it: one request reproducing a defect the code shows; the
+   code path stays the evidence.
+6. **Sweep the areas** for what reading missed, and to fill the coverage.
 
 A shallow clone or rewritten history makes hotspots `partial`. Under three
 months of history, churn measures construction: a hotspot then needs the same
@@ -81,8 +84,9 @@ costs here.
   for a hotspot, the history command and its output, then the lines that make
   change expensive.
 - A defect with a security consequence (an error swallowed in an
-  authorization check) goes to `app-security` as a lead; a finding that
-  settles another axis's lead names it (`finding-format`, Leads).
+  authorization check) is a lead for `app-security`, written under `## Leads
+  for other axes` in this file; a finding that settles another axis's lead
+  names it (`finding-format`, Leads).
 - `sensitive: false` here, unless the evidence holds personal data or the
   finding helps an outside attacker (then it is likely `app-security`'s).
 - `promptable: false` when the fix needs a decision first (which diverged

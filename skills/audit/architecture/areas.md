@@ -16,7 +16,9 @@
 ## Severity grid
 
 What the structure causes, and how much of the system it reaches: "most
-main flows" is more than half of the map's flows.
+main flows" is more than half of the map's flows, a flow counting when its
+main outcome is lost (a lost notification only degrades it). "The team" is
+whoever maintains the code, agents included.
 
 | | Most main flows | One module or flow | Local |
 |---|---|---|---|

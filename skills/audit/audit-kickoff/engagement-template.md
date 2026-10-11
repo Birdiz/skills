@@ -17,7 +17,7 @@ skills_version: <the "Version:" line of the audit skills used>
 description: <one paragraph>
 owner: <auditor|third party: name>
 repository: <path or URL | none>
-working_copy: <path of the dedicated clone, set by recon>
+working_copy: <path of the dedicated clone, created with the workspace>
 commit: <sha | n/a>
 url: <URL | none>
 url_serves: <commit and environment the running target serves | n/a>

@@ -5,7 +5,7 @@ description: Map an unfamiliar codebase before auditing it (stacks, entry points
 
 # recon
 
-Version: 0.11.0 (audit skills, see CHANGELOG)
+Version: 0.12.0 (audit skills, see CHANGELOG)
 
 Build the **codebase map** once, so every axis starts from the same
 understanding. Input: `00-engagement.md` (missing: stop, ask for
@@ -17,8 +17,10 @@ so at the top.
 
 ## Working copy and dependencies
 
-Work in a dedicated clone at the audited commit; record it as `working_copy`
-in the engagement file. Take the dependencies' code from the first available:
+Work in the dedicated clone at the audited commit that kickoff recorded as
+`working_copy`; without one, create it and give its path in the end report.
+For each ecosystem of the project (Composer, npm, an import map...), take
+the dependencies' code from the first available:
 
 1. an existing install with a byte-identical lockfile (`cmp`) whose record
    of installed packages lists every locked one, path recorded;
@@ -26,6 +28,9 @@ in the engagement file. Take the dependencies' code from the first available:
    --no-scripts --no-plugins`, `npm ci --ignore-scripts`, or equivalent), the
    lockfile unchanged afterwards (`git status`);
 3. neither: the questions left open go under Unknowns.
+
+An ecosystem that only holds tooling outside the scope (test runners, agent
+tools) is recorded as such and not installed.
 
 ## Strategy
 
@@ -42,7 +47,9 @@ either way.
 # Codebase map
 commit: <sha>
 method: <graph tool name@version | search>
-dependencies: <path of identical install | installed without scripts | absent>
+dependencies:
+  <ecosystem>: <path of identical install | installed without scripts | absent | out of scope>
+skill: recon@<version>
 tools: [<name@version>]
 generated: <YYYY-MM-DD>
 
@@ -60,8 +67,9 @@ generated: <YYYY-MM-DD>
 - **Stacks**: languages, frameworks, runtimes, versions, where declared.
 - **Entry points**: routes, commands, consumers, jobs, webhooks; file:line each.
 - **Modules**: real units and duties; where structure departs from appearance.
-- **Main execution flows**: the 5-10 that carry the product, entry to side
-  effect.
+- **Main execution flows**: those that carry the product, usually 5 to 12,
+  entry to side effect, each with the pages or routes it covers, so every
+  axis reads "main flow" the same way.
 - **Trust boundaries**: untrusted input, authn and authz enforcement, outbound
   calls.
 - **Personal data**: what; where it enters, is stored, leaves (logs, third
@@ -77,7 +85,12 @@ auditor-owned target, the auditor may paste a command's output).
 
 ## Rules
 
-- Every statement carries a pointer: file and line, or a query and its result.
+- Every statement carries a pointer: file and line, or a query and its
+  result. The map's pointers need no quote; findings and leads quote theirs.
+- A graph edge the map relies on is checked; one found wrong goes under
+  Unknowns. Edges the map does not use are not inventoried.
+- A graph tool may register its index outside the workspace (a registry
+  entry): record where.
 - The map describes. Problems seen on the way become short leads (observation,
   pointers, settling check) in the relevant `findings/<axis>.md`, in the
   engagement language; an axis outside the plan gets its file with coverage
