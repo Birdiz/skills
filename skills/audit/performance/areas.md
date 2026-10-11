@@ -21,8 +21,8 @@ What users wait for, and where. "Main flow" is a flow of the codebase map.
 | | Main flow | Other pages | Administration or background only |
 |---|---|---|---|
 | Fails at expected volume (timeout, memory exhausted, connection pool drained) | high | medium | low |
-| "Poor" on a Core Web Vital, or a wait users notice on every visit, measured on a production-like configuration | high | medium | low |
-| "Needs improvement", or cost that grows with data without bound, shown in code | medium | low | low |
+| "Poor" on a Core Web Vital, or a wait users notice on every visit, measured on a production-like configuration (one level lower when measured only in development, its cause shown in code) | high | medium | low |
+| "Needs improvement", or cost that grows with data without bound, shown in code (growth the product itself bounds, one record a year, is not growth) | medium | low | low |
 | Waste with no user effect measured (uncompressed asset, missing cache header) | low | low | info |
 | Observation | info | info | info |
 

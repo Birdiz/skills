@@ -15,14 +15,16 @@
 
 ## Severity grid
 
-What it does to the pages the owner wants found, and how many.
+What it does to the pages the owner wants found, and how many: "whole host
+or site" covers one host or several, entirely.
 
 | | Whole host or site | A template or section | One page |
 |---|---|---|---|
 | Pages meant to be found cannot be crawled or indexed (`noindex`, blocked, error, canonical elsewhere) | high | medium | low |
 | Pages meant to stay out are indexable (accounts, administration, form results, duplicates) | medium | medium | low |
 | Conflicting or duplicate signals (canonicals, hosts, titles) | medium | low | low |
-| Missing enhancement (description, structured data, sharing tags) | low | low | info |
+| Missing enhancement (description, structured data, sharing tags), or one present but not eligible | low | low | info |
+| Thin or placeholder content left indexable | low | low | info |
 | Observation | info | info | info |
 
 Moves of one level: `finding-format`, Rating.

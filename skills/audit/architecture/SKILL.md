@@ -5,7 +5,7 @@ description: Audit the architecture of a codebase (module boundaries, dependency
 
 # architecture
 
-Version: 0.11.0 (audit skills, see CHANGELOG)
+Version: 0.12.0 (audit skills, see CHANGELOG)
 
 Find and evidence where the structure makes the system fragile or costly to
 change, in `<workspace>/findings/architecture.md`, in `finding-format`, bound
@@ -68,8 +68,9 @@ a cost.
 5. **Sweep the areas** for what tracing missed, and to fill the coverage.
 
 A shallow clone or rewritten history makes change coupling `partial`. Under
-three months of history, coupling shows how the system was built: it
-supports a finding the code already shows, and is not a cost on its own.
+three months of complete history it stays `evaluated`, but coupling shows
+how the system was built: it supports a finding the code already shows, and
+is not a cost on its own.
 
 ## Tools
 
@@ -86,8 +87,9 @@ until the code shows the edge and history or a flow shows the cost.
 - Evidence is the edge or the path: file and line of each import or call
   relied on, the history command and its output, the flow and the step where
   data or failure crosses a boundary.
-- A consequence for another axis goes there as a lead, even when that axis
-  is outside the plan or running alongside: security (an entry point
+- A consequence for another axis is a lead for it, under `## Leads for
+  other axes` in this file, even when that axis is outside the plan:
+  security (an entry point
   bypassing an authorization check by calling a module directly) to
   `app-security`, performance to `performance`, a defect inside one module to
   `code-quality`. A finding that settles another axis's lead names it

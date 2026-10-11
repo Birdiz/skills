@@ -5,7 +5,7 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.11.0 (audit skills, see CHANGELOG)
+Version: 0.12.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
@@ -14,7 +14,9 @@ projections of it. Layout, IDs, lead bullet, severity scale:
 
 Findings live in `<workspace>/findings/<axis>.md`, one file per axis
 (including axes outside the plan that received leads), sections `## Coverage`,
-`## Findings`, `## Leads`, then `## Questions for the auditor` if needed.
+`## Findings`, `## Leads`, then if needed `## Leads for other axes` and `##
+Questions for the auditor`. Recon may have created the file with leads: the
+axis keeps them and fills the rest.
 Headings, bold labels, YAML keys and values, area names and status words
 (`evaluated`, `open:`, `closed:`) stay in English for the parsers; titles and
 prose use the engagement's `language`.
@@ -72,8 +74,10 @@ prose use the engagement's `language`.
   an answer from the owner.
 - **`sensitive: true`** when a leak would help an outsider attack, or exposes
   personal data: exploitable vulnerabilities, where a secret is, non-obvious
-  weaknesses reachable from outside, personal data in evidence. `false` for
-  what any visitor sees, what only a legitimate privileged user can do,
+  weaknesses reachable from outside, what lets an outsider learn about a
+  given account (its existence, its state), personal data in evidence.
+  `false` for what any visitor sees and that targets no one (a missing
+  header), what only a legitimate privileged user can do,
   hygiene, documented framework defaults. Sensitive findings appear only in
   the confidential report.
 - **`promptable: true`** when a coding agent could apply the fix in the code;
@@ -88,31 +92,46 @@ prose use the engagement's `language`.
 
 ## Leads
 
-Recon or any axis writes them; the owning axis closes each before finishing:
-rewriting the bullet's status as `promoted to F-…`, `closed: <why, pointer>`,
-or `open: <what settles it, and who: agent, auditor or owner>`. Leads of an
-axis outside the plan carry `open: axis not requested` until that axis runs.
+Recon writes them in every axis file before the axes run; then each axis
+writes only in its own file. The owning axis closes each lead before
+finishing, rewriting its status as one of:
 
-Across axes, one problem stays in one axis:
+- `promoted to F-…`;
+- `closed: <why, pointer>`;
+- `open: <what settles it, and who: agent, auditor or owner>`;
+- for a lead settled in part, by a finding of any axis:
+  `open: <part> settled by F-…; remains <what>, <who>`.
 
-- A consequence that belongs to another axis (security, performance...)
-  becomes a lead in that axis's file, created if absent, appended as one
-  bullet with the file re-read just before (axes may run in parallel);
-  outside the plan it carries `open: axis not requested`. Nothing else in
-  another axis's file is edited.
+Leads of an axis outside the plan carry `open: axis not requested` until
+that axis runs.
+
+Across axes, one problem stays in one axis, and no axis edits another's file
+(axes run in parallel, and a file rewritten from an older read loses what
+another step added):
+
+- A consequence that belongs to another axis goes under `## Leads for other
+  axes` in the writer's own file, each bullet naming its target axis, with
+  no ID. `verify-findings` moves them, numbered, into the target files.
 - A finding that settles another axis's lead names it in its evidence
-  (`settles L-SEC-21`, or `settles L-SEC-06 (part: <which>)` for part of
-  it); `verify-findings` rewrites that lead.
-- Findings with one cause cite each other in their technical explanation.
+  (`settles L-SEC-21`, or `settles L-SEC-06 (part: <which>)`);
+  `verify-findings` rewrites that lead.
+- Findings with one cause (one fix removes both) cite each other in their
+  technical explanation.
+- A lead moved into the file of an axis that has already run is closed by a
+  **lead pass** of that axis: it closes its open leads, as above, and
+  changes nothing else in its file; new findings then go through
+  verification.
 
 What was examined and dropped (harmless, or no cost shown) is a note in the
 area's coverage, not a lead: a lead is what remains suspected.
 
 ## Questions and answers
 
-One question per line, for what only the auditor or owner can settle, with the
-lead, finding or coverage area concerned. A question needed before the work
-(one the skill asks up front) goes in the file at once, created for it.
+One question per line, `Q-<AXIS>-<NN>`, for what only the auditor or owner
+can settle, with the lead, finding or coverage area concerned. A question
+already asked in another file is not asked again: refer to its ID. A question
+needed before the work (one the skill asks up front) goes in the file at
+once, created for it if absent.
 
 An answer is recorded under the question (`**Answer (YYYY-MM-DD):**`) and in
 the finding as `**Auditor answer.**` after `**Verification.**`. A change it
@@ -124,6 +143,10 @@ verification; an unshown claim becomes a lead.
 
 Per area: `evaluated`, `partial` (gap stated), `not-evaluable` (missing
 capability named, no findings), `not-requested`, the last two kept distinct.
+The axis as a whole is `evaluated` when every area is, `partial` with the
+partial areas named, `not-evaluable` when a required capability was missing.
+The coverage opens with the skill that wrote it (`skill: <name>@<version>`)
+and the tools it ran.
 Name the evidence sources: audited commit, dependency code origin, running
 target with its commit and environment. For a target on another commit,
 compare the two: dynamic evidence covers only what the difference leaves

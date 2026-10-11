@@ -29,4 +29,6 @@ Who can reach it, and what they get:
 | Limited disclosure (account existence, metadata), integrity of own data | medium | low | low |
 | Hardening gap, no direct consequence | low | low | info |
 
-Moves of one level: `finding-format`, Rating.
+A weakness that needs the victim's own action (following a crafted link, a
+page framing this one) starts from the row of what the attacker gets, one
+level lower. Other moves of one level: `finding-format`, Rating.

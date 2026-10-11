@@ -33,9 +33,23 @@ Binding on every audit step: recon, axes, verification.
   from a link or the auditor.
 - In either regime, signing in with an account the auditor provides for the
   audit is a visitor's ordinary use, not a login attempt; its credentials are
-  handled like a secret. A form is submitted only to show its validation,
-  with input it rejects; never one that creates, changes or sends something
-  (passive), or only on the auditor's own account and data (active).
+  handled like a secret. Under passive, a form is submitted only to show its
+  validation, with input it rejects. Under active, a step may also create
+  data through the product's own forms with the auditor's test accounts (a
+  registration, a character), each creation listed under `## Created on
+  target` in the step's file; it never deletes anything, and resetting the
+  data is the owner's.
+- Parallel steps share the target: each uses its own browser context, never
+  a profile another step signs in with, and remembers that another step's
+  data may appear.
+- On a target the auditor runs, a container may be inspected read-only
+  (`docker exec` to read configuration and files): environment variables by
+  name only, never their values.
+- Development builds inject tools (debug toolbars, profilers, `/_profiler`,
+  `/_wdt`): they are excluded from crawls, scans and measurements, and read
+  only as the auditor's instruments. A development `robots.txt` that blocks
+  everything is configuration to report on, not a rule for the audit's own
+  crawl.
 - Following links across the in-scope hosts (a crawl) is sequential, at most
   one request per second, with a page cap recorded in the output.
 - No load or stress test (traffic meant to strain the target), in any regime:
@@ -43,21 +57,30 @@ Binding on every audit step: recon, axes, verification.
 - **Active**: with `testing: active`, on the listed `hosts`, inside `in_scope`.
   Stop at the first proof; read or keep no data that is not the auditor's. A
   step that could leave scope, touch such data, or change or degrade the target
-  becomes a lead for the owner to test.
+  beyond the listed creations above becomes a lead for the owner to test.
 - A secret is recorded by location, kind and presence in history. In every
   workspace file (map, findings, notes, reports) its value, default and
   placeholder values included, is written `<redacted>`, never quoted in full
-  or in part. A secret is never used or tested for validity.
+  or in part. A secret is never used or tested for validity. Files known to
+  hold secrets (`.env*`, fixtures with passwords) are read through a filter
+  that masks values, and a tool that copies credentials into its report
+  (session cookies, extra headers) has them removed before the report is
+  kept.
 - Each tool run (scanners, analysers, audit commands, the `git log` commands
   and scripts an axis relies on) is scripted in
-  `tool-output/<step>/run-<name>.sh` (`<step>`: `recon`, the axis, `verify`),
-  raw output kept beside it, auditor artifacts (`.gitnexus/`, caches, the
-  workspace) excluded; in a container, the working copy is mounted read-only.
-  Rules or scripts written for the run are kept there too.
+  `tool-output/<step>/run-<name>.sh` (`<step>`: `recon`, the axis, `verify`,
+  `report`), raw output kept beside it, auditor artifacts (`.gitnexus/`,
+  caches, the workspace) excluded; in a container, the working copy is
+  mounted read-only. Rules or scripts written for the run are kept there too;
+  tool installs and caches (`node_modules`, vulnerability databases) go in
+  `<workspace>/cache/`, which no deliverable cites. A run that read nothing
+  (a ruleset that does not exist, an empty target list) is not a clean
+  result: check what each run read.
 - A count or a list cited as evidence comes from such a script, run with
   `bash`, never from an interactive shell: a shell hook can filter or
   truncate output without saying so.
-- Each step lists the tools it ran, `name@version`, in its own output (the
-  map's header, an axis's coverage, a verification note); only
-  `audit-kickoff`, at the end, copies them into the engagement file. Axes may
-  run in parallel, so none writes the engagement file.
+- Each step lists its own skill version and the tools it ran,
+  `name@version`, in its own output (the map's header, an axis's coverage, a
+  verification note, the report's provenance); only `audit-kickoff` copies
+  them into the engagement file, before the report. Steps may run in
+  parallel, so none other writes the engagement file.

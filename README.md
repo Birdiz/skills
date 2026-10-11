@@ -12,8 +12,8 @@ content is specific to auditing.
 Early. The foundation, a first axis (`app-security`), verification and
 reporting are written, and have run on a real codebase. Two more static axes
 (`code-quality`, `architecture`) have run twice, through verification. Three
-web axes (`accessibility`, `seo`, `performance`) are written and have not run
-yet. `infra-security`, `privacy`, remediation grouping and tickets are not
+web axes (`accessibility`, `seo`, `performance`) have run once, on a local
+development stack. `infra-security`, `privacy`, remediation grouping and tickets are not
 written. See [Roadmap](#roadmap).
 
 ## Install
@@ -103,7 +103,6 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 
 ## Roadmap
 
-- Run `accessibility`, `seo` and `performance` on a real target
 - Axes: `infra-security`, `privacy`
 - Remediations: group findings by fix, then render each one as a ticket, a
   vendor brief or an executable prompt

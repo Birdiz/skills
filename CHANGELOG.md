@@ -1,5 +1,60 @@
 # Changelog
 
+## 0.12.0 (unreleased)
+
+From the first full run (gn-platform at a new commit: kickoff, recon, six
+axes in parallel against a local dev stack, verification, report): 42
+findings, 42 confirmed, no rating changed, text corrected in 7; the report
+out of draft with six cosmetic discrepancies. What broke: a lead one axis
+wrote into another's file was lost when that axis rewrote its file, two
+axes picked the same lead ID, three leads went to axes that had already run
+and nobody owned them; the verification was cut by a network error; dev
+tools filled a crawl and polluted scans; a report kept a session cookie;
+no step recorded its own skill version.
+
+- `finding-format`: axes write only in their own file; leads for other
+  axes go under `## Leads for other axes`, and `verify-findings` moves and
+  numbers them; an axis that receives leads after it ran does a lead pass.
+  One status form for a lead settled in part. Questions numbered
+  `Q-<AXIS>-<NN>` and asked once. Facts about a given account (existence,
+  state) are sensitive. Axis status derived from its areas; coverage opens
+  with the skill version
+- Rules of engagement (auditor's decisions): under active, a step may create
+  data through the product's forms with the auditor's test accounts, listed,
+  never deleting; a container the auditor runs may be read with
+  `docker exec`, environment variables by name only. Also: one browser
+  context per step; development tools excluded from crawls, scans and
+  measurements; files holding secrets read through a mask, credentials
+  removed from tool reports; installs and caches in `<workspace>/cache/`; a
+  run that read nothing is not a clean result; `tool-output/report/`
+- `verify-findings`: resumes past findings already verified; rechecks the
+  commit served and data drift before replaying; quotes must be at their
+  pointer and counts match what they claim; adds missing citations between
+  findings with one cause; moves cross-axis leads, rewrites settled ones,
+  lists the axes needing a lead pass
+- `audit-kickoff`: creates the dedicated clone; rechecks the served commit
+  before dynamic axes; lead pass and second verification; copies tools and
+  skill versions before the report; runs the draft loop
+- `audit-report`: counts scripted; blocking discrepancies widened (an
+  incomplete remediation, a claim contradicted by its own text or note,
+  findings with one cause at odds); edits no findings file; linked findings
+  grouped in the summary; one coverage table; questions by ID with their
+  effect on counts
+- `recon`: one dependency line per ecosystem, tooling-only ecosystems not
+  installed; main flows list their pages; map pointers unquoted; only
+  relied-on edges checked; graph registries outside the workspace recorded
+- Axes: `app-security` falls back to a vulnerability database where the
+  audit command runs the project, and rates victim-action weaknesses one
+  level lower; `code-quality` may confirm a defect on the target, grid rows
+  for broken business rules and leftovers; `architecture` defines when a
+  flow counts and who the team is; `accessibility` cites WCAG 2.2 under RGAA
+  where RGAA lacks the criterion, skip link under RGAA, set-level criteria
+  never on one page; `seo` derives the indexing proposal from the code,
+  dates its references, marks deductions from a dev target, grid rows for
+  thin content and ineligible enhancements; `performance` paces and warms
+  measurements, lowers dev-only measurements one level, does not count
+  bounded growth
+
 ## 0.11.0 (unreleased)
 
 Three dynamic axes, in the same form (skill plus `areas.md`); none has run

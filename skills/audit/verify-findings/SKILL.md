@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.11.0 (audit skills, see CHANGELOG)
+Version: 0.12.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -24,11 +24,21 @@ sub-agent | new session`.
 ## Per finding
 
 Refute: ask what would make the finding wrong; confirm only once every answer
-has been checked and failed. Take every `unverified` finding, by severity.
+has been checked and failed. Take every `unverified` finding, by severity. A
+finding that already has a `verification` key was verified before (an
+interrupted run resumes this way) and is skipped, outside revision mode. Save
+each findings file as soon as its axis is done.
+
+Before replaying anything on the running target, check which commit it
+serves. Data on the target may have changed since the axis ran (fixtures
+reloaded, another step's creations): re-observe with current identifiers and
+say so in the note.
 
 1. **Reproduce.** Open each location at the audited commit; rerun the evidence
-   commands the rules allow; a quote shows a drifted line at a glance. A
-   pointer that does not match settles it: refute or correct.
+   commands the rules allow; a quote shows a drifted line at a glance, and
+   must be found at its pointer (a sentence cited from a file that does not
+   contain it is corrected). Check what each count in the evidence actually
+   matched. A pointer that does not match settles it: refute or correct.
 2. **Find the control elsewhere**: framework defaults, global listeners,
    middleware or config, an upstream check, infrastructure in the repository,
    read in the dependency code the map names (its install rechecked) rather
@@ -79,6 +89,8 @@ pointer. The rest stays as written.
 - Text corrected: the old passage and what proved it wrong.
 - Unverified: what is missing, who can settle it, and an entry in `##
   Questions for the auditor`.
+- Findings with one cause that do not cite each other: the citation added
+  to both technical explanations.
 
 ## Revision mode
 
@@ -92,18 +104,25 @@ and when.
 
 Open leads are left to their axis, uninvestigated. Spot-check the `closed`
 ones with the weakest reasons; a wrong closure goes back to `open:` with the
-reason, and a lead closed although its consequence belongs to another axis
-moves there, as `finding-format` says. Anything new becomes a lead in the
-owning axis file: a finding written by the verifier would have no verifier.
+reason. Anything new becomes a lead for its axis: a finding written by the
+verifier would have no verifier.
 
-Once every finding is decided, rewrite the leads that confirmed findings say
-they settle, in the lead's own file: `closed: settled by F-…`, or for a part
-(`settles L-… (part: …)`) `open: <part> settled by F-…; remains <what>,
-<who>`. A refuted finding settles nothing. The verifier is the one step that
-reads every file in turn, so these cross-axis closures fall to it.
+Once every finding is decided, work through the files in turn (the verifier
+is the one step that reads them all, alone):
+
+1. Move each bullet under `## Leads for other axes` into its target axis's
+   `## Leads`, with the next free ID there, and leave `moved to L-…` in its
+   place. A lead closed although its consequence belongs to another axis is
+   moved the same way.
+2. Rewrite the leads that confirmed findings say they settle, in the lead's
+   own file: `closed: settled by F-…`, or for a part `open: <part> settled
+   by F-…; remains <what>, <who>`. A refuted finding settles nothing.
+3. List the axes that received leads after they ran: each needs a lead pass
+   (`finding-format`, Leads).
 
 ## End report
 
 Per axis: confirmed, refuted, unverified, ratings changed, text corrected,
-leads reopened or closed as settled; then the questions added. Continue with
-`audit-report`.
+leads reopened, moved, or closed as settled; then the questions added, the
+citations added between findings with one cause, and the axes that need a
+lead pass. Continue with those lead passes, or with `audit-report`.

@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-kickoff
 
-Version: 0.11.0 (audit skills, see CHANGELOG)
+Version: 0.12.0 (audit skills, see CHANGELOG)
 
 Write the **engagement file**, everything true for this audit only, then run
 the audit. Template, workspace and capability matrix:
@@ -28,7 +28,9 @@ Output: `<workspace_root>/<engagement-slug>/00-engagement.md`
    tool when there is one. Ask only what detection left open.
 4. **Settle authorization.**
 5. **Plan the axes** from the capability matrix.
-6. **Create the workspace** outside the audited repository.
+6. **Create the workspace** outside the audited repository, and the
+   dedicated clone at the audited commit inside it, recorded as
+   `working_copy`.
 7. **Read the file back**; explicit confirmation is recorded as `confirmed:
    <YYYY-MM-DD>` and is the go-ahead for the whole plan.
 
@@ -53,10 +55,17 @@ Run in order, without asking again:
 
 1. `recon`, unless a map exists for the audited commit;
 2. each axis `evaluated` or `partial`, in plan order, each in its own sub-agent
-   when available;
+   when available; before the axes that need the running target, check again
+   which commit it serves;
 3. `verify-findings` in a context that wrote no finding (no sub-agents: tell
    the auditor to open a new session, and stop);
-4. `audit-report`.
+4. a **lead pass** of each axis that received leads from verification
+   (`finding-format`, Leads), then `verify-findings` again for any new
+   finding; one round only, what remains open stays open;
+5. copy into `tools` the skill versions and `name@version` each step listed
+   in its output;
+6. `audit-report`; if it leaves a deliverable in DRAFT, `verify-findings` in
+   revision mode on its list, then `audit-report` again.
 
 Stop only for a **blocker**: an active step on an unauthorized host; a
 required capability missing or unreachable; a contradiction with the file
@@ -66,7 +75,6 @@ one line on what it costs; the auditor can rerun the step once it is back.
 Steps communicate through files, so a new session can resume from the
 workspace.
 
-End by copying into `tools` the `name@version` each step listed in its
-output, then report what was produced, what was skipped and why, findings
-per axis and severity, and every entry under `## Questions for the auditor`
-across the findings files.
+End by reporting what was produced, what was skipped and why, findings per
+axis and severity, what was created on the target, and every entry under `##
+Questions for the auditor` across the findings files.

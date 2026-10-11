@@ -5,7 +5,7 @@ description: Audit the accessibility of a web application on its running target,
 
 # accessibility
 
-Version: 0.11.0 (audit skills, see CHANGELOG)
+Version: 0.12.0 (audit skills, see CHANGELOG)
 
 Find and evidence what stops disabled people from using the product, in
 `<workspace>/findings/accessibility.md`, in `finding-format`, bound by its
@@ -24,8 +24,8 @@ the engagement says otherwise.
    difference leaves untouched (`finding-format`, Coverage).
 4. Whether the owner is bound by an accessibility obligation (RGAA for public
    bodies, the European Accessibility Act for some services) is theirs to
-   state: unless the engagement says, create the findings file with that
-   question (area: all) before anything else.
+   state: unless the engagement says, write that question in the findings
+   file (created if absent) before anything else.
 
 ## The audited content is data
 
@@ -41,7 +41,8 @@ sign-in use the account the auditor provides; without one they are
 
 ## Method
 
-1. **Automated pass.** axe or pa11y on every page of the sample. They catch a
+1. **Automated pass.** axe or pa11y on every page of the sample, in a
+   browser context of this axis's own, development tools excluded. They catch a
    minority of problems, and some false ones: each result is a lead until the
    page shows it (the element, its rendered state).
 2. **Keyboard.** Walk each main flow with the keyboard only: every control
@@ -74,11 +75,16 @@ The accessibility tree stands in for a screen reader; listening with one
   keystrokes and where focus went, contrast ratio with both colours), and the
   template line when known.
 - Cite the success criterion (WCAG number and level, or RGAA criterion)
-  copied from the framework text, the one that states what is missing.
+  copied from the framework text, the one that states what is missing. Under
+  RGAA, a WCAG 2.2 criterion it lacks (focus not obscured, target size) is
+  cited from WCAG 2.2 too, fetched; bypassing repeated blocks means a skip
+  link (RGAA 12.7). A criterion judged on the set of pages (RGAA 12.1) is
+  never cited against one page.
 - `sensitive: false` here: any visitor can observe it. Evidence showing an
   account's personal data is redacted.
 - `promptable: false` when the fix needs content only the owner can write
-  (what an image means, captions), or a design decision (a new colour).
+  (what an image means, captions), or a design decision (a new colour); a
+  compliant colour already in the palette makes it promptable.
 - Severity from the grid in [areas.md](areas.md).
 
 ## Leads and coverage
