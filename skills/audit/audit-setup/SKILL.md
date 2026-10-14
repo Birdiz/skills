@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-setup
 
-Version: 0.12.0 (audit skills, see CHANGELOG)
+Version: 0.14.0 (audit skills, see CHANGELOG)
 
 Write the **auditor profile**: what stays true across engagements. Scope,
 access and client belong to `audit-kickoff`.
@@ -17,8 +17,9 @@ Output: `~/.config/audit-skills/profile.md`
 
 1. **Detect**: shell; `docker` (any tool an axis names can then run from a
    pinned image); which of `semgrep`, `gitleaks`, `trivy`, `lizard`, `scc`,
-   `jscpd`, `lighthouse`, `pa11y`, `axe` and language-native audit commands
-   (`composer`, `npm`, `pip-audit`...) are on PATH; a reachable
+   `jscpd`, `lighthouse`, `pa11y`, `axe`, `hadolint`, `zizmor` and
+   language-native audit commands (`composer`, `npm`, `pip-audit`...) are on
+   PATH; a reachable
    code-graph tool (e.g. a GitNexus MCP server); a browser automation tool;
    sub-agents.
 2. **Confirm** the detections in one message, asking only about ambiguous

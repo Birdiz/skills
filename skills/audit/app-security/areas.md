@@ -10,11 +10,11 @@
 - **Server-side requests**: SSRF, open redirects, webhook targets.
 - **Files**: upload type and size, path traversal, storage location, download authorization.
 - **Deserialization**: untrusted object deserialization, unsafe parsers.
-- **Secrets**: hard-coded credentials, keys in history, secrets in logs or client bundles.
+- **Secrets**: hard-coded credentials, keys in history, secrets in logs or client bundles (how secrets reach the runtime: `infra-security`).
 - **Cryptography**: home-made schemes, weak algorithms, static IVs, predictable randomness.
 - **Dependencies**: known-vulnerable versions actually present, abandoned packages.
-- **Configuration**: debug modes, CORS, security headers, default accounts, exposed admin or metrics endpoints.
-- **Errors and logs**: stack traces to clients, personal data or tokens in logs.
+- **Configuration**: debug modes, CORS, security headers, default accounts, exposed admin or metrics endpoints of the application (the servers, containers and pipeline around it: `infra-security`).
+- **Errors and logs**: stack traces to clients, tokens in logs, logs readable by whoever should not (what personal data logs keep, and how long: `privacy`).
 - **Abuse**: rate limiting on auth and costly endpoints, enumeration, business-logic bypass.
 
 ## Severity grid

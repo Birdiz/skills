@@ -28,6 +28,8 @@ lies.
 | Leftover with no user effect (orphaned file, stale record) | low | low | info |
 | Misleads a reader (stale comment, wrong name), no consequence for users | low | low | info |
 
-For the last two rows, the column is where the code is. Copies that are merely
+A delivery check that does not block a merge (or does not run) is a
+condition that makes a defect likely, in the column of the code it
+protects. For the last two rows, the column is where the code is. Copies that are merely
 alike, with the same behaviour, are not diverged. Moves of one level:
 `finding-format`, Rating.

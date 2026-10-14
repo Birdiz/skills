@@ -16,6 +16,15 @@ findings and reports.
 - **Evidence regime**: how an axis can prove something. *Static* (the
   repository is enough), *dynamic* (needs a running target), *declarative*
   (needs answers from the client).
+- **Declared**: what rests only on the owner's answer. An answer that
+  reveals a gap supports a declarative finding; one that claims a control
+  closes a lead as declared, not observed, and the reports list it apart.
+- **Lead pass**: an axis taking up, after it ran, the leads moved into its
+  file and the answers to its questions; it touches only what they
+  concern, and what it changes is verified again.
+- **Proposal**: the answer the repository suggests to a question, with its
+  pointer; the owner accepts or corrects it. A fact only the owner knows
+  has none.
 - **Codebase map**: the shared description of the audited code, written once
   by `recon` and read by every axis.
 - **Finding**: an observed, evidenced problem in the common schema.

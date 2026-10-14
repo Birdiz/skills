@@ -1,5 +1,128 @@
 # Changelog
 
+## 0.14.0 (unreleased)
+
+From the first run of `infra-security` and `privacy` (a copy of the
+gn-platform 30edaa4 workspace, the axes added by amendment, then
+verification, the owner's answers, six lead passes, a second verification
+and the report): 21 new findings, 21 confirmed, no rating changed by
+verification, text corrected in 5; 63 confirmed in all; 29 of 31 questions
+asked were answered; the report left in DRAFT. It also ran 0.12.0's lead
+pass, cross-axis moves and verification resume for the first time. What
+broke: questions due "before anything else" needed the inventory first; a
+sub-agent axis could not ask; every lead pass had to break "changes nothing
+else"; 31 questions took 11 rounds and the owner stopped; two recommended
+answers were invented; an answer was contradicted by the forge's settings;
+the stack ran a stale image under the audited code; a pull moved a tag a
+running container used; fixture passwords reached an agent's context; the
+report blocked on mixed skill versions with no route to fix them; scripts
+of the copied workspace still pointed at the original.
+
+Auditor's decisions: versions that differ between steps, each recorded or
+attributed, do not block a report; confirmed findings a lead pass changed
+are verified again; the answers step sorts questions, then offers proposals
+as lists to accept at once.
+
+- `finding-format`: the lead pass has a scope (close, apply answers, write
+  the findings they reveal, open leads and questions, update the coverage it
+  touched with a dated line) and what it changes is verified again. Lead
+  statuses `closed: settled by F-…`, `closed: intended (Q-…)`, the declared
+  form for facts as well as controls, joined forms for partial settlement;
+  the shape of a bullet for another axis and of a moved lead. Questions
+  carry a proposal from the repository, or none; older questions numbered;
+  a sub-agent axis works on and says which answer moves a rating; answers
+  keep the owner's words apart from the accepted proposal; an observation
+  contradicting an answer is put to the owner once. `dynamic` covers forge
+  and cloud settings; `locations` for a setting, an answer or an absence;
+  `finding-format`'s sensitive cases win over an axis default;
+  `## Created on target` in the section list
+- Rules of engagement: the target is its code and its runtime image, checked
+  against the audited commit; images pulled by digest, no tag a container
+  uses moved, nothing retagged; `docker logs` filtered, the runtime may be
+  queried for its settings, project commands may not, stores read only
+  through the product; the cloud read scope (forge settings included) binds
+  every step; credentials never printed; parallel active steps use separate
+  accounts; later runs in their own `tool-output` subdirectory, paths
+  relative to the workspace, times in UTC
+- `audit-kickoff`: the image the target runs is detected and rechecked;
+  `cloud_read` scope settled at the interview; amendment for an axis added
+  after confirmation; the answers step sorts, lists proposals by theme,
+  asks the rest one by one; the second verification covers changed
+  findings; DRAFT items go to the step that owns each; steps that recorded
+  no version are attributed one
+- `verify-findings`: environment facts may be given; file by file;
+  re-checks what an answer changed in a confirmed finding; checks the
+  runtime image; note carries skill and tools; corrects a repeated fact in
+  axis texts and plain language; rewrites a right closure's wrong reason,
+  relabels closures resting on answers; moves any cross-axis bullet and
+  closes one a confirmed finding covers; a rating depending on an answer is
+  confirmed with its condition
+- `audit-report`: versions recorded or attributed are provenance; an area
+  status breaking the rule blocks; stale coverage, uncited compatible
+  findings and a moved axis plan are cosmetic; undated URLs with a dated
+  copy open; DRAFT items name who fixes them; declared facts from coverage
+  listed with declared closures; asked and never-asked questions apart
+- `infra-security`: boundaries with `app-security` (its server config,
+  trusted proxies) and `code-quality` (merge checks); questions after the
+  inventory; what `trivy config` does not read is read by hand, `zizmor`
+  offline; build-stage files scanned at their stage, digests compared with
+  today's, untagged means `latest`, when a CVE is a finding; image checked
+  against the commit; no deploy job and no backup in IaC handled; unseen
+  settings rated from the documented default. Grid: causes with no attacker
+  in the middle column, resource limits as hardening
+- `privacy`: legal applicability in doubt caps confidence at low, facts not
+  shown stay leads; sources for the texts (Publications Office fallback,
+  Légifrance, consolidated, dated twice) and how `references` name them;
+  inventory lines `I-NN`; texts at the point of collection count as notice;
+  browser on public pages then signed in, full URLs, dev cookies excluded;
+  a processor not yet chosen; effort when a decision is awaited. Grid: a
+  store holding some sensitive data counts, row for staff access
+- `code-quality` grid: a delivery check that does not block a merge
+
+## 0.13.0 (unreleased)
+
+Two axes that rest partly on the owner's answers, in the same form (skill,
+`areas.md`) plus a questionnaire (`questions.md`); neither has run yet. They
+bring the declarative evidence regime into use, with the auditor's
+decisions: development-only configuration is a finding rated for a
+developer's machine; a control the owner declares without showing it closes
+a lead as declared, not observed; answers are collected after verification,
+then taken up by a lead pass.
+
+- Add `infra-security`: an inventory of what defines the infrastructure and
+  the deployment each file applies to; scanners as leads (`trivy config`,
+  `hadolint`, `zizmor`); images, runtime and exposure, secrets delivery,
+  pipeline, cloud through read-only access, backups and detection. The
+  application's own code and configuration stay with `app-security`
+- Add `privacy`: an inventory of personal data (enters, stored, read,
+  leaves, deleted) every finding cites; the notice, legal bases and
+  consent, the visitor's browser before any choice and after a refusal,
+  third parties, rights, retention, records. The law is the owner's to
+  state; not legal advice, a legal judgment caps confidence at medium.
+  Exposure of personal data stays with the security axes
+- `finding-format`: an answer is evidence of what the owner states, quoted
+  with its question and date; a gap it reveals supports a finding, a control
+  it claims closes a lead as declared; owner documents in `client-docs/`,
+  masked. Answers recorded verbatim by whoever receives them, applied by the
+  axis's lead pass. An area waiting for an answer is `partial`
+- Rules of engagement: `docker ps` and `docker inspect` join read-only
+  inspection, resolved values filtered out; an image the auditor built may
+  be scanned; cloud read only through the owner's read-only access, store
+  contents never read; one TLS handshake per host is passive, enumeration
+  is active; personal data of real people recorded by field and location,
+  never copied
+- `audit-kickoff`: an answers step after verification (in rounds when the
+  owner is in the session, a list to send otherwise), then the lead pass
+  covers answers; questionnaires given to a third-party owner at
+  confirmation; capability matrix for the two axes; `client-docs/` in the
+  workspace
+- `verify-findings`: checks a declarative finding against its recorded
+  answer and the repository; spot-checks every lead closed as declared
+- `audit-report`: declared, unobserved controls listed apart in the peer
+  report
+- `app-security` areas name their boundary with the two new axes;
+  `audit-setup` detects `hadolint` and `zizmor`
+
 ## 0.12.0 (unreleased)
 
 From the first full run (gn-platform at a new commit: kickoff, recon, six

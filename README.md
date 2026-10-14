@@ -9,12 +9,13 @@ content is specific to auditing.
 
 ## Status
 
-Early. The foundation, a first axis (`app-security`), verification and
-reporting are written, and have run on a real codebase. Two more static axes
-(`code-quality`, `architecture`) have run twice, through verification. Three
-web axes (`accessibility`, `seo`, `performance`) have run once, on a local
-development stack. `infra-security`, `privacy`, remediation grouping and tickets are not
-written. See [Roadmap](#roadmap).
+Early. The foundation, six axes (`app-security`, `code-quality`,
+`architecture`, `accessibility`, `seo`, `performance`), verification and
+reporting have run on a real codebase, together, through a full audit on a
+local development stack. Two axes that rest partly on the owner's answers
+(`infra-security`, `privacy`) have run once, with the answers step and lead
+passes. Remediation grouping and tickets are not written. See
+[Roadmap](#roadmap).
 
 ## Install
 
@@ -39,11 +40,15 @@ gives you every skill twice.
 1. `/audit-setup`, once per machine: the auditor profile.
 2. `/audit-kickoff`, once per audit: scope, access, authorization, audience.
 3. `recon`: one shared map of the codebase.
-4. Axes write findings in a common format (`app-security`, `code-quality`,
-   `architecture`, `accessibility`, `seo`, `performance` so far).
+4. Axes write findings in a common format (`app-security`,
+   `infra-security`, `privacy`, `code-quality`, `architecture`,
+   `accessibility`, `seo`, `performance`), and the questions only the owner
+   can answer.
 5. `verify-findings`, in a separate context: confirmed, refuted, or left
    unverified with a reason.
-6. `audit-report`: the deliverables the engagement's audience requires.
+6. The owner's answers, then a lead pass of the axes they concern, verified
+   in turn.
+7. `audit-report`: the deliverables the engagement's audience requires.
 
 ## Skills
 
@@ -62,6 +67,12 @@ gives you every skill twice.
   auditing it.
 - [app-security](skills/audit/app-security/SKILL.md): the application
   security axis.
+- [infra-security](skills/audit/infra-security/SKILL.md): images,
+  containers, network exposure, edge, secrets delivery, pipeline, cloud,
+  backups, from the IaC, the running target and the owner's answers.
+- [privacy](skills/audit/privacy/SKILL.md): personal data inventory,
+  information, consent, trackers, third parties, retention and rights,
+  against the law that applies to the owner.
 - [code-quality](skills/audit/code-quality/SKILL.md): defects, error
   handling, hotspots, duplication and tests, judged by their cost.
 - [architecture](skills/audit/architecture/SKILL.md): boundaries,
@@ -103,7 +114,7 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 
 ## Roadmap
 
-- Axes: `infra-security`, `privacy`
+- Run `infra-security` and `privacy` against a cloud account (cloud read)
 - Remediations: group findings by fix, then render each one as a ticket, a
   vendor brief or an executable prompt
 - Tickets: at kickoff, detect whether the target has an issue tracker and ask
