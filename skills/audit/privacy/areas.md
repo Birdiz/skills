@@ -17,13 +17,15 @@
 
 What it does to the people, and whose data. "Data that harms" is data of
 minors, special categories (health, beliefs, origin...), and data whose
-disclosure harms on its own (identity documents, location, finances).
+disclosure harms on its own (identity documents, location, finances); a
+store holding some of it counts, even mixed with other data.
 
 | | Data that harms | Other personal data |
 |---|---|---|
 | Used or disclosed with no legal basis (a recipient without contract or basis, a tracker before consent, a purpose people were not told of) | critical | high |
 | No limit on what is kept or collected (no retention period applied, data collected with no use), or a right people cannot exercise | high | medium |
 | Information missing, or contradicted by the processing | medium | medium |
+| Read inside the organisation beyond what a role needs | medium | low |
 | A record, contract or procedure missing, no effect on people shown yet | medium | low |
 | Good practice beyond the obligation | info | info |
 

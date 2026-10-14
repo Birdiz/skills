@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.13.0 (audit skills, see CHANGELOG)
+Version: 0.14.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -16,7 +16,9 @@ place. Bound by [rules of engagement](../finding-format/rules-of-engagement.md).
 
 An agent re-reading its own reasoning finds it convincing, so the verifier is
 a context that wrote none of the findings: a sub-agent given file paths only
-(workspace, working copy, this skill), never the conversation or a summary.
+(workspace, working copy, this skill), never the conversation or a summary;
+facts about the environment (tools available, a browser that cannot open a
+host, a constraint on images) may be added, nothing about the findings.
 Without sub-agents, if this session wrote a finding, stop and tell the auditor
 to invoke `verify-findings` in a new session: a blocker. Each note records `by:
 sub-agent | new session`.
@@ -24,13 +26,16 @@ sub-agent | new session`.
 ## Per finding
 
 Refute: ask what would make the finding wrong; confirm only once every answer
-has been checked and failed. Take every `unverified` finding, by severity. A
+has been checked and failed. Take every `unverified` finding, file by file,
+by severity within each file, and save each file as soon as it is done. A
 finding that already has a `verification` key was verified before (an
-interrupted run resumes this way) and is skipped, outside revision mode. Save
-each findings file as soon as its axis is done.
+interrupted run resumes this way) and is skipped, outside revision mode,
+unless an `**Auditor answer.**` dated after that key changed it: then only
+what the answer changed is re-checked (its reason, its pointer, the rating
+against the grid), and the note says so.
 
 Before replaying anything on the running target, check which commit it
-serves. Data on the target may have changed since the axis ran (fixtures
+serves and which image runs it. Data on the target may have changed since the axis ran (fixtures
 reloaded, another step's creations): re-observe with current identifiers and
 say so in the note.
 
@@ -54,7 +59,8 @@ say so in the note.
    dated, and says what the finding quotes; nothing in the repository or on
    the target contradicts it; the consequence follows from it. The owner's
    statement is not re-asked: what only the owner knows is taken as
-   answered.
+   answered. Scanners are rerun on the axis's vulnerability database, not
+   updated, its date recorded.
 4. **Rating**: severity against the axis grid; a stated adjustment holds
    only if its reason holds at its pointer (a sound move on a wrong reason is
    kept, the reason rewritten); confidence; `sensitive` and `promptable`
@@ -64,7 +70,9 @@ say so in the note.
      a wrong rating is corrected;
    - `refuted`: evidence fails, or a control fully prevents the consequence;
    - `unverified`: beyond the engagement's capabilities, or only the auditor
-     or owner can settle it.
+     or owner can settle it. Facts reproduced with a rating that depends on
+     an answer (a setting not seen, a decision not taken) are `confirmed`,
+     the condition stated and its question asked.
 
 ## Writing the result
 
@@ -77,16 +85,20 @@ verification: {by: sub-agent, on: 2026-10-08}
 ```
 
 ```markdown
-**Verification.** Reproduced: src/Security/UserChecker.php:20-25 and the
+**Verification.** by: sub-agent, verify-findings@0.13.0, tools: [git@2.50.1].
+Reproduced: src/Security/UserChecker.php:20-25 and the
 listener priorities (vendor/...:56, vendor/...:94). No global control found.
 Severity kept at medium.
 ```
 
 **Correct in place** whatever was proven wrong (pointer, claim, scenario,
-remediation, reference), quoting the replaced text in the note; reports read
-these files. A corrected fact repeated in the coverage is corrected there
-too, and a question the repository already answers is annotated with the
-pointer. The rest stays as written.
+remediation, reference, the plain-language explanation), quoting the
+replaced text in the note; reports read these files. A corrected fact
+repeated elsewhere is corrected there too: the coverage, a question, a
+text the axis wrote in `tool-output/` that findings cite (an inventory),
+never a raw tool output. A coverage statement found wrong on its own is
+annotated with the pointer. A question the repository already answers is
+annotated with the pointer. The rest stays as written.
 
 - Refuted: what makes it wrong, with pointers.
 - Rating changed: old value, new value, reason; the YAML and every sentence
@@ -107,19 +119,25 @@ and when.
 
 ## Leads
 
-Open leads are left to their axis, uninvestigated. Spot-check the `closed`
-ones with the weakest reasons, and every one closed as declared (the answer
-says what the closure claims, and the repository does not contradict it); a
-wrong closure goes back to `open:` with the reason. Anything new becomes a lead for its axis: a finding written by the
+Open leads are left to their axis, uninvestigated. Spot-check, in the files
+whose findings you verify, the `closed` ones with the weakest reasons, and
+every one closed as declared (the answer says what the closure claims, and
+the repository does not contradict it). A wrong closure goes back to
+`open:` with the reason; a right closure on a wrong reason keeps its status,
+the reason rewritten; one that rests on an answer without saying so takes
+the declared form. A check that held is one line in the note of the axis. Anything new becomes a lead for its axis: a finding written by the
 verifier would have no verifier.
 
 Once every finding is decided, work through the files in turn (the verifier
 is the one step that reads them all, alone):
 
-1. Move each bullet under `## Leads for other axes` into its target axis's
-   `## Leads`, with the next free ID there, and leave `moved to L-…` in its
-   place. A lead closed although its consequence belongs to another axis is
-   moved the same way.
+1. Move each bullet under `## Leads for other axes`, whatever its shape,
+   into its target axis's `## Leads`, with the next free ID there, a title,
+   and the status `finding-format` gives a moved lead; the bullet is
+   replaced by `moved to L-…`. A lead closed although its consequence
+   belongs to another axis is moved the same way. A moved lead that a
+   confirmed finding's locations already cover is closed as settled by it,
+   with the pointer.
 2. Rewrite the leads that confirmed findings say they settle, in the lead's
    own file: `closed: settled by F-…`, or for a part `open: <part> settled
    by F-…; remains <what>, <who>`. A refuted finding settles nothing.

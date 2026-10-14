@@ -44,17 +44,29 @@ Binding on every audit step: recon, axes, verification.
   data may appear.
 - On a target the auditor runs, a container may be inspected read-only
   (`docker exec` to read configuration and files, `docker ps`, `docker
-  inspect`): environment variables by name only, never their values. A
-  command that prints configuration with values resolved (`docker inspect`,
-  `docker compose config`) runs through a filter that drops them before
-  anything is kept. An image the auditor built for the target may be
-  scanned, as evidence of that build.
-- **Cloud read**, with `cloud_read: yes`: only the read-only access the
-  owner gives for the audit, its credentials handled like a secret and kept
-  outside the workspace; configuration is read through the provider's API,
-  never changed, and the content of stores (objects, rows, secret values)
-  is never read. Output is masked of secrets and personal data before it is
-  kept.
+  inspect`, `docker logs` filtered to the step's own requests): environment
+  variables by name only, never their values. A command that prints
+  configuration with values resolved (`docker inspect`, `docker compose
+  config`) runs through a filter that drops them before anything is kept.
+  Running the runtime itself to read its settings (`php -r 'ini_get(…)'`) is
+  inspection; a project command (`bin/console`, `manage.py`) runs project
+  code and is not. A store's content is read only through the product, as a
+  visitor would.
+- The target is its code and its runtime: each step that observes it checks
+  which commit the code comes from and which image runs it, and that the
+  image was built from the audited commit's build files; a difference is
+  stated like a commit difference. An image the auditor built for the
+  target may be scanned, as evidence of that build.
+- Images are pulled by digest, or scanned from their registry without a
+  pull. A tag a running container uses is never pulled or moved, and no
+  local image is retagged.
+- **Cloud read**, with `cloud_read: yes` or within the scope the engagement
+  records (forge settings read with the auditor's own login count): it binds
+  every step alike, and covers only the read-only access the owner gives for
+  the audit, its credentials handled like a secret and kept outside the
+  workspace; configuration is read through the provider's API, never
+  changed, and the content of stores (objects, rows, secret values) is never
+  read. Output is masked of secrets and personal data before it is kept.
 - Passive also covers one TLS handshake per host, to read the protocol and
   the certificate. Enumerating protocols, ciphers or ports is scanning:
   active only, on the listed hosts.
@@ -83,12 +95,19 @@ Binding on every audit step: recon, axes, verification.
   the owner's documents, is recorded by field and location and never copied
   into a workspace file; data the project's fixtures invent is not personal
   data.
+- Credentials (an account the auditor provides, a fixture password) are read
+  by the script that uses them and never printed: no command shows their
+  value to the agent, in its output or its context.
+- Parallel active steps each create their data with an account or object no
+  other step uses, where the product allows one per account.
 - Each tool run (scanners, analysers, audit commands, the `git log` commands
   and scripts an axis relies on) is scripted in
   `tool-output/<step>/run-<name>.sh` (`<step>`: `recon`, the axis, `verify`,
-  `report`), raw output kept beside it, auditor artifacts (`.gitnexus/`,
-  caches, the workspace) excluded; in a container, the working copy is
-  mounted read-only. Rules or scripts written for the run are kept there too;
+  `report`; a later run of the same step in `tool-output/<step>/<run>/`,
+  `lead-pass-<YYYY-MM-DD>` or `round-2`), raw output kept beside it, paths
+  relative to the workspace so a copy reruns in place, times in UTC, auditor
+  artifacts (`.gitnexus/`, caches, the workspace) excluded; in a container,
+  the working copy is mounted read-only. Rules or scripts written for the run are kept there too;
   tool installs and caches (`node_modules`, vulnerability databases) go in
   `<workspace>/cache/`, which no deliverable cites. A run that read nothing
   (a ruleset that does not exist, an empty target list) is not a clean

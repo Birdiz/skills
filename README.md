@@ -13,8 +13,9 @@ Early. The foundation, six axes (`app-security`, `code-quality`,
 `architecture`, `accessibility`, `seo`, `performance`), verification and
 reporting have run on a real codebase, together, through a full audit on a
 local development stack. Two axes that rest partly on the owner's answers
-(`infra-security`, `privacy`) are written and have not run yet. Remediation
-grouping and tickets are not written. See [Roadmap](#roadmap).
+(`infra-security`, `privacy`) have run once, with the answers step and lead
+passes. Remediation grouping and tickets are not written. See
+[Roadmap](#roadmap).
 
 ## Install
 
@@ -113,7 +114,7 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 
 ## Roadmap
 
-- Run `infra-security` and `privacy` on a real target
+- Run `infra-security` and `privacy` against a cloud account (cloud read)
 - Remediations: group findings by fix, then render each one as a ticket, a
   vendor brief or an executable prompt
 - Tickets: at kickoff, detect whether the target has an issue tracker and ask

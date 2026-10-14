@@ -21,11 +21,13 @@ Who can reach it, and what they get:
 |---|---|---|---|
 | Control of a host, the deploy pipeline or the cloud account | critical | high | medium |
 | A data store, or the secrets of a service | critical | high | low |
-| Availability of the service (an exposed admin action, no resource limits) | medium | medium | low |
+| Availability of the service (an exposed admin action, a dependency that does not come back after a restart) | medium | medium | low |
 | Limited disclosure (versions, internal names, development data) | low | low | info |
-| Hardening gap, no path shown (root user, unpinned image, broad default permission) | low | low | info |
+| Hardening gap, no path shown (root user, unpinned image, no resource limits, broad default permission) | low | low | info |
 
-Data that cannot be restored after an incident (no backup, or one never
-restored): `high` for the stores of the main flows, `medium` for the others,
-whoever causes the loss. Development-only configuration: see "Rating the
-deployment" in the skill. Moves of one level: `finding-format`, Rating.
+A cause with no attacker (a host restart, a provider outage, an operator's
+mistake) is rated in the middle column. Data that cannot be restored after
+an incident (no backup, or one never restored): `high` for the stores of
+the main flows, `medium` for the others, whoever causes the loss.
+Development-only configuration: see "Rating the deployment" in the skill.
+Moves of one level: `finding-format`, Rating.

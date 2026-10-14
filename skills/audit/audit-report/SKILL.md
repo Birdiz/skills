@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.13.0 (audit skills, see CHANGELOG)
+Version: 0.14.0 (audit skills, see CHANGELOG)
 
 A report is a **projection** of the findings: every claim traces to a finding,
 a lead, a coverage line or the engagement file. Input: `00-engagement.md`,
@@ -22,18 +22,30 @@ a lead, a coverage line or the engagement file. Input: `00-engagement.md`,
 4. **Consistency check** per finding: text agrees with the YAML (prose rating,
    remediation still valid after the note); citations open for the reader
    (a file in the repository or the workspace, a versioned or dated public
-   URL; a URL of the running target is evidence of its day, not a citation);
-   the skill versions in each step's output agree with the engagement file.
+   URL, or an undated one with a dated copy in the workspace; a URL of the
+   running target, in evidence or `locations`, is evidence of its day, not a
+   citation); each step's skill version, recorded in its output or
+   attributed by the engagement file (an amendment), agrees with that file;
+   each axis's status, derived as `finding-format` says from its areas,
+   agrees with what the areas state.
 5. **Sort discrepancies.** *Blocking*: something a reader acts on or judges
    by is wrong or unreadable: a remediation stale or incomplete; a rating,
    `promptable` or claim contradicted by the finding's own text, its note or
    an answer; findings with one cause at odds on the fix; an unopenable
-   citation; mixed skill versions. *Cosmetic*: form only (label or prose
-   language, wording, a lead ID cited after its promotion), listed under
-   "Method and limits" and fixed at the next revision.
-6. **Draft** while a blocking one remains: deliverables marked DRAFT at the
-   top with the list, and the end message asks for `verify-findings` in
-   revision mode on it, then a new report.
+   citation; a step whose recorded version contradicts the engagement file;
+   an area status that breaks `finding-format` (evaluated while waiting for
+   an answer). Versions that differ between steps, each recorded or
+   attributed, are provenance, not a discrepancy. *Cosmetic*: form only, or
+   stale without changing a judgment (label or prose language, wording, a
+   lead ID cited after its promotion, a coverage sentence a later pass made
+   stale, findings with one cause and compatible fixes that do not cite each
+   other, an axis plan the coverages since moved), listed under "Method and
+   limits" and fixed at the next revision.
+6. **Draft** while a blocking one remains: deliverables open with `DRAFT`
+   and the list, each item naming who fixes it: `verify-findings` in
+   revision mode for the findings' text, the axis's lead pass for its
+   coverage, `audit-kickoff` for the engagement file. The end message asks
+   for those steps, then a new report.
 
 Fixes happen in the findings files, through the skill that owns them, and the
 report is regenerated; a finding changed after the report means a new report,
