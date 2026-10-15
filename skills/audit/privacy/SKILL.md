@@ -5,7 +5,7 @@ description: Audit how an application handles personal data against the data pro
 
 # privacy
 
-Version: 0.14.0 (audit skills, see CHANGELOG)
+Version: 0.15.0 (audit skills, see CHANGELOG)
 
 Find and evidence where the product's handling of personal data departs from
 the law that applies to its owner, in `<workspace>/findings/privacy.md`, in

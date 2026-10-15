@@ -32,6 +32,11 @@ findings and reports.
   owning axis closes each one: promoted, closed, or open.
 - **Coverage**: what an axis evaluated, partially evaluated, could not
   evaluate, or was not asked to evaluate.
+- **Fix**: one piece of work (a pull request, a session in a console, a
+  decision) resolving one or more confirmed findings, `R-<NNN>`; its
+  findings share one change, or the same files and executor.
+- **Remediation plan**: the ordered fixes of an engagement, with who does
+  each and what it waits for. Written by `remediation-plan`.
 - **Quick win**: a confirmed, unresolved finding of medium severity or above
   and small effort. Derived, not stored.
 - **Resolution**: what the owner did about a finding: open, accepted (kept by

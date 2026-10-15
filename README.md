@@ -14,8 +14,8 @@ Early. The foundation, six axes (`app-security`, `code-quality`,
 reporting have run on a real codebase, together, through a full audit on a
 local development stack. Two axes that rest partly on the owner's answers
 (`infra-security`, `privacy`) have run once, with the answers step and lead
-passes. Remediation grouping and tickets are not written. See
-[Roadmap](#roadmap).
+passes. Remediation grouping is written and has not run yet; tickets are
+not written. See [Roadmap](#roadmap).
 
 ## Install
 
@@ -48,7 +48,8 @@ gives you every skill twice.
    unverified with a reason.
 6. The owner's answers, then a lead pass of the axes they concern, verified
    in turn.
-7. `audit-report`: the deliverables the engagement's audience requires.
+7. `remediation-plan`: the findings grouped into fixes, ordered.
+8. `audit-report`: the deliverables the engagement's audience requires.
 
 ## Skills
 
@@ -85,6 +86,9 @@ gives you every skill twice.
   queries, remote calls, front-end loading, cost growing with data.
 - [verify-findings](skills/audit/verify-findings/SKILL.md): try to refute
   every finding from a context that did not write it.
+- [remediation-plan](skills/audit/remediation-plan/SKILL.md): group
+  confirmed findings into fixes (one change, or the same files and
+  executor), ordered, with who does each and what it waits for.
 - [audit-report](skills/audit/audit-report/SKILL.md): peer report,
   plain-language summary and remediation prompts, from verified findings.
 
@@ -115,11 +119,11 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 ## Roadmap
 
 - Run `infra-security` and `privacy` against a cloud account (cloud read)
-- Remediations: group findings by fix, then render each one as a ticket, a
-  vendor brief or an executable prompt
-- Tickets: at kickoff, detect whether the target has an issue tracker and ask
-  whether the agent may create tasks there; local files otherwise. Sensitive
-  findings never go to a tracker that is not access-restricted
+- Run `remediation-plan` on a real workspace
+- Tickets, one per fix: at kickoff, detect whether the target has an issue
+  tracker and ask whether the agent may create tasks there; local files
+  otherwise. Sensitive fixes never go to a tracker that is not
+  access-restricted
 - A script that validates finding files against the schema
 
 ## License

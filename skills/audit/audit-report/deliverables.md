@@ -4,19 +4,23 @@
 
 Complete, for a technical reader who will act on it or challenge it.
 
-1. **Summary**: confirmed findings by severity and axis; quick wins; the two or
-   three that matter most, one sentence each; linked findings (one cause or
-   one fix shared across axes), grouped, each still counted once in its axis.
+1. **Summary**: confirmed findings by severity and axis; the number of
+   fixes, by executor; quick wins (fixes); the two or three fixes that
+   matter most, one sentence each.
 2. **Scope and coverage**: each axis's coverage in one common table (area,
    status, note); gaps as visible as findings.
-3. **Findings**, every confirmed one, by axis, severity, effort: title, ID,
-   rating line (severity, confidence, effort, evidence regime), evidence
-   condensed to its key pointers (the findings file holds the rest),
-   technical explanation, remediation, what verification established.
-4. **Not verified**, kept apart from confirmed ones: reason, and who can settle
+3. **Remediation plan**: the plan's order table, then each fix: title, ID,
+   its findings, why together, change, check, what it waits for. A finding
+   is counted in its axis; a fix, once.
+4. **Findings**, every confirmed one, by axis, severity, effort: title, ID,
+   its fix, rating line (severity, confidence, effort, evidence regime),
+   evidence condensed to its key pointers (the findings file holds the
+   rest), technical explanation, remediation, what verification
+   established.
+5. **Not verified**, kept apart from confirmed ones: reason, and who can settle
    it.
-5. **Accepted**: owner's decision and date; outside quick wins.
-6. **Open leads and questions**: what each would change; answers received.
+6. **Accepted**: owner's decision and date; outside quick wins.
+7. **Open leads and questions**: what each would change; answers received.
    Controls and facts declared by the owner and not observed (leads closed
    as declared, coverage lines `declared, not observed`), each with its
    question: the audit relies on them without having seen them.
@@ -25,8 +29,8 @@ Complete, for a technical reader who will act on it or challenge it.
    would move several ratings (an obligation, a volume, a decision not yet
    taken) says so once, with the effect on counts. Leads and questions
    opened after the last lead pass are named as waiting for the next run.
-7. **Refuted**: one line each (ID, title, why).
-8. **Method and limits**: mapping method, dependency source, running target,
+8. **Refuted**: one line each (ID, title, why).
+9. **Method and limits**: mapping method, dependency source, running target,
    standing unknowns, cosmetic discrepancies.
 
 ## Plain-language summary
@@ -35,30 +39,32 @@ For a decision maker who reads no code. Two pages at most.
 
 1. **What was looked at, and what was not**, unaudited axes named plainly.
 2. **The overall picture**, three to five sentences.
-3. **Quick wins**: everyday title, why it matters (from the plain-language
-   explanation), what fixing involves, who usually does it.
-4. **To go further**: other confirmed findings by theme, a sentence or two
-   each.
+3. **Quick wins**: the quick-win fixes, each with an everyday title, why it
+   matters (from its findings' plain-language explanations), what fixing
+   involves, who usually does it.
+4. **To go further**: the other fixes by theme, a sentence or two each;
+   those waiting for a decision say which.
 5. **What we need from you**: the owner's questions, without jargon.
 
-Open confirmed findings only; accepted ones as one line ("N points were kept
-as they are, by decision"). IDs only in a closing table. A `sensitive` finding
-is told by its consequence alone: no file, entry point, parameter, host or
-method. A severity label comes with its meaning.
+Open fixes only; accepted findings as one line ("N points were kept as they
+are, by decision"). IDs only in a closing table, fixes with their findings.
+A `sensitive` fix is told by its consequence alone: no file, entry point,
+parameter, host or method. A severity label comes with its meaning.
 
 ## Remediation prompts
 
-One self-contained prompt per confirmed `promptable` quick win; the other
-confirmed `promptable` findings if the auditor asked.
+One self-contained prompt per `promptable` quick-win fix, covering all its
+findings; the other `promptable` fixes if the auditor asked, in the plan's
+order.
 
 - `executable`, to a coding agent in the repository: stack and
   repository-relative files, the target behaviour, constraints (what stays,
-  conventions), the remediation's check as a test or command.
+  conventions), the check of each finding as a test or command.
 - `vendor-brief`, to a developer: what to change, why in one sentence, how to
   check.
 - `both`: both forms.
 
 Prompts leave the confidential perimeter, so they describe the target state
 only: no exploitation path, payload, secret, personal data, or production host
-or URL. Quick wins that are not `promptable` close the file under "To do by
-hand", with who does it and how to check.
+or URL. Quick-win fixes that are not `promptable` close the file under "To
+do by hand", with their executor and how to check.

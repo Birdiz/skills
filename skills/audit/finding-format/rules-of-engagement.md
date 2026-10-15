@@ -103,7 +103,7 @@ Binding on every audit step: recon, axes, verification.
 - Each tool run (scanners, analysers, audit commands, the `git log` commands
   and scripts an axis relies on) is scripted in
   `tool-output/<step>/run-<name>.sh` (`<step>`: `recon`, the axis, `verify`,
-  `report`; a later run of the same step in `tool-output/<step>/<run>/`,
+  `plan`, `report`; a later run of the same step in `tool-output/<step>/<run>/`,
   `lead-pass-<YYYY-MM-DD>` or `round-2`), raw output kept beside it, paths
   relative to the workspace so a copy reruns in place, times in UTC, auditor
   artifacts (`.gitnexus/`, caches, the workspace) excluded; in a container,
@@ -117,6 +117,7 @@ Binding on every audit step: recon, axes, verification.
   truncate output without saying so.
 - Each step lists its own skill version and the tools it ran,
   `name@version`, in its own output (the map's header, an axis's coverage, a
-  verification note, the report's provenance); only `audit-kickoff` copies
+  verification note, the plan's header, the report's provenance); only
+  `audit-kickoff` copies
   them into the engagement file, before the report. Steps may run in
   parallel, so none other writes the engagement file.

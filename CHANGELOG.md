@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.15.0 (unreleased)
+
+Findings grouped into fixes, the unit of work the deliverables and the
+coming tickets use. Auditor's decisions: findings share a fix when one
+change resolves them, or when the same executor changes the same files in
+one go; grouping is its own step, before the report; the report checks the
+plan's form, and no independent verification checks the grouping, each
+finding keeping its own check inside the fix.
+
+- Add `remediation-plan`: every confirmed open finding in exactly one fix
+  (`R-<NNN>`, `single`, `one-change` or `same-files`), each with why
+  together, change, check, executor (`code`, `operations`, `owner`), effort
+  and what it waits for (a fix or a decision); an order table; quick wins
+  derived per fix; IDs stable across runs, fixes left empty kept as `done`
+  or `dropped`; contradicting remediations kept apart as discrepancies; a
+  script checks membership, derived fields and order
+- `audit-report`: reads the plan, sends a missing or stale one back to
+  `remediation-plan`, checks each fix against its findings (a dropped check
+  or a contradicted remediation blocks); the peer report gains the plan,
+  the summary's quick wins and the prompts are per fix
+- `audit-kickoff`: `remediation-plan` runs after the second verification;
+  `02-remediation-plan.md` in the workspace. Rules of engagement:
+  `tool-output/plan/`
+
 ## 0.14.0 (unreleased)
 
 From the first run of `infra-security` and `privacy` (a copy of the
