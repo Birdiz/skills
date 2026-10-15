@@ -1,6 +1,6 @@
 {
   "name": "birdiz-skills",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "Agent skills for technical audits: recon, app security, infrastructure security, privacy, code quality, architecture, accessibility, SEO, performance, independent verification, remediation plans, reports.",
   "author": {
     "name": "Thomas Bouzy",

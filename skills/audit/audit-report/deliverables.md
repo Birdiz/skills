@@ -5,8 +5,9 @@
 Complete, for a technical reader who will act on it or challenge it.
 
 1. **Summary**: confirmed findings by severity and axis; the number of
-   fixes, by executor; quick wins (fixes); the two or three fixes that
-   matter most, one sentence each.
+   fixes, by executor; quick wins; the first three fixes of the plan's
+   order, one sentence each, and any high-severity fix waiting for a
+   decision, with the decision.
 2. **Scope and coverage**: each axis's coverage in one common table (area,
    status, note); gaps as visible as findings.
 3. **Remediation plan**: the plan's order table, then each fix: title, ID,
@@ -28,7 +29,8 @@ Complete, for a technical reader who will act on it or challenge it.
    those asked and unanswered apart from those never asked; an answer that
    would move several ratings (an obligation, a volume, a decision not yet
    taken) says so once, with the effect on counts. Leads and questions
-   opened after the last lead pass are named as waiting for the next run.
+   opened by the last lead pass, or after it, are named as waiting for the
+   next run.
 8. **Refuted**: one line each (ID, title, why).
 9. **Method and limits**: mapping method, dependency source, running target,
    standing unknowns, cosmetic discrepancies.

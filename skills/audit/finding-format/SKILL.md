@@ -5,7 +5,7 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.15.0 (audit skills, see CHANGELOG)
+Version: 0.16.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
@@ -105,9 +105,8 @@ prose use the engagement's `language`.
   (verified at a later commit).
 - **`references`** may be empty when no framework names the problem; a
   reference is never stretched to fill it.
-- **Quick win**, derived and never stored: `confirmed`, `open`, medium or
-  above, effort S. Deliverables count quick wins by fix
-  (`remediation-plan`).
+- **Quick win** is a property of a fix, derived (`remediation-plan`): a
+  finding is one through its fix.
 
 ## Leads
 
@@ -212,7 +211,10 @@ Per area: `evaluated`, `partial` (gap stated), `not-evaluable` (missing
 capability named, no findings), `not-requested`, the last two kept distinct.
 An area judged on answers names them, and lists the controls it takes as
 `declared, not observed (Q-…)`; one waiting for an answer that could change
-a finding or a rating in it is `partial`.
+a finding or a rating in it, or promote a lead to a finding, is `partial`,
+whether the question was asked or not. An answer that defers to someone
+else (counsel) leaves nothing waiting in the area: the deferred point is a
+lead or a condition stated in a finding.
 The axis as a whole is `evaluated` when every area is, `partial` with the
 partial areas named, `not-evaluable` when a required capability was missing.
 The coverage opens with the skill that wrote it (`skill: <name>@<version>`)

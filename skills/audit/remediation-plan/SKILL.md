@@ -5,7 +5,7 @@ description: Group the confirmed findings of an audit into fixes (one piece of w
 
 # remediation-plan
 
-Version: 0.15.0 (audit skills, see CHANGELOG)
+Version: 0.16.0 (audit skills, see CHANGELOG)
 
 Turn findings into work. A **fix** is what one person does in one go (a pull
 request, a session in a console, a decision): it resolves one or more
@@ -18,11 +18,17 @@ Remediations stay owned by their findings; the plan joins them.
 
 ## Before starting
 
-1. Read the engagement file, `finding-format`, every findings file.
+1. Read the engagement file, `finding-format`, and in every findings file
+   what planning needs: each finding's YAML, technical explanation,
+   remediation, verification note and auditor answer, and the questions
+   with their answers.
 2. Take every finding `confirmed` with `resolution: open`. One that is
    `unverified` waits for `verify-findings`; `refuted`, `accepted` and
    `fixed` ones have nothing to plan.
 3. An existing plan is updated, never rewritten from nothing (Updating).
+   The plan is stale, and this step runs again, when a finding enters or
+   leaves the set above, or when a finding's verification note or auditor
+   answer is dated after the plan's `generated`.
 
 ## Grouping
 
@@ -32,14 +38,22 @@ Each finding goes into exactly one fix. Findings share a fix when:
   cause, or their remediations describe the same change at the same
   locations (`grouping: one-change`);
 - **the same files**, changed by the same executor in one go, each by its
-  own change (`grouping: same-files`), provided the group neither waits for
-  more nor costs more effort than its most severe finding alone would.
+  own change in the same place (a block, a template, a service) or with
+  remediations that cite each other (`grouping: same-files`), provided the
+  findings are all sensitive or all not, and the group neither waits for
+  more nor costs more effort than its most severe finding alone would (the
+  group's effort is judged whole and stated).
 
-Anything else (the same mechanism in other files, a fix that needs another
-first) stays in separate fixes, linked by `waits_for` or named in the
-reason. A fix with one finding is `grouping: single`. Each group states why,
-with a pointer: the sentence that names the cause, or the files both
-remediations change.
+Anything else (the same mechanism in other files, a cause shared in part,
+the same console, a fix that needs another first) stays in separate fixes,
+linked by `waits_for` or named in the reason. A fix with one finding is
+`grouping: single`. Each fix states its grouping, with a pointer: the
+sentence that names the cause, or the place both remediations change; a
+single fix names the related findings kept apart, and why.
+
+A finding is never split across fixes. A remediation offering options keeps
+them: a group may name the option its findings share, and the fix waits for
+nothing unless the choice is the owner's (below).
 
 Two remediations that contradict each other are not merged: their findings
 stay in separate fixes, and the conflict goes under `## Discrepancies`, for
@@ -83,31 +97,44 @@ locations:
   - assets/styles/app.css:120
 ```
 
-**Why together.** The cause both findings name (F-A11Y-008, technical
+**Grouping.** The cause both findings name (F-A11Y-008, technical
 explanation; F-PERF-008, verification note).
 
-**Change.** The target state, from the findings' remediations.
+**Change.** The target state, from the findings' remediations, in steps
+when several executors take part.
 
 **Check.** Each finding's check, by ID.
 ````
 
-- **Executor**: `code` for a change in the repository, `operations` for a
-  host, a console, the forge or the cloud, `owner` for a decision, a text or
-  a document only the owner can give.
-- **Waits for**: a fix to do first, or a decision the owner has not taken
-  (an unanswered or undecided question, by ID). A fix waiting for a
-  decision is still planned, so the decision shows as the blocker.
+- **Executor**: who does the main change. `code` for a change in the
+  repository, its content included (a template, a colour); `operations` for
+  a host, a console, the forge or the cloud; `owner` when the fix is itself
+  a decision, a legal or organisational text, or a document only the owner
+  can give. Steps for another executor are named in the change.
+- **Waits for**: a fix to do first, or a decision the owner has not taken:
+  a question unanswered, answered "not decided", or deferred to someone
+  else (counsel), by ID (`<axis> question <n>` when it has none), or a
+  decision the remediation places before the work, named. A choice made
+  while doing the fix waits for nothing; a fix that is the decision has
+  executor `owner` and waits for nothing. A fix waiting for a decision is
+  still planned, so the decision shows as the blocker; a remediation with
+  a first step that waits for nothing says so in the change.
 - **Change** describes the target state, never the attack: tickets and
-  prompts are drawn from it.
-- **Quick win**, derived: open, severity medium or above, effort S, nothing
-  to wait for.
+  prompts are drawn from it. **Check** keeps every case each finding
+  showed, described as behaviour to test (a redirect to another host, in
+  any of the forms the finding found), so a test written from it fails
+  before the fix.
+- **`locations`**: where the change lands, not the evidence.
+- **Quick win**: an open fix of severity medium or above, effort S, waiting
+  for nothing. Deliverables count quick wins this way.
 
 ## Order
 
-Fixes waiting for nothing come first, then by severity, then by effort,
-quick wins first among equals; a fix always comes after those it waits
-for. Fixes waiting for a decision close the order, with the decision. The
-order is the `## Order` table; IDs never encode it.
+Three tiers: fixes waiting for nothing, then fixes waiting only for other
+fixes (each after those it waits for), then fixes waiting for a decision,
+with the decision. Within a tier: severity, then effort, then ID. The order
+is the `## Order` table. A first plan numbers its fixes in that order;
+later fixes take the next free ID, so IDs stop following the order.
 
 ## Updating
 
@@ -116,15 +143,18 @@ later run, a fix keeps its ID while any of its findings is still in it; a
 finding newly confirmed joins a fix by the same rules, or opens a new one;
 a finding fixed, accepted or refuted leaves its fix. A fix left empty
 becomes `done` when its findings were fixed, `dropped` otherwise, and stays
-in the file. Each change of membership is one dated line under the fix.
+in the file. Each change of membership after the first plan is one dated
+line under the fix.
 
 ## Checking
 
-A script in `tool-output/plan/`, run with `bash`, checks that every
-confirmed open finding is in exactly one open fix, that every ID cited
-exists with the status given, that `severity`, `promptable` and `sensitive`
-follow from the findings, and that nothing comes before what it waits for.
-Its output is kept beside it.
+Every script that computes what the plan states is kept in
+`tool-output/plan/`; the header's `tools` are those whose output the plan
+relies on. A script there, run with `bash`, checks that every confirmed
+open finding is in exactly one open fix, that every ID cited exists (a
+finding with the status given, a question waited for still undecided), that
+`severity`, `promptable` and `sensitive` follow from the findings, and that
+nothing comes before what it waits for. Its output is kept beside it.
 
 ## End report
 

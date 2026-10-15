@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.16.0 (unreleased)
+
+From the first run of `remediation-plan` and the report on its plan (a copy
+of the gn-platform 30edaa4 workspace, findings unchanged): 63 findings in 49
+fixes (39 single, 1 one-change, 9 same-files), 15 quick wins, 9 fixes
+waiting for a decision, no discrepancy; the report in DRAFT with five
+blocking items, each routed to its owner, the 0.14.0 rules held (versions
+no longer block). It caught a finding wrongly marked not sensitive, nine
+findings changed by lead passes and never verified again, and a fix whose
+check no longer failed before the fix. What was loose: two quick-win
+definitions, same-files groups chaining from file to file, decisions named
+without a question, mixed executors, staleness of the plan undefined.
+
+- `remediation-plan`: what to read in the findings; when the plan is
+  stale; same-files means the same place, with findings of one
+  sensitivity; partial causes and shared consoles stay apart; a finding
+  never split, options kept; executor is who does the main change, other
+  steps named; what a fix waits for (undecided or deferred answers,
+  decisions placed before the work), and a fix that is a decision; a check
+  that still fails before the fix; `locations` where the change lands;
+  three tiers in the order, first plan numbered in order; scripts and
+  tools recorded; `**Grouping.**` for every fix
+- `finding-format`: a quick win is a fix's property; an area waiting for an
+  answer that could promote a lead, asked or not, is `partial`, while an
+  answer deferring to someone else leaves nothing waiting
+- `audit-report`: a finding changed after its note is not verified; a
+  stale plan goes back; `sensitive` among blocking contradictions; a fix
+  whose check passes without the fix blocks; fixers named in order; the
+  recorded axis status shown beside the derived one; dated copies;
+  questions waiting split three ways; top fixes from the plan's order
+
 ## 0.15.0 (unreleased)
 
 Findings grouped into fixes, the unit of work the deliverables and the

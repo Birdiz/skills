@@ -37,8 +37,8 @@ findings and reports.
   findings share one change, or the same files and executor.
 - **Remediation plan**: the ordered fixes of an engagement, with who does
   each and what it waits for. Written by `remediation-plan`.
-- **Quick win**: a confirmed, unresolved finding of medium severity or above
-  and small effort. Derived, not stored.
+- **Quick win**: an open fix of medium severity or above, small effort,
+  waiting for nothing. Derived, not stored.
 - **Resolution**: what the owner did about a finding: open, accepted (kept by
   decision), or fixed (verified at a later commit). Independent of status.
 - **Sensitive**: a finding that would help an outside attacker or expose
