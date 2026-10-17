@@ -1,7 +1,7 @@
 {
   "name": "birdiz-skills",
-  "version": "0.14.0",
-  "description": "Agent skills for technical audits: recon, app security, infrastructure security, privacy, code quality, architecture, accessibility, SEO, performance, independent verification, reports.",
+  "version": "0.16.0",
+  "description": "Agent skills for technical audits: recon, app security, infrastructure security, privacy, code quality, architecture, accessibility, SEO, performance, independent verification, remediation plans, reports.",
   "author": {
     "name": "Thomas Bouzy",
     "url": "https://github.com/Birdiz"
@@ -23,6 +23,7 @@
     "./skills/audit/seo",
     "./skills/audit/performance",
     "./skills/audit/verify-findings",
+    "./skills/audit/remediation-plan",
     "./skills/audit/audit-report"
   ]
 }

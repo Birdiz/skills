@@ -63,6 +63,7 @@ remote:
 <engagement-slug>/
   00-engagement.md
   01-codebase-map.md     # recon
+  02-remediation-plan.md # remediation-plan
   findings/              # one file per axis
   client-docs/           # documents the owner gives, masked
   reports/
