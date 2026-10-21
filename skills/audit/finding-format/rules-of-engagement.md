@@ -67,6 +67,11 @@ Binding on every audit step: recon, axes, verification.
   workspace; configuration is read through the provider's API, never
   changed, and the content of stores (objects, rows, secret values) is never
   read. Output is masked of secrets and personal data before it is kept.
+- **The issue tracker** may be read (visibility, labels, a search for a
+  fix's ticket) with the auditor's own access. Only `tickets` writes there:
+  new issues, one per fix, with the permission the engagement records and
+  the auditor's yes for the batch. Nothing in it is edited, commented,
+  closed or deleted, and no label or milestone is created.
 - Passive also covers one TLS handshake per host, to read the protocol and
   the certificate. Enumerating protocols, ciphers or ports is scanning:
   active only, on the listed hosts.
@@ -103,7 +108,7 @@ Binding on every audit step: recon, axes, verification.
 - Each tool run (scanners, analysers, audit commands, the `git log` commands
   and scripts an axis relies on) is scripted in
   `tool-output/<step>/run-<name>.sh` (`<step>`: `recon`, the axis, `verify`,
-  `plan`, `report`; a later run of the same step in `tool-output/<step>/<run>/`,
+  `plan`, `report`, `tickets`; a later run of the same step in `tool-output/<step>/<run>/`,
   `lead-pass-<YYYY-MM-DD>` or `round-2`), raw output kept beside it, paths
   relative to the workspace so a copy reruns in place, times in UTC, auditor
   artifacts (`.gitnexus/`, caches, the workspace) excluded; in a container,

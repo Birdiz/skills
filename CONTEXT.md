@@ -37,6 +37,10 @@ findings and reports.
   findings share one change, or the same files and executor.
 - **Remediation plan**: the ordered fixes of an engagement, with who does
   each and what it waits for. Written by `remediation-plan`.
+- **Ticket**: one fix handed to whoever does it, in the target's issue
+  tracker when the owner allows it, a local file otherwise; drawn from the
+  fix, never carrying how the problem is exploited, and the team's once
+  created. Written by `tickets`.
 - **Quick win**: an open fix of medium severity or above, small effort,
   waiting for nothing. Derived, not stored.
 - **Resolution**: what the owner did about a finding: open, accepted (kept by

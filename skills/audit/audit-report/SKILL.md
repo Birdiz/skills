@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.16.0 (audit skills, see CHANGELOG)
+Version: 0.17.0 (audit skills, see CHANGELOG)
 
 A report is a **projection** of the findings: every claim traces to a finding,
 a lead, a coverage line, a fix of the plan or the engagement file. Input:
@@ -55,11 +55,12 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    other, an axis plan the coverages since moved), listed under "Method and
    limits" and fixed at the next revision.
 6. **Draft** while a blocking one remains: deliverables open with `DRAFT`
-   and the list, each item naming who fixes it, in order when several do: `verify-findings` in
-   revision mode for the findings' text, the axis's lead pass for its
-   coverage, `remediation-plan` for the plan, `audit-kickoff` for the
-   engagement file. The end message asks
-   for those steps, then a new report.
+   and the list, numbered, each item naming by ID the findings and fixes
+   whose text it could change (`tickets` holds those back), and who fixes
+   it, in order when several do: `verify-findings` in revision mode for
+   the findings' text, the axis's lead pass for its coverage,
+   `remediation-plan` for the plan, `audit-kickoff` for the engagement
+   file. The end message asks for those steps, then a new report.
 
 Fixes happen in the findings files, through the skill that owns them, and the
 report is regenerated; a finding changed after the report means a new report,

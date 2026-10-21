@@ -3,7 +3,8 @@
 Ask only for fields with a reader: target and scope (all axes), owner
 (authorization), capabilities and wanted axes (axis plan), testing and hosts
 (security axes; asked only with a running target), audience (`audit-report`),
-tools and MCP servers (record, provenance). Tools are pinned `name@version`;
+tickets (`tickets`; the tracker fields only with a tracker), tools and MCP
+servers (record, provenance). Tools are pinned `name@version`;
 every connected MCP server left unused goes in `mcp_servers_excluded` and
 receives no code or finding.
 
@@ -43,6 +44,16 @@ for: <self|client>
 prompt_executor: <vendor-brief|executable|both|none>
 language: <fr|en|...>
 
+## Tickets
+destination: <tracker|local>
+tracker: <kind (github, gitlab, forgejo, jira...): project | none>
+visibility: <restricted|public|unknown, from its API on YYYY-MM-DD>
+allowed_by: <name, role | n/a>
+allowed_on: <YYYY-MM-DD | n/a>
+evidence: <"verbatim statement" (auditor-owned) | document reference (third party) | n/a>
+conventions: <repository path of its ticket conventions | none>
+labels: [<existing label: when it applies>]
+
 ## Tooling
 tools: [<name@version>]   # copied at the end from each step's output
 mcp_servers: [<name@version>]
@@ -65,6 +76,7 @@ remote:
   01-codebase-map.md     # recon
   02-remediation-plan.md # remediation-plan
   findings/              # one file per axis
+  tickets/               # tickets, one per fix, and their index
   client-docs/           # documents the owner gives, masked
   reports/
 ```
