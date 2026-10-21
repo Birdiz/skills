@@ -6,3 +6,6 @@
 .gitnexus/
 node_modules/
 .DS_Store
+
+# Python
+__pycache__/

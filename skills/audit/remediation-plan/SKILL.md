@@ -5,7 +5,7 @@ description: Group the confirmed findings of an audit into fixes (one piece of w
 
 # remediation-plan
 
-Version: 0.18.0 (audit skills, see CHANGELOG)
+Version: 0.19.0 (audit skills, see CHANGELOG)
 
 Turn findings into work. A **fix** is what one person does in one go (a pull
 request, a session in a console, a decision): it resolves one or more
@@ -157,7 +157,10 @@ relies on. A script there, run with `bash`, checks that every confirmed
 open finding is in exactly one open fix, that every ID cited exists (a
 finding with the status given, a question waited for still undecided), that
 `severity`, `promptable` and `sensitive` follow from the findings, and that
-nothing comes before what it waits for. Its output is kept beside it.
+nothing comes before what it waits for. The validator (`finding-format`,
+Validator), run with `--require verification --require plan`, checks all
+of it but the questions' answers, which the script reads itself; without
+Python 3, the script checks all of it. Its output is kept beside it.
 
 ## End report
 

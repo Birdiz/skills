@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.18.0 (audit skills, see CHANGELOG)
+Version: 0.19.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -32,7 +32,8 @@ finding that already has a `verification` key was verified before (an
 interrupted run resumes this way) and is skipped, outside revision mode,
 unless an `**Auditor answer.**` dated after that key changed it: then only
 what the answer changed is re-checked (its reason, its pointer, the rating
-against the grid), and the note says so.
+against the grid), the note says so, and the key's `on` takes the date of
+that re-check.
 
 Before replaying anything on the running target, check which commit it
 serves and which image runs it. Data on the target may have changed since the axis ran (fixtures
@@ -143,6 +144,11 @@ is the one step that reads them all, alone):
    by F-…; remains <what>, <who>`. A refuted finding settles nothing.
 3. List the axes that received leads after they ran: each needs a lead pass
    (`finding-format`, Leads).
+
+Last, run the validator (`finding-format`, Validator) with `--require
+verification`, its output kept in `tool-output/verify/`. Its errors in
+what this step wrote are fixed in place; the others go in the end report,
+for the step that owns them. Its `lead-pass` lines are the axes of step 3.
 
 ## End report
 
