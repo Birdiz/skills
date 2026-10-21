@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.18.0 (audit skills, see CHANGELOG)
+Version: 0.19.0 (audit skills, see CHANGELOG)
 
 A report is a **projection** of the findings: every claim traces to a finding,
 a lead, a coverage line, a fix of the plan or the engagement file. Input:
@@ -23,6 +23,9 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    finding in exactly one open fix, and no other, and is not stale
    (`remediation-plan`, Before starting); otherwise it goes to
    `remediation-plan` first.
+   The validator (`finding-format`, Validator), run with `--require
+   verification --require plan`, its output kept in `tool-output/report/`,
+   checks both; its other errors are discrepancies (step 5).
 3. **Recompute** every count from the files, with a script kept in
    `tool-output/report/`.
 4. **Consistency check** per finding: text agrees with the YAML (prose rating,

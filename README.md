@@ -16,8 +16,8 @@ local development stack. Two axes that rest partly on the owner's answers
 (`infra-security`, `privacy`) have run once, with the answers step and lead
 passes. Remediation grouping has run once, with the report on its plan.
 Tickets, one per fix, have run once, to local files; the tracker path
-has not run. See
-[Roadmap](#roadmap).
+has not run. A validator checks the form of findings files and plans; it
+has run on the workspaces of those runs. See [Roadmap](#roadmap).
 
 ## Install
 
@@ -67,7 +67,8 @@ gives you every skill twice.
 **Model-invoked** (they hold the discipline)
 
 - [finding-format](skills/audit/finding-format/SKILL.md): the schema and
-  rules every finding follows.
+  rules every finding follows, and a validator for the form of findings
+  files and plans (Python 3, standard library only).
 - [recon](skills/audit/recon/SKILL.md): map an unfamiliar codebase before
   auditing it.
 - [app-security](skills/audit/app-security/SKILL.md): the application
@@ -127,8 +128,8 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 ## Roadmap
 
 - Run `infra-security` and `privacy` against a cloud account (cloud read)
-- Run `tickets`, locally and in a tracker
-- A script that validates finding files against the schema
+- Run `tickets` in a tracker
+- Run the validator inside a full engagement
 
 ## License
 

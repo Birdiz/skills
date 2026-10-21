@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.19.0 (unreleased)
+
+A validator for the form of findings files and plans, which the steps
+that check them by hand now run when Python 3 is there. Run on the
+gn-platform 30edaa4 workspaces (v013, v015, v017): it reports the 20
+confirmed findings whose `**Auditor answer.**` is dated after their
+verification, among them the nine the v015 report listed by hand as a
+blocking item; a question marked `**Asked 2026-10-12, not answered**`
+outside the form; the questions without ID of older skills; the
+`**Why together.**` label of the 0.15.0 plan. On the plan it agrees with
+the plan's own checking script (no error). Auditor's decisions: it checks
+findings files and the plan, not tickets; the steps run it when Python 3 is there and check by
+hand otherwise, so no step depends on it.
+
+- `finding-format`: `scripts/validate.py <workspace>`, read-only, standard
+  library only: sections and order, headings against IDs, YAML keys and
+  values, prose sections, verification key and note, lead statuses, the
+  form of leads for other axes, question IDs and answer marks, area
+  statuses, every ID cited; in the plan, header, sections, each fix's
+  YAML and prose, membership, `severity`, `promptable` and `sensitive`
+  from the findings, waits, the order table and quick wins. `ERROR`,
+  `WARNING`, `PENDING <step>`; `--require verification` and `--require
+  plan`; tests beside it
+- `verify-findings`: a re-check after an auditor answer dates the key
+  `on` to that re-check; the validator runs last, with `--require
+  verification`
+- `remediation-plan`: the plan's checking script relies on the
+  validator, and checks the questions waited for itself
+- `audit-report`: verification present and plan current through the
+  validator; its other errors are discrepancies
+
 ## 0.18.0 (unreleased)
 
 From the first run of `tickets` (a copy of the gn-platform 30edaa4

@@ -5,12 +5,13 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.18.0 (audit skills, see CHANGELOG)
+Version: 0.19.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
 [schema.md](schema.md). What an audit may touch and run:
-[rules-of-engagement.md](rules-of-engagement.md).
+[rules-of-engagement.md](rules-of-engagement.md). A script checks the
+form of what this skill defines (Validator).
 
 Findings live in `<workspace>/findings/<axis>.md`, one file per axis
 (including axes outside the plan that received leads), sections `## Coverage`,
@@ -21,6 +22,26 @@ the leads and replaces the rest.
 Headings, bold labels, YAML keys and values, area names and status words
 (`evaluated`, `open:`, `closed:`) stay in English for the parsers; titles and
 prose use the engagement's `language`.
+
+## Validator
+
+`python3 -I <this skill>/scripts/validate.py <workspace>` checks the form
+of the findings files and, when there is one, of the plan: sections and
+their order, headings against IDs, YAML keys and values, prose sections,
+lead statuses, question IDs and answer marks, area statuses, the IDs
+cited, and each fix against its findings (`remediation-plan`). It writes
+nothing and needs only Python 3's standard library. Each line is `ERROR`
+(the form breaks this skill or `remediation-plan`), `WARNING` (a form of
+older skills, an ID cited and defined nowhere) or `PENDING <step>` (a step
+still to run: `verify-findings`, `remediation-plan`, `lead-pass`);
+`--require verification` and `--require plan` make the pending lines of
+those steps errors. Exit status 1 on any error.
+
+It checks form, never judgment: a pointer, a quote, a rating or a
+grouping stays with the step that owns it. A step that runs it keeps the
+output in its own `tool-output/` directory and lists
+`finding-format@<version>` in its tools. Without Python 3, the step makes
+the same checks by reading the files.
 
 ## Evidence
 
