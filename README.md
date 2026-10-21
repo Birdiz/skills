@@ -14,8 +14,9 @@ Early. The foundation, six axes (`app-security`, `code-quality`,
 reporting have run on a real codebase, together, through a full audit on a
 local development stack. Two axes that rest partly on the owner's answers
 (`infra-security`, `privacy`) have run once, with the answers step and lead
-passes. Remediation grouping has run once, with the report on its plan;
-tickets are not written. See [Roadmap](#roadmap).
+passes. Remediation grouping has run once, with the report on its plan.
+Tickets, one per fix, are written and have not run. See
+[Roadmap](#roadmap).
 
 ## Install
 
@@ -50,6 +51,8 @@ gives you every skill twice.
    in turn.
 7. `remediation-plan`: the findings grouped into fixes, ordered.
 8. `audit-report`: the deliverables the engagement's audience requires.
+9. `tickets`: one per fix, in the target's tracker when the owner allows
+   it, local files otherwise.
 
 ## Skills
 
@@ -91,6 +94,10 @@ gives you every skill twice.
   executor), ordered, with who does each and what it waits for.
 - [audit-report](skills/audit/audit-report/SKILL.md): peer report,
   plain-language summary and remediation prompts, from verified findings.
+- [tickets](skills/audit/tickets/SKILL.md): one ticket per fix, following
+  the target's conventions, in its tracker with the owner's permission
+  (sensitive fixes only in an access-restricted one), local files
+  otherwise; never edits a ticket once created.
 
 A user-invoked skill may rely on model-invoked ones, never on another
 user-invoked one.
@@ -119,10 +126,7 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 ## Roadmap
 
 - Run `infra-security` and `privacy` against a cloud account (cloud read)
-- Tickets, one per fix: at kickoff, detect whether the target has an issue
-  tracker and ask whether the agent may create tasks there; local files
-  otherwise. Sensitive fixes never go to a tracker that is not
-  access-restricted
+- Run `tickets`, locally and in a tracker
 - A script that validates finding files against the schema
 
 ## License

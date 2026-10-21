@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-kickoff
 
-Version: 0.16.0 (audit skills, see CHANGELOG)
+Version: 0.17.0 (audit skills, see CHANGELOG)
 
 Write the **engagement file**, everything true for this audit only, then run
 the audit. Template, workspace and capability matrix:
@@ -20,16 +20,18 @@ Output: `<workspace_root>/<engagement-slug>/00-engagement.md`
    the auditor to run `audit-setup`.
 2. **Detect** from the repository or URL at hand: languages, frameworks,
    infrastructure as code, frontend, commit to audit, remote host and its
-   issue tracker; for a running target, the commit and environment it
-   serves, and the image it runs (built from which commit). Restate them in
-   one block for confirmation.
+   issue tracker (its visibility from its API, its labels, and the
+   repository's conventions for tickets: an agent's guide to the tracker,
+   a contributing guide, issue templates); for a running target, the
+   commit and environment it serves, and the image it runs (built from
+   which commit). Restate them in one block for confirmation.
 3. **Interview in rounds.** Each round asks the frontier: the open questions
    whose prerequisites are settled, at most three, numbered, each with a
    recommended answer ("1 ok, 2 b, 3 ok"), through the structured question
    tool when there is one. Ask only what detection left open. When the
    auditor reads the forge or cloud with their own login, settle the scope
    of `cloud_read` here.
-4. **Settle authorization.**
+4. **Settle authorization**, and where tickets go (Tickets).
 5. **Plan the axes** from the capability matrix.
 6. **Create the workspace** outside the audited repository, and the
    dedicated clone at the audited commit inside it, recorded as
@@ -55,11 +57,30 @@ Settle it before the axis plan: `active` with its record, or `passive` with
 the auditor told what passive excludes. Confirmation waits until it is
 settled.
 
+## Tickets
+
+One per fix, written by `tickets` (fields:
+[engagement-template.md](engagement-template.md)). Local files by default.
+The tracker only with permission, which, like the testing authorization,
+is the owner's:
+
+- **Auditor-owned tracker**: ask "Do you, as owner of `<tracker>`, allow
+  the agent to create one issue per fix there?"; the answer, quoted
+  verbatim with who and when, is the permission.
+- **Third-party tracker**: the owner's written permission (document, date,
+  signatory). Without it, `destination: local`.
+
+With the tracker, propose which existing labels a ticket takes, and when
+(from the conventions: a triage label, a scope label), for the auditor to
+accept or correct; `tickets` creates none. A tracker anyone can read takes
+no sensitive fix: say so when settling it.
+
 ## Amendment
 
-An axis added after confirmation is an amendment: the auditor's request,
-quoted with its date, under the axis plan, and the axis row added with its
-status. Give its `questions.md` as at confirmation. The steps already run
+Tickets settled after confirmation are an amendment, recorded the same
+way. An axis added after confirmation is an amendment: the auditor's
+request, quoted with its date, under the axis plan, and the axis row added
+with its status. Give its `questions.md` as at confirmation. The steps already run
 keep their versions; the new ones record theirs.
 
 ## After confirmation
@@ -102,7 +123,9 @@ Run in order, without asking again:
 8. `audit-report`; if it leaves a deliverable in DRAFT, the step its list
    names for each item (`verify-findings` in revision mode, a lead pass,
    `remediation-plan`, this skill for the engagement file), then
-   `audit-report` again.
+   `audit-report` again;
+9. `tickets`, for the fixes no blocking item names; it asks once before
+   creating anything in a tracker.
 
 Stop only for a **blocker**: an active step on an unauthorized host; a
 required capability missing or unreachable; a contradiction with the file
@@ -113,5 +136,6 @@ Steps communicate through files, so a new session can resume from the
 workspace.
 
 End by reporting what was produced, what was skipped and why, findings per
-axis and severity, what was created on the target, and every question still
-unanswered across the findings files, asked or not.
+axis and severity, what was created on the target, the tickets created and
+those kept local or waiting, and every question still unanswered across the
+findings files, asked or not.

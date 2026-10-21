@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.17.0 (unreleased)
+
+Tickets, one per fix, the last step of an engagement; not yet run.
+Auditor's decisions: a fix gets its ticket once the plan is current and no
+blocking item of the report names it or its findings; the tracker needs
+the owner's permission recorded at kickoff, then the auditor's yes for
+each batch; a ticket created belongs to the team, and later runs list the
+ones whose fix changed, was done or dropped, never touching them; a
+sensitive fix may go to an access-restricted tracker, without how it is
+exploited, and stays local otherwise.
+
+- Add `tickets`: a ticket per ready fix, drawn from its Change, Check and
+  waits, following the target's documented ticket conventions or a
+  default form, with a closing line naming the fix and its findings; the
+  prompt rule for what may leave the workspace, checks naming kinds of
+  input, never a literal one; only labels and milestones that exist;
+  created in plan order after a search for the fix ID, each body sent kept;
+  `tickets/index.md` with states `sent`, `local`, `waits` and, later,
+  `changed since sent`, `fix done`, `fix dropped`; local files when the
+  engagement has no `## Tickets`
+- `audit-kickoff`: detects the tracker's visibility, labels and the
+  repository's ticket conventions; settles `## Tickets` (destination,
+  permission as for testing, labels proposed from the conventions); a
+  tracker settled after confirmation is an amendment; `tickets` runs after
+  the report; `tickets/` in the workspace
+- `audit-report`: DRAFT items are numbered and name the findings and fixes
+  they concern
+- Rules of engagement: the tracker is read with the auditor's access and
+  written only by `tickets`, new issues only; `tool-output/tickets/`
+- `audit-setup`: detects a tracker CLI or MCP server
+
 ## 0.16.0 (unreleased)
 
 From the first run of `remediation-plan` and the report on its plan (a copy

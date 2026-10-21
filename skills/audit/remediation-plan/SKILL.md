@@ -5,7 +5,7 @@ description: Group the confirmed findings of an audit into fixes (one piece of w
 
 # remediation-plan
 
-Version: 0.16.0 (audit skills, see CHANGELOG)
+Version: 0.17.0 (audit skills, see CHANGELOG)
 
 Turn findings into work. A **fix** is what one person does in one go (a pull
 request, a session in a console, a decision): it resolves one or more
@@ -138,7 +138,7 @@ later fixes take the next free ID, so IDs stop following the order.
 
 ## Updating
 
-`R-` IDs are never reused or renumbered: tickets will point at them. On a
+`R-` IDs are never reused or renumbered: tickets point at them. On a
 later run, a fix keeps its ID while any of its findings is still in it; a
 finding newly confirmed joins a fix by the same rules, or opens a new one;
 a finding fixed, accepted or refuted leaves its fix. A fix left empty
