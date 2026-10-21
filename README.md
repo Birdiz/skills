@@ -15,7 +15,8 @@ reporting have run on a real codebase, together, through a full audit on a
 local development stack. Two axes that rest partly on the owner's answers
 (`infra-security`, `privacy`) have run once, with the answers step and lead
 passes. Remediation grouping has run once, with the report on its plan.
-Tickets, one per fix, are written and have not run. See
+Tickets, one per fix, have run once, to local files; the tracker path
+has not run. See
 [Roadmap](#roadmap).
 
 ## Install

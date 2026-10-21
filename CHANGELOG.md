@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.18.0 (unreleased)
+
+From the first run of `tickets` (a copy of the gn-platform 30edaa4
+workspace, plan and report unchanged, `destination: local`, gn-platform's
+own ticket conventions), checked by a second context: 37 tickets written,
+12 fixes held by the report's five blocking items, nothing leaked from the
+workspace's paths or IDs, labels consistent. It caught two sensitive
+tickets whose Why, copied from the plain-language explanation, said who
+could exploit the problem and with what; two checks weakened when
+restated without their workspace file; and a plan check that passes
+before the fix, which the ticket could not repair. What was loose: plan
+text pointing into the workspace, an ID cited for comparison holding a
+fix, conventions against one ticket per fix, labels and headings in local
+tickets. Auditor's decisions: `tickets` replaces what the plan points to
+with its content and nothing more; one ticket per fix, conventions shape
+the form, never the scope; a check that does not hold keeps its fix
+waiting, for `remediation-plan`.
+
+- `tickets`: verification present as well as plan current; an item holds
+  what it names as possibly changed, never a comparison; a fix waiting for
+  a held fix waits; pointers (scripts, files, question and lead IDs)
+  replaced by their content and listed; a check that loses a case or
+  passes before the fix holds its fix (`waits: plan check`); Why says what
+  goes wrong and for whom, never who, from where or how, a sensitive fix
+  by its consequence alone; every case kept in the criteria; everything in
+  the engagement's language; conventions win aspect by aspect, never to
+  create labels or split a fix; labels in the index only; sensitive local
+  files marked; readiness and tickets checked by scripts; no question when
+  nothing goes to the tracker; `## Notes` in the index
+- `remediation-plan`: a step waiting for nothing has its own check; checks
+  name their cases or point to where they are listed
+- `audit-kickoff`: `tickets` routes a fix held by its plan check
+
 ## 0.17.0 (unreleased)
 
 Tickets, one per fix, the last step of an engagement; not yet run.

@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-kickoff
 
-Version: 0.17.0 (audit skills, see CHANGELOG)
+Version: 0.18.0 (audit skills, see CHANGELOG)
 
 Write the **engagement file**, everything true for this audit only, then run
 the audit. Template, workspace and capability matrix:
@@ -124,8 +124,9 @@ Run in order, without asking again:
    names for each item (`verify-findings` in revision mode, a lead pass,
    `remediation-plan`, this skill for the engagement file), then
    `audit-report` again;
-9. `tickets`, for the fixes no blocking item names; it asks once before
-   creating anything in a tracker.
+9. `tickets`, for the fixes it finds ready; it asks once before creating
+   anything in a tracker, and routes a fix held by its plan check to
+   `remediation-plan`.
 
 Stop only for a **blocker**: an active step on an unauthorized host; a
 required capability missing or unreachable; a contradiction with the file
