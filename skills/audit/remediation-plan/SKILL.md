@@ -5,7 +5,7 @@ description: Group the confirmed findings of an audit into fixes (one piece of w
 
 # remediation-plan
 
-Version: 0.19.0 (audit skills, see CHANGELOG)
+Version: 0.20.0 (audit skills, see CHANGELOG)
 
 Turn findings into work. A **fix** is what one person does in one go (a pull
 request, a session in a console, a decision): it resolves one or more
@@ -27,8 +27,9 @@ Remediations stay owned by their findings; the plan joins them.
    `fixed` ones have nothing to plan.
 3. An existing plan is updated, never rewritten from nothing (Updating).
    The plan is stale, and this step runs again, when a finding enters or
-   leaves the set above, or when a finding's verification note or auditor
-   answer is dated after the plan's `generated`.
+   leaves the set above, or when a finding's `verification` `on` or an
+   auditor answer is dated after the plan's `generated` (a `Re-checked …:
+   no change.` line does not date the note).
 
 ## Grouping
 
@@ -149,6 +150,18 @@ becomes `done` when its findings were fixed, `dropped` otherwise, and stays
 in the file. Each change of membership after the first plan is one dated
 line under the fix.
 
+An update applies this skill's current rules to the whole plan, not only
+to the findings that made it stale. A group a rule no longer allows (a
+`same-files` group mixing sensitive and non-sensitive findings) is split:
+the fix keeps its ID with the part holding its most severe finding (the
+first listed on a tie), the other part takes the next free ID, grouped by
+the same rules, each change one dated line. The
+header's `generated` and `skill` become the update's; the first line of
+prose under the header keeps the earlier ones (`first generated
+2026-10-15 by remediation-plan@0.15.0`) and says in a few words what the
+update changed, membership or not. The blocking items of the latest
+report that name this step are taken up the same way.
+
 ## Checking
 
 Every script that computes what the plan states is kept in
@@ -166,4 +179,6 @@ Python 3, the script checks all of it. Its output is kept beside it.
 
 Fixes by executor and severity, quick wins, fixes waiting for a decision
 (with the decision), groups formed and why in one line each, discrepancies;
-then continue with `audit-report`.
+on an update, the fixes whose membership, title, `sensitive` or check
+changed, since a report and tickets carry them; then continue with
+`audit-report`.

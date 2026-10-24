@@ -52,7 +52,7 @@ allowed_by: <name, role | n/a>
 allowed_on: <YYYY-MM-DD | n/a>
 evidence: <"verbatim statement" (auditor-owned) | document reference (third party) | n/a>
 conventions: <repository path of its ticket conventions | none>
-labels: [<existing label: when it applies>]
+labels: [<existing label>: <when it applies>; <existing label>: <when>]
 
 ## Tooling
 tools: [<name@version>]   # copied at the end from each step's output

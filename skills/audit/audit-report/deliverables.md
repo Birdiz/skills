@@ -26,7 +26,8 @@ Complete, for a technical reader who will act on it or challenge it.
    as declared, coverage lines `declared, not observed`), each with its
    question: the audit relies on them without having seen them.
    Questions by ID (by axis and order when they have none), each once,
-   those asked and unanswered apart from those never asked; an answer that
+   those asked and unanswered apart from those never asked, and those
+   answered but undecided (deferred, "not decided"); an answer that
    would move several ratings (an obligation, a volume, a decision not yet
    taken) says so once, with the effect on counts. Leads and questions
    opened by the last lead pass, or after it, are named as waiting for the

@@ -5,7 +5,7 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.19.0 (audit skills, see CHANGELOG)
+Version: 0.20.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
@@ -19,8 +19,10 @@ Findings live in `<workspace>/findings/<axis>.md`, one file per axis
 Questions for the auditor` (the owner's included) and `## Created on target`.
 Recon may have created the file with leads and placeholders: the axis keeps
 the leads and replaces the rest.
-Headings, bold labels, YAML keys and values, area names and status words
-(`evaluated`, `open:`, `closed:`) stay in English for the parsers; titles and
+Headings, bold labels, YAML keys and values, area names, status words
+(`evaluated`, `open:`, `closed:`) and the lines other steps parse (a
+verification's `Re-checked …: no change.`, a report's `Holds:`) stay in
+English for the parsers; titles and
 prose use the engagement's `language`.
 
 ## Validator
@@ -28,8 +30,13 @@ prose use the engagement's `language`.
 `python3 -I <this skill>/scripts/validate.py <workspace>` checks the form
 of the findings files and, when there is one, of the plan: sections and
 their order, headings against IDs, YAML keys and values, prose sections,
-lead statuses, question IDs and answer marks, area statuses, the IDs
-cited, and each fix against its findings (`remediation-plan`). It writes
+lead statuses, question IDs and answer marks (numbered or not), area
+statuses, the IDs cited, and each fix against its findings
+(`remediation-plan`: membership, derived keys, a `same-files` group mixing
+sensitive and non-sensitive findings, `locations` pointing into the
+workspace). An auditor answer dated after the verification is pending
+for `verify-findings` until the note re-checks it (`verify-findings`, Per
+finding). It writes
 nothing and needs only Python 3's standard library. Each line is `ERROR`
 (the form breaks this skill or `remediation-plan`), `WARNING` (a form of
 older skills, an ID cited and defined nowhere) or `PENDING <step>` (a step
@@ -59,6 +66,9 @@ the same checks by reading the files.
   stands with confidence at most medium.
 - **Openable**: cite only the audited repository, the workspace,
   `tool-output/`, or a public reference; never memory or a past conversation.
+  A public reference is versioned (a tag, a commit, a numbered edition; a
+  branch is not) or dated, or kept as a copy in the workspace whose run
+  output gives its fetch date; `audit-report` holds the others.
 - **References from the source**: copy every identifier (ASVS, WCAG, CWE
   alike) from the framework text, kept in `tool-output/` (fetched when absent) or behind a
   versioned URL, version named; cite the one or two whose requirement states
@@ -203,7 +213,8 @@ is asked open, and no step invents one. A question asked in another file is
 not asked again: refer to its ID, and ask only what it leaves. A question
 the skill asks up front goes in the file before any finding is written,
 created for it if absent. Questions written without an ID (older skills) are
-numbered by the next step that writes the file, in order, text unchanged.
+numbered by the next step that writes the file (`verify-findings`
+included), in order, text unchanged.
 
 An axis that cannot reach the owner (a sub-agent, an absent client) works
 on: it rates on what is shown, and a finding whose rating depends on an
@@ -214,6 +225,9 @@ step is writing that file: `**Answer (YYYY-MM-DD, who):** "<the owner's
 words>"`, then, when the owner chose a proposal, `accepts the proposal:
 <proposal>`, so the owner's words and the recorder's stay apart. A question
 asked and left unanswered gets `**Asked (YYYY-MM-DD), not answered.**`.
+A mark out of this form whose date and words leave no doubt is put in
+form by `verify-findings`, which reads every file; the old mark is quoted
+in its end report.
 
 The axis's lead pass applies the answers. In a finding the answer changes,
 or whose question names it, as `**Auditor answer.**` after

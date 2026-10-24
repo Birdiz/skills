@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.19.0 (audit skills, see CHANGELOG)
+Version: 0.20.0 (audit skills, see CHANGELOG)
 
 A report is a **projection** of the findings: every claim traces to a finding,
 a lead, a coverage line, a fix of the plan or the engagement file. Input:
@@ -16,16 +16,23 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
 
 1. Read the engagement file, `finding-format`, every findings file.
 2. **Verification present**: every finding `confirmed`, `refuted`, or
-   `unverified` with a `**Verification.**` note, and none changed by an
-   `**Auditor answer.**` dated after its note. Any other goes to
-   `verify-findings` first, in a separate context.
+   `unverified` with a `**Verification.**` note, and none with an
+   `**Auditor answer.**` dated after its note that the note has not
+   re-checked. Any other goes to `verify-findings` first, in a separate
+   context.
    **Plan current**: `02-remediation-plan.md` holds every confirmed open
    finding in exactly one open fix, and no other, and is not stale
    (`remediation-plan`, Before starting); otherwise it goes to
    `remediation-plan` first.
    The validator (`finding-format`, Validator), run with `--require
    verification --require plan`, its output kept in `tool-output/report/`,
-   checks both; its other errors are discrepancies (step 5).
+   checks both; its other errors are discrepancies (step 5): cosmetic
+   when the form alone is wrong (a mark, a label), blocking otherwise.
+   **Engagement current**: a step run since `audit-kickoff` last copied
+   versions and tools: `audit-kickoff` (After confirmation, step 7) makes
+   that copy first.
+   **Inputs**: the sha256 of the plan and of each findings file, kept in
+   `tool-output/report/` as `inputs.sha256`; `tickets` compares them.
 3. **Recompute** every count from the files, with a script kept in
    `tool-output/report/`.
 4. **Consistency check** per finding: text agrees with the YAML (prose rating,
@@ -37,10 +44,13 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    citation); each step's skill version, recorded in its output or
    attributed by the engagement file, agrees with that file;
    each axis's status, derived as `finding-format` says from its areas,
-   agrees with what the areas state. Per fix: its reason for grouping is
+   agrees with what the areas state. A findings file whose hash matches
+   the previous report's `inputs.sha256` keeps that report's judgments, said under "Method and limits"; the rules changed
+   since are checked on every one. Per fix: its reason for grouping is
    stated with a pointer; its change agrees with each finding's
    remediation; its check holds each finding's check, so a test written
-   from it fails before the fix; its `severity`,
+   from it fails before the fix, and a step of the change that waits for
+   nothing has its own; its `locations` are where the change lands; its `severity`,
    `promptable` and `sensitive` follow from its findings.
 5. **Sort discrepancies.** *Blocking*: something a reader acts on or judges
    by is wrong or unreadable: a remediation stale or incomplete; a rating,
@@ -59,7 +69,11 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    limits" and fixed at the next revision.
 6. **Draft** while a blocking one remains: deliverables open with `DRAFT`
    and the list, numbered, each item naming by ID the findings and fixes
-   whose text it could change (`tickets` holds those back), and who fixes
+   whose text it could change, and ending with a line `Holds: R-…, R-…`
+   (or `Holds: nothing`), in English, that `tickets` reads: every fix holding one of
+   those findings, a change that depends on what the step finds included.
+   A finding the item could create holds no fix yet: a ticket it later
+   joins shows as changed since sent. Each item names who fixes
    it, in order when several do: `verify-findings` in revision mode for
    the findings' text, the axis's lead pass for its coverage,
    `remediation-plan` for the plan, `audit-kickoff` for the engagement

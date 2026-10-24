@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-kickoff
 
-Version: 0.19.0 (audit skills, see CHANGELOG)
+Version: 0.20.0 (audit skills, see CHANGELOG)
 
 Write the **engagement file**, everything true for this audit only, then run
 the audit. Template, workspace and capability matrix:
@@ -72,7 +72,9 @@ is the owner's:
 
 With the tracker, propose which existing labels a ticket takes, and when
 (from the conventions: a triage label, a scope label), for the auditor to
-accept or correct; `tickets` creates none. A tracker anyone can read takes
+accept or correct; `tickets` creates none. A label the conventions name
+that the tracker lacks is said when proposing. "Waits for nothing" means
+no fix and no decision. A tracker anyone can read takes
 no sensitive fix: say so when settling it.
 
 ## Amendment
