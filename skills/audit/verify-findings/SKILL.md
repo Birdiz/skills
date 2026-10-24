@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.19.0 (audit skills, see CHANGELOG)
+Version: 0.20.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -30,13 +30,21 @@ has been checked and failed. Take every `unverified` finding, file by file,
 by severity within each file, and save each file as soon as it is done. A
 finding that already has a `verification` key was verified before (an
 interrupted run resumes this way) and is skipped, outside revision mode,
-unless an `**Auditor answer.**` dated after that key changed it: then only
-what the answer changed is re-checked (its reason, its pointer, the rating
-against the grid), the note says so, and the key's `on` takes the date of
-that re-check.
+unless an `**Auditor answer.**` is dated after that key and no
+`Re-checked …, answer of <that date>` line of the note covers it: then
+only what the answer changed is re-checked (its reason, its pointer, the
+rating against the axis's current grid, its references), and the
+`**Verification.**` paragraph gets one line. When the re-check corrects
+nothing, the line is `Re-checked YYYY-MM-DD, answer of YYYY-MM-DD: no
+change.`, in English whatever the note's language, and `on` stays, so the
+plan is not made stale for nothing; when it corrects something, the line says
+what, and `on` takes the re-check's date. Earlier lines of the note stay as
+history; the new line names any value it supersedes. Leads are
+spot-checked only where the answers re-checked closed them.
 
 Before replaying anything on the running target, check which commit it
-serves and which image runs it. Data on the target may have changed since the axis ran (fixtures
+serves and which image runs it. A target that no longer exists replays
+nothing: its dynamic evidence stands as recorded, and the note says so. Data on the target may have changed since the axis ran (fixtures
 reloaded, another step's creations): re-observe with current identifiers and
 say so in the note.
 
@@ -65,7 +73,9 @@ say so in the note.
 4. **Rating**: severity against the axis grid; a stated adjustment holds
    only if its reason holds at its pointer (a sound move on a wrong reason is
    kept, the reason rewritten); confidence; `sensitive` and `promptable`
-   against `finding-format`; references against their source.
+   against `finding-format`; references against their source, each
+   openable (`finding-format`, Evidence): an undated one gets a copy in
+   the workspace whose run output gives its fetch date.
 5. **Decide**:
    - `confirmed`: evidence reproduced, no control, reachability as stated;
      a wrong rating is corrected;
@@ -113,7 +123,8 @@ annotated with the pointer. The rest stays as written.
 ## Revision mode
 
 Discrepancies listed by `audit-report` or the auditor in verified findings
-(text against YAML, unapplied corrections, unopenable citations) are applied
+(text against YAML, unapplied corrections, unopenable citations), and the
+blocking items of the latest report that name this step, are applied
 in place under the same rules, `confirmed` findings included. Re-check only
 what the correction touches; add one line to the note saying what was revised
 and when.
@@ -147,12 +158,18 @@ is the one step that reads them all, alone):
 
 Last, run the validator (`finding-format`, Validator) with `--require
 verification`, its output kept in `tool-output/verify/`. Its errors in
-what this step wrote are fixed in place; the others go in the end report,
-for the step that owns them. Its `lead-pass` lines are the axes of step 3.
+what this step wrote, and answer marks out of form whose date and words
+leave no doubt (`finding-format`, Questions and answers), are fixed in
+place, and questions without ID numbered in the files this step writes;
+the others go in the end report, for the step that owns them. Its
+`lead-pass` lines are the axes of step 3.
 
 ## End report
 
 Per axis: confirmed, refuted, unverified, ratings changed, text corrected,
 leads reopened, moved, or closed as settled; then the questions added, the
-citations added between findings with one cause, and the axes that need a
-lead pass. Continue with those lead passes, or with `audit-report`.
+citations added between findings with one cause, the marks put in form
+(each old mark quoted), and the axes that need a lead pass; the findings whose text changed that a report or a ticket
+already carries, so the next `audit-report` and `tickets` take them up.
+Continue with those lead passes, or with `remediation-plan` when a plan
+exists, then `audit-report`.

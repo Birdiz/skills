@@ -5,7 +5,7 @@ description: Turn the fixes of an audit's remediation plan into tickets, one per
 
 # tickets
 
-Version: 0.19.0 (audit skills, see CHANGELOG)
+Version: 0.20.0 (audit skills, see CHANGELOG)
 
 One **ticket** per open fix of the plan: the work handed to whoever does it,
 where they track work. Input: `00-engagement.md`, `02-remediation-plan.md`,
@@ -17,7 +17,8 @@ A ticket is drawn from its fix and adds nothing: no finding, no grouping, no
 remediation of its own; what it takes from elsewhere is only what the plan
 points to (Pointers). One fix, one ticket, never split. Once created in a
 tracker it belongs to the team: this step never edits, comments on,
-relabels, closes or deletes it.
+relabels, closes or deletes it, beyond the dependency links made right
+after it (Creating, step 4).
 
 ## Before starting
 
@@ -26,25 +27,42 @@ relabels, closes or deletes it.
    ticket draws on: evidence (to judge checks), plain-language
    explanation, remediation, `sensitive`.
 2. **Verification present and plan current**, as `audit-report` requires
-   them (Before writing, step 2); otherwise the step it names first. A plan
-   written by an older version of `remediation-plan` is current unless it
-   is stale by that skill's rule. No report yet: `audit-report` first.
+   them (Before writing, step 2); otherwise the step it names first. The
+   validator (`finding-format`, Validator), run with `--require
+   verification --require plan`, checks both; its output is kept with this
+   run's scripts and `finding-format@<version>` listed in `tools`. An
+   error of form alone (a mark, a label) holds nothing, as the report
+   sorts it. A plan written by an older version of `remediation-plan` is
+   current unless it is stale by that skill's rule.
+   **Report current**: the hashes in the report's `inputs.sha256`
+   (`audit-report`, Before writing) match the plan and findings files now;
+   no report, no hashes, or one differing: `audit-report` first.
 3. **Ready fixes**: each `open` fix of the plan, unless:
    - a blocking item of the report's DRAFT list (the peer report's, or
-     any deliverable's: they carry the same list) names the fix or one of
-     its findings as something it could change; an ID cited only for
-     comparison holds nothing, and an item naming no finding or fix holds
-     no fix. The whole fix waits, with the item's number;
+     any deliverable's: they carry the same list) holds it, by its
+     `Holds:` line; in a report without that line, by naming the fix or
+     one of its findings as something it could change (an ID cited only
+     for comparison holds nothing). The whole fix waits, with the item's
+     number;
    - it waits for a fix that is not ready (`waits: R-NNN`);
    - its check does not hold (Pointers): `waits: plan check`, for
      `remediation-plan`.
 
    A report without DRAFT holds no fix.
+
+   **Done since the audit**: when the tracker's default branch has moved
+   past the audited commit, read its commits since then and the issues
+   closed since the audit began, through the tracker's API, never fetched
+   into the audited working copy. A ready fix whose change shows there is
+   `local: possibly done after <commit>`, with the commit or issue, listed
+   in the question and created only when the answer names it ("all"
+   covers the tickets listed to create), and named in the end report for
+   `verify-findings` on a later commit.
 4. An existing `tickets/index.md` is updated, never rewritten from nothing
    (Later runs).
 
-Readiness is computed by a script in `tool-output/tickets/`, its output
-kept beside it.
+Readiness is computed by a script in `tool-output/tickets/` (a later
+run in `tool-output/tickets/<YYYY-MM-DD>/`), its output kept beside it.
 
 ## Destination
 
@@ -111,16 +129,19 @@ data, production host or URL, workspace path, or lead or question ID.
 - **Why** says what goes wrong and for whom, from the findings'
   plain-language explanations, never who could cause it, from where, by
   what means, nor what limits it today. A sensitive fix's Why is its
-  consequence alone, as the summary tells it. The plain-language
+  consequence alone, as the summary tells it (the plain-language
+  explanation's consequence when there is no summary). The plain-language
   explanations were written for the confidential report: reread each
   sentence against this rule before using it.
-- **Acceptance criteria** keep every case each finding's check holds
+- **Acceptance criteria** keep every case the fix's Check holds
   (every page, every form, every row) and name the kinds of input to test,
   not a literal one ("a destination on another host, in every form the
   filter accepts", not the string).
 - A sensitive fix in a restricted tracker keeps its files and checks under
   the same rule. Its local file opens with
-  `<!-- sensitive: access-restricted tracker only -->`.
+  `<!-- sensitive: access-restricted tracker only -->`; the body sent opens
+  with one line in the ticket's language saying it stays in an
+  access-restricted tracker, so it reads as such if the tracker opens.
 
 ## Pointers
 
@@ -143,22 +164,34 @@ fix, `waits: plan check`, with what is wrong in one line, for
    tracker included.
 2. A script in `tool-output/tickets/` checks every ticket: title and size
    as in the plan, closing line present, no workspace path, lead or
-   question ID, URL, host, e-mail address or `<redacted>`. Its output is
-   kept beside it.
-3. When tickets go to the tracker, **ask once**, through the structured
-   question tool when there is one: the tickets to create (fix, title,
-   labels, what each is blocked by), then those kept local and those
-   waiting, each with its reason. Only a clear yes creates; the auditor may
-   strike lines. The answer goes in the index, verbatim, with its date.
-   Without it, the files stay local. When nothing goes to the tracker,
-   nothing is asked, and `allowed: n/a`.
+   question ID, URL (`scheme://`), host name of the target, e-mail address
+   or `<redacted>`, anywhere in the file. It is run once on tickets broken
+   on purpose, so a check that reads nothing fails. Its output is kept
+   beside it.
+3. When tickets go to the tracker, the index first lists them all: those
+   to create (fix, title, labels, what each is blocked by, the dependency
+   links the conventions make), then those kept local, waiting or
+   possibly done, each with its reason. Then **ask once**, through the
+   structured question tool when there is one: the counts (tickets and
+   dependency links), the index's path, and three answers: all, only the fixes the auditor names, or
+   none. Only a clear yes creates. The question and answer go in
+   `allowed:`, verbatim, with their date; a fix left out becomes `local:
+   struck by the auditor`. Without a yes, the files stay local. When
+   nothing goes to the tracker, nothing is asked, and `allowed: n/a`.
 4. Create in the plan's order, so a ticket waited for exists before the
-   one waiting for it. Before each, search the tracker for the fix ID in
-   the closing line: a ticket found is recorded, not created again. Each
-   creation is scripted in `tool-output/tickets/run-create.sh`, through
-   the tracker's CLI or MCP server, labels set at creation, the body sent
-   kept beside it as `R-NNN.sent.md`, and recorded in the index as soon as
-   it succeeds, so a run stopped midway resumes.
+   one waiting for it. Before each, read its index row, then search the
+   tracker for the fix ID in the closing line (an empty search is printed
+   as such): a ticket recorded or found is not created again. The body
+   sent is the local file without its marker and title line, a sensitive
+   one opening with its restricted-tracker line, a ticket waited for named
+   by its tracker reference (`#n`). Each creation is
+   scripted in `tool-output/tickets/run-create.sh`, through the tracker's
+   CLI or MCP server, labels set at creation, the body sent kept beside
+   it as `R-NNN.sent.md`, and recorded in the index as soon as it
+   succeeds, so a run stopped midway resumes. A dependency link the
+   conventions make natively, listed in the index the yes answered, is
+   made right after the waiting ticket, read back, and noted under the
+   index's `## Notes`.
 
 ## Index
 
@@ -171,7 +204,7 @@ plan: 02-remediation-plan.md, generated <YYYY-MM-DD>
 skill: tickets@<version>
 tools: [<name@version>]
 destination: <tracker: kind, project, visibility checked YYYY-MM-DD | local>
-allowed: <"the auditor's yes, verbatim" (YYYY-MM-DD) | n/a>
+allowed: <"the question" / "the auditor's answer", verbatim (YYYY-MM-DD) | pending | n/a>
 
 | Fix | Ticket | Labels | Sent | State |
 |---|---|---|---|---|
@@ -184,24 +217,33 @@ allowed: <"the auditor's yes, verbatim" (YYYY-MM-DD) | n/a>
 
 Rows in the plan's order. Labels live here and in the tracker, never in a
 ticket's body; in a local run they are what the mapping gives, for the
-auditor. `tools`: those whose output the index relies on. States: `sent`;
-`local` with its reason (destination, sensitive, struck by the auditor);
-`waits` with every reason (report item, fix, plan check); and on later runs,
-for a sent ticket, `changed since sent`, `fix done` or `fix dropped`.
+auditor. A label the mapping gives but the tracker lacks is left out,
+and noted. `tools`: those whose output the index relies on. States:
+`ready: awaiting the auditor's yes` until the question is answered;
+`sent`; `local` with its reason (destination, sensitive, struck by the
+auditor, possibly done after a commit); `waits` with every reason (report
+item, fix, plan check); and on later runs, for a sent ticket, `changed
+since sent`, `fix done` or `fix dropped`.
 `## Notes`: the pointers replaced, the fixes the conventions would split,
 any choice the skill left open.
 
 ## Later runs
 
 A fix never gets a second ticket. The local files are regenerated from the
-plan. A sent ticket whose regenerated body differs from `R-NNN.sent.md`
-becomes `changed since sent`, with what changed in one line; one whose fix
-became `done` or `dropped` says so. The auditor handles these in the
-tracker. A new fix, or one no longer waiting, goes through Creating.
+plan; the file of a fix neither ready nor sent is removed. A sent ticket
+keeps its row, link and latest `R-NNN.sent.md` (whichever run folder
+holds it), with any hold noted. One whose regenerated body, prepared as
+sent, differs from that `R-NNN.sent.md` becomes
+`changed since sent`, with what changed in one line; one whose fix became
+`done` or `dropped` says so. The auditor handles these in the tracker. A
+new fix, one no longer waiting, one struck by the auditor, and one kept
+local because the destination was local before a tracker was settled go
+through Creating.
 
 ## End report
 
-Tickets created, with their links; kept local, and why; waiting, and for
-what (report item, fix, plan check, routed to its step); sent tickets
-needing the auditor (changed, done, dropped); the labels set; and that
-nothing else was written in the tracker.
+Tickets created, with their links, and the dependency links made; kept
+local, and why; possibly done since the audit, for `verify-findings` on a
+later commit; waiting, and for what (report item, fix, plan check, routed
+to its step); sent tickets needing the auditor (changed, done, dropped);
+the labels set; and that nothing else was written in the tracker.

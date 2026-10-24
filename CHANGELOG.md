@@ -1,5 +1,63 @@
 # Changelog
 
+## 0.20.0 (unreleased)
+
+From the first run of `tickets` into a tracker (GitHub, private), with the
+validator inside every downstream step: a copy of the gn-platform 30edaa4
+workspace, where `verify-findings` re-checked the 20 findings answered
+after verification, `remediation-plan` updated the plan to 0.19.0's rules
+(two `same-files` groups mixing sensitive and non-sensitive findings
+split, 51 fixes), `audit-report` regenerated the report (DRAFT, six
+blocking items, ten fixes held), and `tickets` prepared 41 tickets and
+created the four the auditor kept, with one native dependency link. What
+was loose: 12 of the 20 answers changed nothing yet forced a re-verification
+and a stale plan; a malformed answer mark no step owned kept every
+validator run failing; the report's held fixes were read from prose in
+French; `tickets` read a report older than the plan; a fix already done
+on the default branch after the audited commit would have become a
+ticket; striking 41 lines does not fit a question; nothing marked a
+sensitive ticket once sent; a dependency link was a write the rules did
+not allow. Auditor's decisions: an answer the re-check finds changes
+nothing is recorded without moving the verification date; the batch yes
+reads the full list from the index and answers all, some or none; a
+struck fix is offered again on later runs; a sensitive ticket sent opens
+with a line saying it stays in a restricted tracker.
+
+- `finding-format`: a re-checked answer stops being pending; an answer
+  mark out of form is put in form by `verify-findings`; versioned means a
+  tag, a commit or an edition, not a branch; the validator checks marks of
+  questions without ID, a `same-files` group mixing sensitivity, plan
+  `locations` pointing into the workspace, and counts every question; the
+  lines other steps parse stay in English;
+  dependency links allowed in the tracker when named in the yes; a later
+  run of a step that is not an axis goes in a dated folder
+- `verify-findings`: `Re-checked <date>, answer of <date>: no change.`
+  keeps `on`; the current grid and the references are re-checked; a removed
+  target replays nothing; undated references get a dated copy; the
+  latest report's blocking items for this step are taken up; the end
+  report names the findings a report or ticket already carries
+- `remediation-plan`: an update applies the current rules plan-wide, a
+  split group keeps its ID with its most severe finding, the header takes
+  the update's date and version and the prose keeps the first; the end
+  report names the fixes changed
+- `audit-report`: verification counts re-checked answers; validator
+  errors of form alone are cosmetic; the engagement's versions copied
+  first by `audit-kickoff`; the hashes of the plan and findings files kept
+  as `inputs.sha256`, and a findings file with the previous hash keeps the
+  previous report's judgments; a step that waits for nothing has its own
+  check; each blocking item ends with `Holds: R-…`, in English, for
+  `tickets`; answered but undecided questions apart
+- `tickets`: runs the validator; needs a report built from the current
+  plan and findings files (`inputs.sha256`); reads `Holds:`; fixes possibly done after the audited
+  commit kept local and offered; the full list in the index, a question
+  with all, some or none; struck fixes offered again; the body sent
+  without marker or title, `#n` for a ticket waited for, a sensitive one
+  marked in a line; index row before search; dependency links after the
+  waiting ticket, read back; checker tested on broken tickets; states
+  `ready: awaiting the auditor's yes`, `local: possibly done after`
+- `audit-kickoff`: labels the tracker lacks are said; "waits for nothing"
+  means no fix and no decision
+
 ## 0.19.0 (unreleased)
 
 A validator for the form of findings files and plans, which the steps

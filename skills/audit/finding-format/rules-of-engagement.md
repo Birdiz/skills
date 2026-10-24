@@ -68,10 +68,13 @@ Binding on every audit step: recon, axes, verification.
   changed, and the content of stores (objects, rows, secret values) is never
   read. Output is masked of secrets and personal data before it is kept.
 - **The issue tracker** may be read (visibility, labels, a search for a
-  fix's ticket) with the auditor's own access. Only `tickets` writes there:
+  fix's ticket, the default branch's commits and the issues closed since
+  the audit) with the auditor's own access. Only `tickets` writes there:
   new issues, one per fix, with the permission the engagement records and
-  the auditor's yes for the batch. Nothing in it is edited, commented,
-  closed or deleted, and no label or milestone is created.
+  the auditor's yes for the batch, and the dependency links the
+  tracker's conventions use, made right after the waiting ticket and
+  listed in the index that yes answered. Nothing else in it is edited, commented, closed or deleted,
+  and no label or milestone is created.
 - Passive also covers one TLS handshake per host, to read the protocol and
   the certificate. Enumerating protocols, ciphers or ports is scanning:
   active only, on the listed hosts.
@@ -109,7 +112,8 @@ Binding on every audit step: recon, axes, verification.
   and scripts an axis relies on) is scripted in
   `tool-output/<step>/run-<name>.sh` (`<step>`: `recon`, the axis, `verify`,
   `plan`, `report`, `tickets`; a later run of the same step in `tool-output/<step>/<run>/`,
-  `lead-pass-<YYYY-MM-DD>` or `round-2`), raw output kept beside it, paths
+  `<run>` being `lead-pass-<YYYY-MM-DD>` or `round-2` for an axis, the
+  run's date `<YYYY-MM-DD>` for the others), raw output kept beside it, paths
   relative to the workspace so a copy reruns in place, times in UTC, auditor
   artifacts (`.gitnexus/`, caches, the workspace) excluded; in a container,
   the working copy is mounted read-only. Rules or scripts written for the run are kept there too;

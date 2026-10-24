@@ -15,9 +15,10 @@ reporting have run on a real codebase, together, through a full audit on a
 local development stack. Two axes that rest partly on the owner's answers
 (`infra-security`, `privacy`) have run once, with the answers step and lead
 passes. Remediation grouping has run once, with the report on its plan.
-Tickets, one per fix, have run once, to local files; the tracker path
-has not run. A validator checks the form of findings files and plans; it
-has run on the workspaces of those runs. See [Roadmap](#roadmap).
+Tickets, one per fix, have run to local files, then to a GitHub tracker
+(four issues, one dependency link). A validator checks the form of findings
+files and plans; it has run inside verification, the plan, the report and
+tickets. See [Roadmap](#roadmap).
 
 ## Install
 
@@ -128,8 +129,8 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 ## Roadmap
 
 - Run `infra-security` and `privacy` against a cloud account (cloud read)
-- Run `tickets` in a tracker
-- Run the validator inside a full engagement
+- Run `tickets` again on the same tracker (later runs: changed, struck and
+  possibly-done tickets)
 
 ## License
 

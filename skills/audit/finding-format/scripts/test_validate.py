@@ -47,7 +47,7 @@ FINDINGS_FILE = """# app-security
 
 ## Coverage
 
-skill: app-security@0.19.0, tools: [semgrep@1.0]
+skill: app-security@0.20.0, tools: [semgrep@1.0]
 
 | Area | Status | Notes |
 |---|---|---|
@@ -72,7 +72,7 @@ skill: app-security@0.19.0, tools: [semgrep@1.0]
 
 PLAN = """# Remediation plan
 commit: a1b2c3d4e5f6
-skill: remediation-plan@0.19.0
+skill: remediation-plan@0.20.0
 tools: [python3@3.9.6]
 findings: 1 confirmed open, from findings/*.md read on 2026-10-12
 generated: 2026-10-12
@@ -179,6 +179,24 @@ class ValidateTest(unittest.TestCase):
         self.assertFlags("PENDING verify-findings", "auditor answer 2026-10-11 after verification 2026-10-10",
                          finding=finding)
 
+    def test_answer_rechecked_without_change(self):
+        finding = (FINDING.replace("Reproduced.\n", "Reproduced.\nRe-checked 2026-10-12, answer of 2026-10-11: no change.\n")
+                   + "\n**Auditor answer.** Q-SEC-01, answer 2026-10-11: severity kept.\n")
+        code, out = self.run_on(self.workspace(finding=finding), "--require", "verification")
+        self.assertNotIn("after verification", out)
+        self.assertEqual(code, 0, out)
+
+    def test_recheck_in_its_own_paragraph(self):
+        finding = (FINDING + "\nRe-checked 2026-10-12, answer of 2026-10-11: no change.\n"
+                   + "\n**Auditor answer.** Q-SEC-01, answer 2026-10-11: severity kept.\n")
+        code, out = self.run_on(self.workspace(finding=finding), "--require", "verification")
+        self.assertEqual(code, 0, out)
+
+    def test_recheck_of_another_answer_still_pending(self):
+        finding = (FINDING.replace("Reproduced.\n", "Reproduced.\nRe-checked 2026-10-12, answer of 2026-10-09: no change.\n")
+                   + "\n**Auditor answer.** Q-SEC-01, answer 2026-10-11: severity kept.\n")
+        self.assertFlags("PENDING verify-findings", "auditor answer 2026-10-11", finding=finding)
+
     def test_accepted_without_answer(self):
         self.assertFlags("ERROR", "resolution accepted without",
                          finding=FINDING.replace("resolution: open", "resolution: accepted"), plan=None)
@@ -198,6 +216,11 @@ class ValidateTest(unittest.TestCase):
         self.assertFlags("ERROR", "Q-SEC-01: answer not",
                          findings_file=FINDINGS_FILE.replace("**Answer (2026-10-11, owner):**", "**Answer 2026-10-11:**"))
 
+    def test_asked_form_without_id(self):
+        text = FINDINGS_FILE + "- Which host? **Asked 2026-10-12, not answered**\n"
+        code, out = self.assertFlags("ERROR", "question: not `**Asked", findings_file=text)
+        self.assertIn("2 questions", out)
+
     def test_lead_for_other_axis_waits_for_move(self):
         text = FINDINGS_FILE.replace("## Questions for the auditor",
                                      "## Leads for other axes\n\n- **privacy: Cookie scope.** framework.yaml:9.\n\n"
@@ -212,6 +235,27 @@ class ValidateTest(unittest.TestCase):
     def test_plan_severity_follows_findings(self):
         self.assertFlags("ERROR", "R-001: severity low, its findings give medium",
                          plan=PLAN.replace("severity: medium", "severity: low").replace("| medium |", "| low |"))
+
+    def test_plan_same_files_mixes_sensitivity(self):
+        finding2 = (FINDING.replace("F-SEC-001", "F-SEC-002").replace("sensitive: false", "sensitive: true")
+                    .replace("Settles L-SEC-01.", ""))
+        plan = (PLAN.replace("findings: [F-SEC-001]", "findings: [F-SEC-001, F-SEC-002]")
+                .replace("grouping: single", "grouping: same-files").replace("sensitive: false", "sensitive: true"))
+        self.assertFlags("ERROR", "mixes sensitive and non-sensitive", finding=FINDING + "\n" + finding2, plan=plan)
+
+    def test_plan_location_in_workspace(self):
+        plan = PLAN.replace("  - config/packages/framework.yaml:14\n```", "  - findings/privacy.md (Q-SEC-01)\n```")
+        self.assertFlags("ERROR", "points into the workspace", plan=plan)
+
+    def test_plan_location_repository_dirs_pass(self):
+        plan = PLAN.replace("  - config/packages/framework.yaml:14\n```",
+                            "  - config/packages/framework.yaml:14\n  - tickets/models.py:12\n  - reports/views.py\n```")
+        code, out = self.run_on(self.workspace(plan=plan))
+        self.assertNotIn("points into the workspace", out)
+
+    def test_plan_location_dot_slash(self):
+        plan = PLAN.replace("  - config/packages/framework.yaml:14\n```", "  - ./findings/app-security.md\n```")
+        self.assertFlags("ERROR", "points into the workspace", plan=plan)
 
     def test_plan_missing_finding_is_pending(self):
         plan = PLAN.replace("findings: [F-SEC-001]", "findings: []").replace("status: open", "status: dropped")

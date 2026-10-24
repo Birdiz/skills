@@ -15,7 +15,7 @@ import os
 import re
 import sys
 
-VERSION = "finding-format@0.19.0"
+VERSION = "finding-format@0.20.0"
 
 AXES = {
     "code-quality": "QUA", "architecture": "ARC", "app-security": "SEC",
@@ -63,6 +63,11 @@ L_ID = re.compile(r"\bL-(%s)-(\d+)\b" % CODES)
 Q_ID = re.compile(r"\bQ-(%s)-(\d+)\b" % CODES)
 R_ID = re.compile(r"\bR-(\d+)\b")
 DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
+RECHECK = re.compile(r"Re-checked \d{4}-\d{2}-\d{2}, answer of (\d{4}-\d{2}-\d{2}): no change\b")
+WORKSPACE = re.compile(r"^(\./)?(findings/(%s)\.md|tool-output/|client-docs/"
+                       r"|0[0-2]-(engagement|codebase-map|remediation-plan)\.md"
+                       r"|tickets/(index|R-\d{3})(\.sent)?\.md"
+                       r"|reports/(peer-report|summary|remediation-prompts)\.md)" % "|".join(AXES))
 FENCE = re.compile(r"^(`{3,}|~{3,})")
 
 
@@ -361,8 +366,9 @@ def check_finding(rep, path, axis, title, start, items, engagement_commit):
     dates = [DATE.search(p).group(1) for _, p in answers if DATE.search(p)]
     if len(dates) < len(answers):
         rep.warn(path, start + 1, "%s: an **Auditor answer.** carries no date" % fid)
+    rechecked = set(RECHECK.findall(" ".join(p for _, p in paras)))
     if ver is not None and dates:
-        late = [d for d in dates if d > str(ver["on"])]
+        late = [d for d in dates if d > str(ver["on"]) and d not in rechecked]
         if late:
             rep.pending("verify-findings", path, start + 1,
                         "%s: auditor answer %s after verification %s" % (fid, max(late), ver["on"]))
@@ -421,13 +427,15 @@ def check_questions(rep, path, axis, items, ids):
         m = re.match(r"^[-*]\s+(?:\*\*)?(Q-[A-Z0-9]+-\d+)", text)
         if not m:
             rep.warn(path, i + 1, "question without ID (older skills): the next step writing this file numbers it")
-            continue
-        qid = m.group(1)
-        if not re.fullmatch(r"Q-%s-\d{2,}" % code, qid):
-            rep.error(path, i + 1, "%s: ID does not follow Q-%s-<NN> for this file" % (qid, code))
-        if qid in ids["Q"]:
-            rep.error(path, i + 1, "%s: ID used twice (also %s)" % (qid, ids["Q"][qid]))
-        ids["Q"][qid] = "%s:%d" % (os.path.relpath(path, rep.root), i + 1)
+            ids["Q_unnumbered"] += 1
+            qid = "question"
+        else:
+            qid = m.group(1)
+            if not re.fullmatch(r"Q-%s-\d{2,}" % code, qid):
+                rep.error(path, i + 1, "%s: ID does not follow Q-%s-<NN> for this file" % (qid, code))
+            if qid in ids["Q"]:
+                rep.error(path, i + 1, "%s: ID used twice (also %s)" % (qid, ids["Q"][qid]))
+            ids["Q"][qid] = "%s:%d" % (os.path.relpath(path, rep.root), i + 1)
         for m2 in re.finditer(r"\*\*(Answer|Asked)\b[^*]*\*\*", text):
             mark = m2.group(0)
             if m2.group(1) == "Answer" and not re.match(r"\*\*Answer \(\d{4}-\d{2}-\d{2}, [^)]+\)\s*:\*\*", mark):
@@ -590,6 +598,15 @@ def check_plan(rep, path, findings, ids, engagement_commit):
                     rep.pending("remediation-plan", path, d["_line"],
                                 "%s: %s is %s/%s, no longer confirmed and open" % (rid, f, fd.get("status"), fd.get("resolution")))
         known = [findings[f].data for f in fs if f in findings]
+        if d.get("status") == "open" and d.get("grouping") == "same-files" and \
+                len({x.get("sensitive") is True for x in known}) > 1:
+            rep.error(path, d["_line"], "%s: same-files group mixes sensitive and non-sensitive findings" % rid)
+        for loc in (d.get("locations") or []) if d.get("status") == "open" else []:
+            loc = str(loc)
+            head = (loc.split() or [""])[0]
+            inside = os.path.isabs(head) and os.path.abspath(head).startswith(os.path.abspath(rep.root) + os.sep)
+            if inside or WORKSPACE.search(loc) or L_ID.search(loc) or Q_ID.search(loc):
+                rep.error(path, d["_line"], "%s: location `%s` points into the workspace, not where the change lands" % (rid, loc))
         if d.get("status") == "open" and known:
             sev = max((x.get("severity") for x in known if x.get("severity") in SEVERITIES),
                       key=SEVERITIES.index, default=None)
@@ -714,7 +731,7 @@ def main(argv):
 
     rep = Report(root)
     commit = engagement_commit(root, rep)
-    ids = {"F": {}, "L": {}, "Q": {}, "not_requested": {}}
+    ids = {"F": {}, "L": {}, "Q": {}, "Q_unnumbered": 0, "not_requested": {}}
     refs, findings = [], {}
     for name in sorted(os.listdir(fdir)):
         if not name.endswith(".md"):
@@ -758,7 +775,7 @@ def main(argv):
     print("%s: %d findings (%s), %d leads, %d questions, %d fixes (%d open)" % (
         VERSION, len(findings),
         ", ".join("%s %d" % (s, statuses.get(s, 0)) for s in FINDING_ENUMS["status"]),
-        len(ids["L"]), len(ids["Q"]), len(fixes),
+        len(ids["L"]), len(ids["Q"]) + ids["Q_unnumbered"], len(fixes),
         sum(1 for d in fixes.values() if d.get("status") == "open")))
     print("errors %d, warnings %d, pending %d%s" % (
         rep.counts["ERROR"], rep.counts["WARNING"], rep.counts["PENDING"],
