@@ -138,7 +138,7 @@ def workflow():
     b.append(arrow(xs[0] + W, yA + H/2, xs[1], yA + H/2))
     b.append(arrow(xs[1] + W, yA + H/2, xs[2], yA + H/2))
     # audit: axes cluster on the right, verify on the left
-    cx, cy, cw, ch = 430, 150, xs[2] + W - 430, 150
+    cx, cy, cw, ch = 440, 150, xs[2] + W - 440, 150
     b.append(f'<rect class="surface" x="{cx}" y="{cy}" width="{cw}" height="{ch}" rx="14"/>')
     b.append(f'<text class="ink" x="{cx+18}" y="{cy+28}" font-size="14" font-weight="600">8 axes</text>'
              f'<text class="muted" x="{cx+76}" y="{cy+28}" font-size="12.5">one findings file each, in a common format</text>')
@@ -152,15 +152,15 @@ def workflow():
     b.append(f'<text class="muted" x="{cx+18}" y="{cy+134}" font-size="12.5">'
              'findings · leads · questions only the owner can answer</text>')
     b.append(arrow(xs[2] + W/2, yA + H, xs[2] + W/2, cy))
-    vx, vy, vw, vh = L, 172, W, 106
+    vx, vy, vw, vh = L, 172, 254, 106
     b.append(f'<rect class="card" x="{vx}" y="{vy}" width="{vw}" height="{vh}" rx="12"/>'
              f'<text class="mono ink" x="{vx+18}" y="{vy+30}" font-size="15" font-weight="700">verify-findings</text>'
              f'<text class="muted" x="{vx+18}" y="{vy+52}" font-size="12.5">try to refute, from another context</text>')
     sx = vx + 18
     for color, label in [("--ok", "confirmed"), ("--bad", "refuted"), ("--idle", "unverified")]:
         b.append(f'<circle cx="{sx+5}" cy="{vy+79}" r="5" fill="var({color})"/>'
-                 f'<text class="muted" x="{sx+15}" y="{vy+83.5}" font-size="12">{label}</text>')
-        sx += 15 + len(label) * 6.6 + 14
+                 f'<text class="muted" x="{sx+15}" y="{vy+83.5}" font-size="11.5">{label}</text>')
+        sx += 15 + len(label) * 6.0 + 12
     b.append(arrow(cx, vy + 40, vx + vw, vy + 40))
     # the lead-pass loop
     ly = 330

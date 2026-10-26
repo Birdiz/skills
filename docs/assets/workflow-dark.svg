@@ -22,25 +22,25 @@ text { font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Ari
 <rect class="card" x="702" y="34" width="236" height="68" rx="12"/><text class="mono ink" x="720" y="64" font-size="15" font-weight="700">recon</text><text class="muted" x="720" y="86" font-size="12.5">one shared codebase map</text>
 <path class="wire" d="M386 68.0 L418 68.0"/><polygon class="head" points="426,68.0 417,63.0 417,73.0"/>
 <path class="wire" d="M662 68.0 L694 68.0"/><polygon class="head" points="702,68.0 693,63.0 693,73.0"/>
-<rect class="surface" x="430" y="150" width="508" height="150" rx="14"/>
-<text class="ink" x="448" y="178" font-size="14" font-weight="600">8 axes</text><text class="muted" x="506" y="178" font-size="12.5">one findings file each, in a common format</text>
-<rect class="chip" x="448.0" y="194" width="112.0" height="27" rx="13.5"/><text class="mono ink" x="504.0" y="212" font-size="12" text-anchor="middle">app-security</text>
-<rect class="chip" x="568.0" y="194" width="112.0" height="27" rx="13.5"/><text class="mono ink" x="624.0" y="212" font-size="12" text-anchor="middle">infra-security</text>
-<rect class="chip" x="688.0" y="194" width="112.0" height="27" rx="13.5"/><text class="mono ink" x="744.0" y="212" font-size="12" text-anchor="middle">privacy</text>
-<rect class="chip" x="808.0" y="194" width="112.0" height="27" rx="13.5"/><text class="mono ink" x="864.0" y="212" font-size="12" text-anchor="middle">code-quality</text>
-<rect class="chip" x="448.0" y="230" width="112.0" height="27" rx="13.5"/><text class="mono ink" x="504.0" y="248" font-size="12" text-anchor="middle">architecture</text>
-<rect class="chip" x="568.0" y="230" width="112.0" height="27" rx="13.5"/><text class="mono ink" x="624.0" y="248" font-size="12" text-anchor="middle">accessibility</text>
-<rect class="chip" x="688.0" y="230" width="112.0" height="27" rx="13.5"/><text class="mono ink" x="744.0" y="248" font-size="12" text-anchor="middle">seo</text>
-<rect class="chip" x="808.0" y="230" width="112.0" height="27" rx="13.5"/><text class="mono ink" x="864.0" y="248" font-size="12" text-anchor="middle">performance</text>
-<text class="muted" x="448" y="284" font-size="12.5">findings · leads · questions only the owner can answer</text>
+<rect class="surface" x="440" y="150" width="498" height="150" rx="14"/>
+<text class="ink" x="458" y="178" font-size="14" font-weight="600">8 axes</text><text class="muted" x="516" y="178" font-size="12.5">one findings file each, in a common format</text>
+<rect class="chip" x="458.0" y="194" width="109.5" height="27" rx="13.5"/><text class="mono ink" x="512.8" y="212" font-size="12" text-anchor="middle">app-security</text>
+<rect class="chip" x="575.5" y="194" width="109.5" height="27" rx="13.5"/><text class="mono ink" x="630.2" y="212" font-size="12" text-anchor="middle">infra-security</text>
+<rect class="chip" x="693.0" y="194" width="109.5" height="27" rx="13.5"/><text class="mono ink" x="747.8" y="212" font-size="12" text-anchor="middle">privacy</text>
+<rect class="chip" x="810.5" y="194" width="109.5" height="27" rx="13.5"/><text class="mono ink" x="865.2" y="212" font-size="12" text-anchor="middle">code-quality</text>
+<rect class="chip" x="458.0" y="230" width="109.5" height="27" rx="13.5"/><text class="mono ink" x="512.8" y="248" font-size="12" text-anchor="middle">architecture</text>
+<rect class="chip" x="575.5" y="230" width="109.5" height="27" rx="13.5"/><text class="mono ink" x="630.2" y="248" font-size="12" text-anchor="middle">accessibility</text>
+<rect class="chip" x="693.0" y="230" width="109.5" height="27" rx="13.5"/><text class="mono ink" x="747.8" y="248" font-size="12" text-anchor="middle">seo</text>
+<rect class="chip" x="810.5" y="230" width="109.5" height="27" rx="13.5"/><text class="mono ink" x="865.2" y="248" font-size="12" text-anchor="middle">performance</text>
+<text class="muted" x="458" y="284" font-size="12.5">findings · leads · questions only the owner can answer</text>
 <path class="wire" d="M820.0 102 L820.0 142"/><polygon class="head" points="820.0,150 815.0,141 825.0,141"/>
-<rect class="card" x="150" y="172" width="236" height="106" rx="12"/><text class="mono ink" x="168" y="202" font-size="15" font-weight="700">verify-findings</text><text class="muted" x="168" y="224" font-size="12.5">try to refute, from another context</text>
-<circle cx="173" cy="251" r="5" fill="var(--ok)"/><text class="muted" x="183" y="255.5" font-size="12">confirmed</text>
-<circle cx="261.4" cy="251" r="5" fill="var(--bad)"/><text class="muted" x="271.4" y="255.5" font-size="12">refuted</text>
-<circle cx="336.59999999999997" cy="251" r="5" fill="var(--idle)"/><text class="muted" x="346.59999999999997" y="255.5" font-size="12">unverified</text>
-<path class="wire" d="M430 212 L394 212"/><polygon class="head" points="386,212 395,207 395,217"/>
-<path class="loop" d="M336 278 L336 330 L684.0 330 L684.0 309"/><polygon class="head-accent" points="684.0,300 679.0,309 689.0,309"/>
-<rect x="354.0" y="316" width="312" height="28" rx="14" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/><text class="ink" x="510.0" y="334.5" font-size="12.5" text-anchor="middle">owner’s answers → lead pass → verified again</text>
+<rect class="card" x="150" y="172" width="254" height="106" rx="12"/><text class="mono ink" x="168" y="202" font-size="15" font-weight="700">verify-findings</text><text class="muted" x="168" y="224" font-size="12.5">try to refute, from another context</text>
+<circle cx="173" cy="251" r="5" fill="var(--ok)"/><text class="muted" x="183" y="255.5" font-size="11.5">confirmed</text>
+<circle cx="254.0" cy="251" r="5" fill="var(--bad)"/><text class="muted" x="264.0" y="255.5" font-size="11.5">refuted</text>
+<circle cx="323.0" cy="251" r="5" fill="var(--idle)"/><text class="muted" x="333.0" y="255.5" font-size="11.5">unverified</text>
+<path class="wire" d="M440 212 L412 212"/><polygon class="head" points="404,212 413,207 413,217"/>
+<path class="loop" d="M354 278 L354 330 L689.0 330 L689.0 309"/><polygon class="head-accent" points="689.0,300 684.0,309 694.0,309"/>
+<rect x="365.5" y="316" width="312" height="28" rx="14" fill="var(--card)" stroke="var(--accent)" stroke-width="1.5"/><text class="ink" x="521.5" y="334.5" font-size="12.5" text-anchor="middle">owner’s answers → lead pass → verified again</text>
 <path class="wire" d="M210 278 L210 376"/><polygon class="head" points="210,384 205,375 215,375"/>
 <rect class="card" x="150" y="384" width="236" height="68" rx="12"/><text class="mono ink" x="168" y="414" font-size="15" font-weight="700">remediation-plan</text><text class="muted" x="168" y="436" font-size="12.5">findings grouped into ordered fixes</text>
 <rect class="card" x="426" y="384" width="236" height="68" rx="12"/><text class="mono ink" x="444" y="414" font-size="15" font-weight="700">audit-report</text><text class="muted" x="444" y="436" font-size="12.5">peer report · summary · prompts</text>
