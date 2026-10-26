@@ -1,4 +1,15 @@
-# skills
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.svg">
+  <img alt="birdiz/skills: agent skills for technical audits" src="docs/assets/banner-light.svg" width="100%">
+</picture>
+</p>
+
+<p align="center">
+  <a href=".claude-plugin/plugin.json"><img alt="version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FBirdiz%2Fskills%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version&color=E8772E"></a>
+  <a href="#install"><img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-1B1F3B"></a>
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-5D6480"></a>
+</p>
 
 Agent skills for running technical audits: code quality, architecture,
 security, privacy, accessibility, SEO and performance.
@@ -39,6 +50,11 @@ Pick one: installing both, or keeping copies saved in your Claude account,
 gives you every skill twice.
 
 ## Flow
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/workflow-dark.svg">
+  <img alt="Workflow: frame with audit-setup, audit-kickoff and recon; audit with eight axes, verify-findings and a lead pass on the owner's answers; deliver with remediation-plan, audit-report and tickets" src="docs/assets/workflow-light.svg">
+</picture>
 
 1. `/audit-setup`, once per machine: the auditor profile.
 2. `/audit-kickoff`, once per audit: scope, access, authorization, audience.
@@ -119,7 +135,13 @@ user-invoked one.
 - **One set of findings, several reports.** Peer report, plain-language
   summary and remediation prompts are projections of the same findings.
 
-Vocabulary is defined in [CONTEXT.md](CONTEXT.md).
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/projections-dark.svg">
+  <img alt="One set of verified findings projected into a peer report, a summary and remediation prompts" src="docs/assets/projections-light.svg">
+</picture>
+
+Vocabulary is defined in [CONTEXT.md](CONTEXT.md); the visual identity in
+[docs/brand.md](docs/brand.md).
 
 ## Never commit an engagement
 
