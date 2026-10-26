@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.22.0 (audit skills, see CHANGELOG)
+Version: 0.23.0 (audit skills, see CHANGELOG)
 
 A report is a **projection** of the findings: every claim traces to a finding,
 a lead, a coverage line, a fix of the plan or the engagement file. Input:
@@ -33,13 +33,16 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    blocking otherwise.
    **Engagement current**: when a step ran since `audit-kickoff` last
    copied versions and tools (an earlier report or tickets run
-   included), this step makes that copy itself first, as `audit-kickoff`
-   (After confirmation, step 7) says, keeps the file as it was beside
-   its scripts, and says so in the provenance.
+   included; this run records itself in its own provenance), this step
+   makes that copy itself first, as `audit-kickoff` (After confirmation,
+   step 7) says, dated, keeps the file as it was beside its scripts as
+   `00-engagement.before.md`, and says so in the provenance.
    **Inputs**: the sha256 of the plan and of each findings file, kept in
    this run's folder as `inputs.sha256` (`sha256sum` format, paths
-   relative to the workspace); the provenance names that folder, where
-   `tickets` reads them and the validator output.
+   relative to the workspace), with a copy of those files under
+   `inputs/`; the provenance names that folder in an English line,
+   `run: tool-output/report/<run>/`, where `tickets` reads the hashes and
+   the validator output.
 3. **Recompute** every count from the files, with a script kept in
    this run's folder.
 4. **Consistency check** per finding: text agrees with the YAML (prose rating,
@@ -53,12 +56,15 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    each axis's status, derived as `finding-format` says from its areas,
    agrees with what the areas state. A findings file whose hash matches
    the previous report's `inputs.sha256` keeps that report's judgments,
-   and a plan whose hash matches keeps its per-fix judgments, said under
-   "Method and limits"; the rules changed since are checked on every
-   one. Per fix: its reason for grouping is stated with a pointer; its
+   and a plan whose hash matches keeps its per-fix judgments; in a file
+   that differs, the findings and fixes whose text the previous report's
+   `inputs/` copy shows unchanged keep theirs too; said under "Method and
+   limits"; the rules changed since are checked on every one. Per fix:
+   its reason for grouping is stated with a pointer; its
    change agrees with each finding's remediation; its check holds each
    finding's check, so a test written from it fails before the fix, and
-   tests every part of the change (each step, each place it lands); in a
+   tests every part of the change, as `remediation-plan` (The plan)
+   defines a part; in a
    fix that waits for something, a step its change says waits for
    nothing has its own check; its `locations` are where the change
    lands; its `severity`, `promptable` and `sensitive` follow from its
@@ -70,7 +76,9 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    an answer; findings with one cause at odds on the fix; a fix that drops
    a finding's check, leaves a part of its change untested, or
    contradicts its remediation; a location a ticket cannot carry (a
-   workspace path); an unopenable
+   workspace path), or `locations` holding only evidence; a note relying
+   on dependency code read from an install that no longer matches the
+   audited lock; an unopenable
    citation; a step whose recorded version contradicts the engagement file;
    an area status that breaks `finding-format` (evaluated while waiting for
    an answer). Versions that differ between steps, each recorded or
@@ -79,8 +87,10 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    lead ID cited after its promotion, a coverage sentence a later pass made
    stale, findings with one cause and compatible fixes that do not cite each
    other, an axis plan the coverages since moved, a location that is
-   evidence rather than where the change lands when the change names
-   where it lands), listed under "Method and limits" and fixed at the
+   evidence rather than where the change lands, or a place the change
+   names missing from `locations`, when the change names where it lands;
+   the map's install drifted with no note relying on it, for `recon`),
+   listed under "Method and limits" and fixed at the
    next revision.
 6. **Draft** while a blocking one remains: deliverables open with `DRAFT`
    and the list, numbered, each item naming by ID the findings and fixes
@@ -108,8 +118,9 @@ discrepancy, sorted as above.
 
 Structure of each: [deliverables.md](deliverables.md). Written in the
 engagement's `language`, headings free. A previous report is moved to
-`reports/superseded-<its date>/` before writing, never overwritten; the
-hand-over check leaves those folders out.
+`reports/superseded-<its date>/` (`-2`, `-3`… when that folder exists)
+before writing, never overwritten; the hand-over check leaves those
+folders out.
 
 Each opens with the same provenance: target, audited commit, audit dates;
 every axis with its status as `finding-format` derives it (evaluated,

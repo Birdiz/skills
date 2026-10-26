@@ -5,7 +5,7 @@ description: Group the confirmed findings of an audit into fixes (one piece of w
 
 # remediation-plan
 
-Version: 0.22.0 (audit skills, see CHANGELOG)
+Version: 0.23.0 (audit skills, see CHANGELOG)
 
 Turn findings into work. A **fix** is what one person does in one go (a pull
 request, a session in a console, a decision): it resolves one or more
@@ -42,8 +42,9 @@ Each finding goes into exactly one fix. Findings share a fix when:
   own change in the same place (a block, a template, a service) or with
   remediations that cite each other (`grouping: same-files`), provided the
   findings are all sensitive or all not, and the group neither waits for
-  more nor costs more effort than its most severe finding alone would (the
-  group's effort is judged whole and stated).
+  more nor costs more effort than its most severe finding alone would (on
+  a tie of severity, the one with the most effort; the group's effort is
+  judged whole and stated).
 
 Anything else (the same mechanism in other files, a cause shared in part,
 the same console, a fix that needs another first) stays in separate fixes,
@@ -125,11 +126,19 @@ when several executors take part.
   showed, described as behaviour to test (a redirect to another host, in
   any of the forms the finding found), so a test written from it fails
   before the fix, and tests every part of the change (each step, each
-  place it lands). A step of the change that waits for nothing has its own
-  check, so the work it allows can be closed. Tickets restate the check
-  outside the workspace: it names its cases, or points to where they are
-  listed.
-- **`locations`**: where the change lands, not the evidence.
+  place it lands, each option the owner may choose that has a target
+  state). A part the change only suggests ("may", "consider") or that
+  depends on what the audited commit lacks needs no criterion; a part
+  that keeps behaviour has one that passes before the fix and after, next
+  to criteria that fail before it. A step of the change that waits for
+  nothing has its own check, so the work it allows can be closed. Tickets
+  restate the check outside the workspace: it names its cases, or points
+  to where they are listed, a list that agrees with the finding (one that
+  does not is replaced by the cases, named).
+- **`locations`**: where the change lands, not the evidence: each place
+  the change names, a file to create named as such, a directory only
+  for code whose file the change leaves open, a setting outside the
+  repository in `finding-format`'s form (`forge: <setting>`).
 - **Quick win**: an open fix of severity medium or above, effort S, waiting
   for nothing. Deliverables count quick wins this way.
 
@@ -156,7 +165,9 @@ to the findings that made it stale. A group a rule no longer allows (a
 `same-files` group mixing sensitive and non-sensitive findings) is split:
 the fix keeps its ID with the part holding its most severe finding (the
 first listed on a tie), the other part takes the next free ID, grouped by
-the same rules, each change one dated line. The
+the same rules, each change one dated line. Fixes whose `locations`
+the update makes share a file are judged again for `same-files`, the
+outcome stated in each one's grouping reason. The
 header's `generated` and `skill` become the update's; the first line of
 prose under the header keeps the earlier ones (`first generated
 2026-10-15 by remediation-plan@0.15.0`) and says in a few words what the

@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.22.0 (audit skills, see CHANGELOG)
+Version: 0.23.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -57,7 +57,9 @@ say so in the note.
    middleware or config, an upstream check, infrastructure in the repository,
    read in the dependency code the map names (its install rechecked) rather
    than recalled; and the owner's own documentation of known limits and
-   planned work, which the finding must cite.
+   planned work, which the finding must cite. An install that no longer
+   matches the audited lock is not read: the note says what it could not
+   check, for `recon`.
 3. **Reachability**: who, through which entry point, under which conditions;
    an unmentioned check may leave it real but lower.
    For `code-quality` and `architecture`: the code is on the flow the finding
@@ -126,8 +128,10 @@ Discrepancies listed by `audit-report` or the auditor in verified findings
 (text against YAML, unapplied corrections, unopenable citations), and the
 blocking items of the latest report that name this step, are applied
 in place under the same rules, `confirmed` findings included. Re-check only
-what the correction touches; add one line to the note saying what was revised
-and when.
+what the correction touches; add one line to the note, `Revised
+<YYYY-MM-DD>: <what>.`, and move `on` (a correction, not a re-check). A
+note citing the report names it by its run folder, which a later report
+does not reuse.
 
 ## Leads
 

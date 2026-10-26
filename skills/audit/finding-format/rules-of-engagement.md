@@ -129,5 +129,6 @@ Binding on every audit step: recon, axes, verification.
   `name@version`, in its own output (the map's header, an axis's coverage, a
   verification note, the plan's header, the report's provenance); only
   `audit-kickoff` copies
-  them into the engagement file, before the report. Steps may run in
-  parallel, so none other writes the engagement file.
+  them into the engagement file, before the report, or `audit-report`
+  making that copy for it. Steps may run in parallel, so none other
+  writes the engagement file.

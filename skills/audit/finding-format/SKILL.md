@@ -5,7 +5,7 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.22.0 (audit skills, see CHANGELOG)
+Version: 0.23.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
@@ -36,7 +36,9 @@ statuses, the IDs cited, and each fix against its findings
 sensitive and non-sensitive findings, `locations` pointing into the
 workspace). An auditor answer dated after the verification is pending
 for `verify-findings` until the note re-checks it (`verify-findings`, Per
-finding). It writes
+finding); an answer under a question dated after the axis's last pass
+(the newest dated coverage paragraph naming its skill and version) is
+pending for `lead-pass`. It writes
 nothing and needs only Python 3's standard library. Each line is `ERROR`
 (the form breaks this skill or `remediation-plan`), `WARNING` (a form of
 older skills, an ID cited and defined nowhere) or `PENDING <step>` (a step
@@ -68,7 +70,9 @@ the same checks by reading the files.
   `tool-output/`, or a public reference; never memory or a past conversation.
   A public reference is versioned (a tag, a commit, a numbered edition; a
   branch is not) or dated, or kept as a copy in the workspace whose run
-  output gives its fetch date; `audit-report` holds the others.
+  output gives its fetch date, named in `references` as `<URL> (copy
+  <path>, fetched <YYYY-MM-DD>)`; `audit-report` holds the others. A
+  version tag is the one the target runs, when the workspace shows it.
 - **References from the source**: copy every identifier (ASVS, WCAG, CWE
   alike) from the framework text, kept in `tool-output/` (fetched when absent) or behind a
   versioned URL, version named; cite the one or two whose requirement states
@@ -149,13 +153,15 @@ finishing, rewriting its status as one of:
 - `closed: settled by F-…`, by a finding of any axis that covers it;
 - `closed: <why, pointer>`;
 - `closed: intended (Q-…), <pointer>`, for behaviour the code shows and the
-  owner's answer says is wanted;
+  owner's answer says is wanted, an answer on what the owner's own content
+  means included;
 - `closed: declared by owner (Q-…), not observed`, whenever the closure
   rests on an answer the audit cannot check (a control, a fact about a
   future deployment); reports list these apart;
 - `open: <what settles it, and who: agent, auditor or owner>`;
 - a lead settled in part joins the forms above with `;`: `open: <part>
-  settled by F-…; remains <what>, <who>`, or `closed: <part> settled by
+  settled by F-…; remains <what>, <who>`, `closed: <part> settled by
+  F-…; rest intended (Q-…), <pointer>`, or `closed: <part> settled by
   F-…; rest declared by owner (Q-…), not observed`.
 
 The new status replaces the old one.
@@ -190,18 +196,23 @@ The axis takes up, after it ran, the leads moved into its file and the
 answers to its questions, with the method of its skill where a lead needs
 it. It may:
 
-- close or promote its open leads, as above;
+- close or promote its open leads, as above, with the answers recorded in
+  other files that bear on them, cited by ID;
 - apply the answers (Questions and answers), and write the findings an
-  answer reveals, on a coverage area as on a lead;
+  answer reveals, on a coverage area as on a lead; a finding it writes
+  covers every instance its skill's method finds, beyond the lead's;
+- put the marks of its own file in form (Questions and answers);
 - open leads, ask questions, write `## Leads for other axes` and `## Created
   on target`;
-- update the coverage of the areas it touched, and add one dated line:
+- update the coverage of the areas it touched and the axis line, and add
+  one dated line after the coverage's earlier provenance:
   `lead pass <YYYY-MM-DD>: skill: <name>@<version>, tools: [...]`.
 
 Everything else in the file stays as written: other areas, findings no
 answer concerns, earlier provenance. Its findings and the confirmed findings
 it changed then go through verification. A lead or question it opens waits
-for the next run: `audit-kickoff` does one round.
+for the next run: `audit-kickoff` does one round, and a lead pass run to
+clear a report's DRAFT belongs to that round.
 
 ## Questions and answers
 
@@ -223,7 +234,9 @@ answer says which answer moves it, and how.
 An answer is recorded under the question by whoever receives it, while no
 step is writing that file: `**Answer (YYYY-MM-DD, who):** "<the owner's
 words>"`, then, when the owner chose a proposal, `accepts the proposal:
-<proposal>`, so the owner's words and the recorder's stay apart. A question
+<proposal>`, so the owner's words and the recorder's stay apart (a
+proposal written as branches, "if not, …", is accepted branch by branch).
+A question
 asked and left unanswered gets `**Asked (YYYY-MM-DD), not answered.**`.
 A mark out of this form whose date and words leave no doubt is put in
 form by `verify-findings`, which reads every file; the old mark is quoted
@@ -235,7 +248,9 @@ or whose question names it, as `**Auditor answer.**` after
 remediation, `promptable`, `resolution: accepted`, any sentence stating the
 old value) applied in place, old text quoted, with its reason. An answer
 that changes nothing is one line in the coverage, not a paragraph per
-finding. In a lead: closed, promoted or kept open. An answer describing a
+finding: one that accepts the proposal the axis worked on names the
+findings its question concerned, and why each stays. In a lead: closed,
+promoted or kept open. An answer describing a
 practice (a habit, a manual step) is not a decision to keep a risk:
 `accepted` needs the owner to say so. `status` stays with verification; an
 unshown claim becomes a lead.
@@ -249,9 +264,12 @@ An area judged on answers names them, and lists the controls it takes as
 a finding or a rating in it, or promote a lead to a finding, is `partial`,
 whether the question was asked or not. An answer that defers to someone
 else (counsel) leaves nothing waiting in the area: the deferred point is a
-lead or a condition stated in a finding.
+lead or a condition stated in a finding; "not decided yet" leaves it
+waiting.
 The axis as a whole is `evaluated` when every area is, `partial` with the
-partial areas named, `not-evaluable` when a required capability was missing.
+partial areas named, `not-evaluable` when a required capability was missing,
+written as the coverage's last line, `Axis: <status> (<partial areas>)`,
+which each pass rewrites.
 The coverage opens with the skill that wrote it (`skill: <name>@<version>`)
 and the tools it ran; each later pass adds its own line (Lead pass).
 Name the evidence sources: audited commit, dependency code origin, running

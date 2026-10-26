@@ -151,9 +151,9 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 ## Roadmap
 
 - Run `infra-security` and `privacy` against a cloud account (cloud read)
-- Clear the gn-platform report's DRAFT (`verify-findings` in revision mode,
-  seo and accessibility lead passes, `remediation-plan`), then `audit-report`
-  and `tickets` on 0.22.0 (uncovered changes, same-day runs, question kept)
+- Run `verify-findings` on gn-platform's current main for the fixes the team
+  closed or did since the audit (#102 to #105, R-017, R-024, R-025, R-043),
+  then `tickets` again (`fix done`, closed tickets)
 
 ## License
 
