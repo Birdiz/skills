@@ -15,7 +15,7 @@ import os
 import re
 import sys
 
-VERSION = "finding-format@0.22.0"
+VERSION = "finding-format@0.23.0"
 
 AXES = {
     "code-quality": "QUA", "architecture": "ARC", "app-security": "SEC",
@@ -421,7 +421,7 @@ def check_other_axes(rep, path, items, refs):
         rep.pending("verify-findings", path, i + 1, "lead for %s not moved yet" % m.group(1))
 
 
-def check_questions(rep, path, axis, items, ids):
+def check_questions(rep, path, axis, items, ids, last_pass):
     code = AXES[axis]
     for i, text in bullets(items):
         m = re.match(r"^[-*]\s+(?:\*\*)?(Q-[A-Z0-9]+-\d+)", text)
@@ -440,6 +440,8 @@ def check_questions(rep, path, axis, items, ids):
             mark = m2.group(0)
             if m2.group(1) == "Answer" and not re.match(r"\*\*Answer \(\d{4}-\d{2}-\d{2}, [^)]+\)\s*:\*\*", mark):
                 rep.error(path, i + 1, "%s: answer not `**Answer (YYYY-MM-DD, who):**`: %s" % (qid, mark))
+            elif m2.group(1) == "Answer" and last_pass and mark[10:20] > last_pass:
+                rep.pending("lead-pass", path, i + 1, "%s: answered %s, after the axis's last pass (%s): waits for a lead pass" % (qid, mark[10:20], last_pass))
             if m2.group(1) == "Asked" and not re.match(r"\*\*Asked \(\d{4}-\d{2}-\d{2}\), not answered\.\*\*", mark):
                 rep.error(path, i + 1, "%s: not `**Asked (YYYY-MM-DD), not answered.**`: %s" % (qid, mark))
 
@@ -466,6 +468,27 @@ def check_coverage(rep, path, start, items):
         word = re.match(r"[a-z-]*", cells[col] if col < len(cells) else "").group(0)
         if word not in AREA_STATUSES:
             rep.error(path, i + 1, "area `%s`: status `%s` not in %s" % (cells[0], cells[col] if col < len(cells) else "", " | ".join(AREA_STATUSES)))
+
+
+def last_pass(sections, axis):
+    """Date of the axis's last pass: the newest date in a coverage paragraph
+    naming the axis's own skill and version (its run, or a lead pass); None
+    when no paragraph names it (older skills), so nothing is checked."""
+    for name, _, items in sections:
+        if name != "Coverage":
+            continue
+        paras, cur = [], []
+        for _, line, _, _ in items:
+            if line is None or not line.strip() or re.match(r"\s*[-*|]", line):
+                paras.append(" ".join(cur))
+                cur = [line] if line and re.match(r"\s*[-*]", line) else []
+            else:
+                cur.append(line)
+        paras.append(" ".join(cur))
+        dates = [d for p in paras if re.search(r"\b%s@\d" % re.escape(axis), p)
+                 for d in re.findall(r"\b\d{4}-\d{2}-\d{2}\b", p)]
+        return max(dates) if dates else None
+    return None
 
 
 def check_findings_file(rep, path, axis, engagement_commit, ids, refs, findings):
@@ -502,7 +525,7 @@ def check_findings_file(rep, path, axis, engagement_commit, ids, refs, findings)
         elif name == "Leads for other axes":
             check_other_axes(rep, path, items, refs)
         elif name == "Questions for the auditor":
-            check_questions(rep, path, axis, items, ids)
+            check_questions(rep, path, axis, items, ids, last_pass(sections[1:], axis))
     text = "\n".join(lines)
     for regex in (F_ID, L_ID, Q_ID):
         for m in regex.finditer(text):

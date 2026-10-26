@@ -1,5 +1,75 @@
 # Changelog
 
+## 0.23.0 (unreleased)
+
+From clearing the gn-platform report's DRAFT, then a fourth `tickets` run
+on the same tracker, all with 0.22.0 on a copy of the 30edaa4 workspace:
+the owner answered the two questions the DRAFT waited for (pages to
+index, accepted as proposed; archetype images decorative), the seo and
+accessibility lead passes applied them (seo: no finding changed, a new
+question on trusted proxies, Duplicates `partial`; accessibility:
+L-A11Y-01 closed, F-A11Y-014 written), `verify-findings` confirmed
+F-A11Y-014 and revised F-SEC-001 (`sensitive`) and three references,
+`remediation-plan` applied the "every part of the change" rule to the
+whole plan (41 checks rewritten, R-052 created, locations corrected),
+`audit-report` produced the first report with no DRAFT, and `tickets`
+created 37 tickets (#117 to #153) on the auditor's yes, after the
+session's permission system refused the agent's first attempt. What was
+loose: no rule said what counts as a part of a change, how a part that
+keeps behaviour or a suggested part is checked, or what `locations`
+holds for code not yet written; overlapping locations did not reopen
+grouping; the validator never saw an answer waiting for a lead pass; a
+lead pass could not put its own marks in form, widen a finding to the
+instances its method found, use other axes' answers, or say where the
+axis status goes; an accepted working proposal, a conditional proposal,
+an "intended" rest and "not decided yet" had no form; a revision had no
+line form and did not say it moves `on`; a copy kept for a reference had
+no form in `references`; a drifted dependency install was read
+silently; the rules of engagement forbade the report's engagement copy;
+a same-day report overwrote the superseded one and kept no copy of its
+inputs; `tickets` found the report's folder in French prose; possibly
+done fixes had no place in the question; a yes not yet created had no
+state; 37 creations ran with no pause.
+
+- `remediation-plan`: a part of the change is each step, place and
+  option with a target state; a suggested or not-yet-possible part needs
+  no criterion; a part that keeps behaviour passes before and after; a
+  list pointed to that disagrees with its finding is replaced by the
+  cases; `locations` name files to create, a directory only when the
+  change leaves the file open, settings as `forge:`; overlapping
+  locations re-judged for `same-files`; a severity tie in a group's
+  effort goes to the most effort
+- `finding-format`: the validator flags an answer dated after the axis's
+  last pass (`PENDING lead-pass`); a lead pass widens its finding to every
+  instance its method finds, uses other files' answers on its leads,
+  puts its own marks in form, writes its line after the coverage's
+  provenance and the axis line `Axis: <status> (<partial areas>)`; a
+  DRAFT's lead passes belong to the one round; `closed: <part> settled
+  by F-…; rest intended (Q-…)`; an answer on the owner's own content is
+  `intended`; an accepted working proposal names the findings it leaves
+  unchanged; a conditional proposal is accepted by branch; "not decided
+  yet" leaves the area waiting; a kept copy in `references` is `<URL>
+  (copy <path>, fetched <date>)`, a tag the one the target runs
+- `verify-findings`: `Revised <date>: <what>.`, moving `on`; a note
+  names a report by its run folder; an install that no longer matches
+  the lock is not read
+- `audit-report`: `inputs/` copy beside `inputs.sha256`, unchanged
+  findings and fixes keep their judgments in a changed file; an English
+  `run:` line in the provenance; the engagement copy dated, kept as
+  `00-engagement.before.md`, this run not in it; `locations` with only
+  evidence and a note on a drifted install blocking, a landing place
+  missing from `locations` cosmetic; `superseded-<date>-2`
+- `tickets`: report folder from the `run:` line; possibly done listed
+  apart in the question, with the links they would add, struck when
+  "all" leaves them out; the question in the session's language with a
+  `pending` covers line, and who asked it in Notes; states for a struck
+  fix offered again and for a yes not yet created; a pause between
+  creations, a stop at the first failure, a rerun to resume; closing as
+  `PR #n (merge sha)`; older tickets' `Sent` version from their run's
+  Notes; replaced `allowed` lines kept; a sent fix's struck copy removed;
+  decisions seen in the code named in the end report
+- rules of engagement: `audit-report` may make the engagement copy
+
 ## 0.22.0 (unreleased)
 
 From the third run of `tickets` on the same tracker, after `audit-report`
