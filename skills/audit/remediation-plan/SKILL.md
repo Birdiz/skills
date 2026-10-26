@@ -5,7 +5,7 @@ description: Group the confirmed findings of an audit into fixes (one piece of w
 
 # remediation-plan
 
-Version: 0.21.0 (audit skills, see CHANGELOG)
+Version: 0.22.0 (audit skills, see CHANGELOG)
 
 Turn findings into work. A **fix** is what one person does in one go (a pull
 request, a session in a console, a decision): it resolves one or more
@@ -124,7 +124,8 @@ when several executors take part.
   prompts are drawn from it. **Check** keeps every case each finding
   showed, described as behaviour to test (a redirect to another host, in
   any of the forms the finding found), so a test written from it fails
-  before the fix. A step of the change that waits for nothing has its own
+  before the fix, and tests every part of the change (each step, each
+  place it lands). A step of the change that waits for nothing has its own
   check, so the work it allows can be closed. Tickets restate the check
   outside the workspace: it names its cases, or points to where they are
   listed.

@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-kickoff
 
-Version: 0.21.0 (audit skills, see CHANGELOG)
+Version: 0.22.0 (audit skills, see CHANGELOG)
 
 Write the **engagement file**, everything true for this audit only, then run
 the audit. Template, workspace and capability matrix:
@@ -119,9 +119,12 @@ Run in order, without asking again:
    findings it changed; one round only: leads and questions opened by
    either stay open, and reach the report as such;
 6. `remediation-plan`;
-7. copy into `tools` the skill versions and `name@version` each step listed
-   in its output; a step that listed none is attributed the version it ran
-   under, from `skills_version`, and said so;
+7. copy into `tools` the `name@version` each step listed in its output,
+   and into `skills_by_step` the skill version each step recorded (report
+   and tickets runs included, from their headers and kept lines), dating
+   the copy; a step that listed none is attributed the version it ran
+   under, from `skills_version`, and said so. `audit-report` makes this
+   copy itself when it finds it out of date;
 8. `audit-report`; if it leaves a deliverable in DRAFT, the step its list
    names for each item (`verify-findings` in revision mode, a lead pass,
    `remediation-plan`, this skill for the engagement file), then

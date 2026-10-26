@@ -1,5 +1,61 @@
 # Changelog
 
+## 0.22.0 (unreleased)
+
+From the third run of `tickets` on the same tracker, after `audit-report`
+on the same day: a copy of the gn-platform 30edaa4 workspace, findings
+and plan unchanged since 2026-10-24. The report, rebuilt by 0.21.0, kept
+its input hashes (DRAFT, eight blocking items, ten fixes held, R-007 and
+R-041 released), and `tickets` created the two tickets it found ready
+(#113, #114) once the auditor said yes; three sent tickets were closed by
+the team, 35 struck fixes stayed struck. What was loose: the previous
+report had no place to go and earlier ones were lost; the report's hashes
+and validator output had no fixed home once dated run folders exist; no
+rule said who copies versions into the engagement after a tickets run;
+`Holds:` lines had no placement; a workspace path in `locations` and an
+evidence line there sorted alike; a part of a fix's change no check tests
+passed every check (R-007's inscriptions page); two runs on one day
+shared a folder; an earlier run had rewritten struck rows as ready; a fix
+both struck and waiting, or struck and possibly done, had no state, nor
+did a waiting fix possibly done; "possibly done" counted pull requests
+merged before the audited commit and matched titles across languages;
+the question asked was a shortened one, and `allowed:` nested quotes; the
+conventions were read at the audited commit; a relabelled ticket and the
+skill version that sent each ticket were not recorded. Auditor's
+decisions: a part of a change no check tests is blocking in the report
+and holds the fix in `tickets`; `audit-report` makes the engagement copy
+itself.
+
+- `audit-report`: the plan and the map's header read; validator output,
+  counts and `inputs.sha256` (`sha256sum` format) in this run's folder,
+  named in the provenance; the engagement copy of `audit-kickoff` step 7
+  made by this step, the file before it kept; a matching plan hash keeps
+  per-fix judgments; a check tests every part of the change, a step
+  waiting for nothing checked only in a fix that waits; a workspace path
+  in `locations` blocking, an evidence line cosmetic; one `Holds:` line
+  per item; a previous report moved to `reports/superseded-<date>/`
+- `tickets`: conventions read on the tracker's default branch (local:
+  the working copy); report's folder from its provenance; "done since"
+  excludes what merged into the audited commit, drops title terms, reads
+  an issue through the merged pull requests its timeline names, covers
+  waiting and struck fixes as a line beside their state, judges masked
+  diffs into the script as data, names earlier runs' kept patches; a
+  check holds only when every part of the change has a criterion; the
+  question written in Notes before it is asked and asked as written,
+  waiting struck fixes counted apart, possibly done listed only when
+  offered; `allowed:` holds the answer only, Notes the fixes it covers,
+  which `run-create.sh` (in the run folder) reads; struck is what an
+  answer struck, kept over waiting, possibly done or freed; reasons
+  combine with `;`; files of fixes neither ready nor sent moved to the
+  run's `removed/`, `superseded-*` left alone; `Sent` gives the skill
+  version; creation labels kept, relabelling noted; earlier `skill` and
+  `tools` lines kept in Notes; the closing commit found from the event,
+  else the merged pull request
+- `remediation-plan`: a check tests every part of the change
+- `audit-kickoff`: `skills_by_step` in the template, report and tickets
+  runs included, the copy dated
+- rules of engagement: a second run the same day in `<YYYY-MM-DD>-2`
+
 ## 0.21.0 (unreleased)
 
 From the second run of `tickets` on the same tracker, two days after the
