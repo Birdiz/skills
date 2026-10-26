@@ -15,7 +15,7 @@ import os
 import re
 import sys
 
-VERSION = "finding-format@0.20.0"
+VERSION = "finding-format@0.21.0"
 
 AXES = {
     "code-quality": "QUA", "architecture": "ARC", "app-security": "SEC",
