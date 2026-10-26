@@ -129,8 +129,8 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 ## Roadmap
 
 - Run `infra-security` and `privacy` against a cloud account (cloud read)
-- Run `tickets` again on the same tracker (later runs: changed, struck and
-  possibly-done tickets)
+- Run `audit-report` then `tickets` again on the same tracker (later runs:
+  closed, struck and possibly-done tickets; the 0.21.0 rules)
 
 ## License
 

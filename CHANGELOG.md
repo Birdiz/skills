@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.21.0 (unreleased)
+
+From the second run of `tickets` on the same tracker, two days after the
+first: a copy of the gn-platform 30edaa4 workspace, plan, findings and
+report unchanged, with two of the four tickets sent closed by the team and
+the default branch 27 commits past the audited one. The run stopped before
+its question, as the skill says: the report, built by 0.19.0, kept no
+input hashes. What was loose: no report from before 0.20.0 could ever be
+current, and nothing said whether that stops the run or only creation;
+the 37 fixes struck two days earlier came back as 35 tickets to create on
+an unchanged plan; a ticket closed in the tracker while its fix is open in
+the plan had no state; a ticket counted as changed since sent only
+because the skill added its restricted-tracker line; "possibly done" had
+no method (shared files gave about 25 false candidates), no rule for a
+partial change or for a fix waiting on one, and nothing kept diffs that
+may hold a secret value out of the run's output; a new validator error
+the report never sorted; the restricted-tracker line had no wording; the
+bodies sent had two possible homes. Auditor's decisions: a struck fix
+comes back only when its ticket changes or the auditor names it; no
+hashes means `audit-report` first, holding creation only; a difference
+from the skill's own form is no change.
+
+- `tickets`: `audit-report` first holds creation only, the rest prepared
+  with `allowed: pending`; a report without hashes is not current; the
+  validator's errors are the report's to sort, one it lacks sends to
+  `audit-report`; possibly done judged from each candidate's diff, a part
+  or stricter change included, a fix waiting for it ready and linked only
+  when both are created, no patch or body kept; the restricted-tracker
+  line worded; struck fixes dated and kept as `R-NNN.struck.md`, offered
+  again only when changed or named; bodies sent kept in `tickets/`; state
+  `closed in tracker`, with how it was closed, for `verify-findings`; a
+  difference of form alone is not `changed since sent`; a hold on a sent
+  ticket's fix is one line; old files of fixes neither ready nor sent
+  removed anywhere under `tickets/`, bodies sent kept elsewhere moved
+  there
+
 ## 0.20.0 (unreleased)
 
 From the first run of `tickets` into a tracker (GitHub, private), with the
