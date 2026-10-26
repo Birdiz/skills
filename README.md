@@ -129,8 +129,9 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 ## Roadmap
 
 - Run `infra-security` and `privacy` against a cloud account (cloud read)
-- Run `audit-report` then `tickets` again on the same tracker (later runs:
-  closed, struck and possibly-done tickets; the 0.21.0 rules)
+- Clear the gn-platform report's DRAFT (`verify-findings` in revision mode,
+  seo and accessibility lead passes, `remediation-plan`), then `audit-report`
+  and `tickets` on 0.22.0 (uncovered changes, same-day runs, question kept)
 
 ## License
 

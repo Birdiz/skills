@@ -55,7 +55,8 @@ conventions: <repository path of its ticket conventions | none>
 labels: [<existing label>: <when it applies>; <existing label>: <when>]
 
 ## Tooling
-tools: [<name@version>]   # copied at the end from each step's output
+tools: [<name@version>]   # copied <YYYY-MM-DD> from each step's output
+skills_by_step: [<step (date): name@version>]   # copied with tools
 mcp_servers: [<name@version>]
 mcp_servers_excluded: [<name>]
 

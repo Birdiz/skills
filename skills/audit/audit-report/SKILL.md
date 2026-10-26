@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.21.0 (audit skills, see CHANGELOG)
+Version: 0.22.0 (audit skills, see CHANGELOG)
 
 A report is a **projection** of the findings: every claim traces to a finding,
 a lead, a coverage line, a fix of the plan or the engagement file. Input:
@@ -14,7 +14,8 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
 
 ## Before writing
 
-1. Read the engagement file, `finding-format`, every findings file.
+1. Read the engagement file, `finding-format`, every findings file, the
+   plan, and the codebase map's header (commit, tools, skill).
 2. **Verification present**: every finding `confirmed`, `refuted`, or
    `unverified` with a `**Verification.**` note, and none with an
    `**Auditor answer.**` dated after its note that the note has not
@@ -25,16 +26,22 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    (`remediation-plan`, Before starting); otherwise it goes to
    `remediation-plan` first.
    The validator (`finding-format`, Validator), run with `--require
-   verification --require plan`, its output kept in `tool-output/report/`,
-   checks both; its other errors are discrepancies (step 5): cosmetic
-   when the form alone is wrong (a mark, a label), blocking otherwise.
-   **Engagement current**: a step run since `audit-kickoff` last copied
-   versions and tools: `audit-kickoff` (After confirmation, step 7) makes
-   that copy first.
+   verification --require plan`, its output kept in this run's folder
+   (`tool-output/report/`, or a later run's folder as the rules of
+   engagement name it), checks both; its other errors are discrepancies
+   (step 5): cosmetic when the form alone is wrong (a mark, a label),
+   blocking otherwise.
+   **Engagement current**: when a step ran since `audit-kickoff` last
+   copied versions and tools (an earlier report or tickets run
+   included), this step makes that copy itself first, as `audit-kickoff`
+   (After confirmation, step 7) says, keeps the file as it was beside
+   its scripts, and says so in the provenance.
    **Inputs**: the sha256 of the plan and of each findings file, kept in
-   `tool-output/report/` as `inputs.sha256`; `tickets` compares them.
+   this run's folder as `inputs.sha256` (`sha256sum` format, paths
+   relative to the workspace); the provenance names that folder, where
+   `tickets` reads them and the validator output.
 3. **Recompute** every count from the files, with a script kept in
-   `tool-output/report/`.
+   this run's folder.
 4. **Consistency check** per finding: text agrees with the YAML (prose rating,
    remediation still valid after the note); citations open for the reader
    (a file in the repository or the workspace, a versioned or dated public
@@ -45,19 +52,25 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    attributed by the engagement file, agrees with that file;
    each axis's status, derived as `finding-format` says from its areas,
    agrees with what the areas state. A findings file whose hash matches
-   the previous report's `inputs.sha256` keeps that report's judgments, said under "Method and limits"; the rules changed
-   since are checked on every one. Per fix: its reason for grouping is
-   stated with a pointer; its change agrees with each finding's
-   remediation; its check holds each finding's check, so a test written
-   from it fails before the fix, and a step of the change that waits for
-   nothing has its own; its `locations` are where the change lands; its `severity`,
-   `promptable` and `sensitive` follow from its findings.
+   the previous report's `inputs.sha256` keeps that report's judgments,
+   and a plan whose hash matches keeps its per-fix judgments, said under
+   "Method and limits"; the rules changed since are checked on every
+   one. Per fix: its reason for grouping is stated with a pointer; its
+   change agrees with each finding's remediation; its check holds each
+   finding's check, so a test written from it fails before the fix, and
+   tests every part of the change (each step, each place it lands); in a
+   fix that waits for something, a step its change says waits for
+   nothing has its own check; its `locations` are where the change
+   lands; its `severity`, `promptable` and `sensitive` follow from its
+   findings.
 5. **Sort discrepancies.** *Blocking*: something a reader acts on or judges
    by is wrong or unreadable: a remediation stale or incomplete; a rating,
    `sensitive`, `promptable` or claim contradicted by the finding's own
    text, `finding-format`, its note or
    an answer; findings with one cause at odds on the fix; a fix that drops
-   a finding's check or contradicts its remediation; an unopenable
+   a finding's check, leaves a part of its change untested, or
+   contradicts its remediation; a location a ticket cannot carry (a
+   workspace path); an unopenable
    citation; a step whose recorded version contradicts the engagement file;
    an area status that breaks `finding-format` (evaluated while waiting for
    an answer). Versions that differ between steps, each recorded or
@@ -65,11 +78,13 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    stale without changing a judgment (label or prose language, wording, a
    lead ID cited after its promotion, a coverage sentence a later pass made
    stale, findings with one cause and compatible fixes that do not cite each
-   other, an axis plan the coverages since moved), listed under "Method and
-   limits" and fixed at the next revision.
+   other, an axis plan the coverages since moved, a location that is
+   evidence rather than where the change lands when the change names
+   where it lands), listed under "Method and limits" and fixed at the
+   next revision.
 6. **Draft** while a blocking one remains: deliverables open with `DRAFT`
    and the list, numbered, each item naming by ID the findings and fixes
-   whose text it could change, and ending with a line `Holds: R-…, R-…`
+   whose text it could change, and ending with its own line `Holds: R-…, R-…`
    (or `Holds: nothing`), in English, that `tickets` reads: every fix holding one of
    those findings, a change that depends on what the step finds included.
    A finding the item could create holds no fix yet: a ticket it later
@@ -92,7 +107,9 @@ discrepancy, sorted as above.
 - `prompt_executor` other than `none`: `reports/remediation-prompts.md`.
 
 Structure of each: [deliverables.md](deliverables.md). Written in the
-engagement's `language`, headings free.
+engagement's `language`, headings free. A previous report is moved to
+`reports/superseded-<its date>/` before writing, never overwritten; the
+hand-over check leaves those folders out.
 
 Each opens with the same provenance: target, audited commit, audit dates;
 every axis with its status as `finding-format` derives it (evaluated,
