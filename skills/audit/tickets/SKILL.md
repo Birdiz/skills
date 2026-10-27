@@ -5,7 +5,7 @@ description: Turn the fixes of an audit's remediation plan into tickets, one per
 
 # tickets
 
-Version: 0.23.0 (audit skills, see CHANGELOG)
+Version: 0.24.0 (audit skills, see CHANGELOG)
 
 One **ticket** per open fix of the plan: the work handed to whoever does it,
 where they track work. Input: `00-engagement.md`, `02-remediation-plan.md`,
@@ -83,8 +83,12 @@ after it (Creating, step 4).
    question apart from those to create and created only when the answer
    names it ("all" covers the tickets listed to create, so a yes to all
    strikes it like any fix left out, its line kept); a waiting or struck
-   one keeps its state, that line beside it. All are named in the end report for
-   `verify-findings` on a later commit. A fix waiting for a ready one
+   one keeps its state, that line beside it, and so does a sent one
+   still open in the plan. All are named in the end report for
+   `verify-findings` on a later commit, unless a fix check already
+   covered their findings at a commit the default branch has not moved
+   past: its outcome (`in part`, what remains; `not fixed`) goes beside
+   the state instead, and for a sent ticket the auditor tells the team. A fix waiting for a ready one
    stays ready, blocked by it by title, linked only when both are
    created. The agent reads each diff with secret values masked, and
    writes its judgment into the script as data; the script prints, for
@@ -229,7 +233,8 @@ other fixes go on.
    A fix left out becomes `local: struck by the auditor (<date>)`, its
    ticket kept as `tickets/R-NNN.struck.md` (an earlier struck copy moved
    to the run's `removed/`). Without a yes, the files stay local. When
-   nothing goes to the tracker, nothing is asked, and `allowed: n/a`.
+   nothing goes to the tracker, nothing is asked, and `allowed: n/a`:
+   struck fixes stay struck until a run asks.
 4. Create in the plan's order, so a ticket waited for exists before the
    one waiting for it. Before each, read its index row, then search the
    tracker for the fix ID in the closing line (an empty search is printed
@@ -272,7 +277,7 @@ allowed: <"the auditor's answer", verbatim (YYYY-MM-DD), question in Notes | pen
 ## Notes
 ```
 
-Rows in the plan's order. Labels live here and in the tracker, never in a
+Rows in the plan's order, then the done and dropped fixes by ID. Labels live here and in the tracker, never in a
 ticket's body; in a local run they are what the mapping gives, for the
 auditor. A label the mapping gives but the tracker lacks is left out,
 and noted. A sent ticket's labels are those set at creation; the team
@@ -305,8 +310,9 @@ that asked nothing and wrote another state over it unstrikes nothing.
 First, a struck fix without `tickets/R-NNN.struck.md` (struck before
 that file was kept) gets its `tickets/R-NNN.md` copied there, and an
 `R-NNN.sent.md` an earlier run kept in `tool-output/tickets/` is moved
-to `tickets/`. Then the local files are regenerated from the plan; the
-file of a fix neither ready nor sent is moved into this run's folder,
+to `tickets/`. Then the local files of the open fixes are regenerated
+from the plan; the file of a fix neither ready nor sent, and the struck
+copy of a sent fix, is moved into this run's folder,
 under `removed/`, wherever an earlier run left it under `tickets/`,
 except `R-NNN.struck.md`, kept while its fix is open and unsent, and the
 `superseded-*` folders, left as they are. A sent ticket keeps its
@@ -320,9 +326,15 @@ tell the team. Its state, from the plan and the tracker:
   skill's own form alone (the marker, the restricted-tracker line, the
   closing line's wording and plan date, how a ticket waited for is named)
   is no change: one line under `## Notes`.
-- `fix done` or `fix dropped`: the plan says so.
+- `fix done` or `fix dropped`: the plan says so. Its files stay as
+  sent, nothing regenerated; a closed issue is said in the same cell
+  (`fix done; issue closed as completed <date>, PR #<n> (merge <short
+  sha>)`). A done or dropped fix never sent is `fix done, never sent`
+  (or dropped), its Ticket `—`, its files moved to `removed/`, a struck
+  mark kept in the cell.
 - `closed in tracker`: the issue is closed while its fix is still open in
-  the plan, with how the tracker says it was closed (completed or not
+  the plan (done in part included: what remains beside it, for the
+  auditor to tell the team), with how the tracker says it was closed (completed or not
   planned) and what closed it: the closing event's commit, else the
   merged pull request that references the issue, as `PR #<n> (merge
   <short sha>)`, or `none given`;

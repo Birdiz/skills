@@ -113,7 +113,7 @@ Binding on every audit step: recon, axes, verification.
   `tool-output/<step>/run-<name>.sh` (`<step>`: `recon`, the axis, `verify`,
   `plan`, `report`, `tickets`; a later run of the same step in `tool-output/<step>/<run>/`,
   `<run>` being `lead-pass-<YYYY-MM-DD>` or `round-2` for an axis, the
-  run's date `<YYYY-MM-DD>` for the others, `<YYYY-MM-DD>-2`, `-3`… for a
+  run's start date `<YYYY-MM-DD>` for the others, `<YYYY-MM-DD>-2`, `-3`… for a
   second run the same day), raw output kept beside it, paths
   relative to the workspace so a copy reruns in place, times in UTC, auditor
   artifacts (`.gitnexus/`, caches, the workspace) excluded; in a container,

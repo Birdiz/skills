@@ -15,7 +15,7 @@ import os
 import re
 import sys
 
-VERSION = "finding-format@0.23.0"
+VERSION = "finding-format@0.24.0"
 
 AXES = {
     "code-quality": "QUA", "architecture": "ARC", "app-security": "SEC",
@@ -64,6 +64,7 @@ Q_ID = re.compile(r"\bQ-(%s)-(\d+)\b" % CODES)
 R_ID = re.compile(r"\bR-(\d+)\b")
 DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 RECHECK = re.compile(r"Re-checked \d{4}-\d{2}-\d{2}, answer of (\d{4}-\d{2}-\d{2}): no change\b")
+FIXCHECK = re.compile(r"Fix checked (\d{4}-\d{2}-\d{2}) at ([0-9a-f]{7,40}): (fixed by|in part|not fixed)\b")
 WORKSPACE = re.compile(r"^(\./)?(findings/(%s)\.md|tool-output/|client-docs/"
                        r"|0[0-2]-(engagement|codebase-map|remediation-plan)\.md"
                        r"|tickets/(index|R-\d{3})(\.sent)?\.md"
@@ -373,10 +374,20 @@ def check_finding(rep, path, axis, title, start, items, engagement_commit):
             rep.pending("verify-findings", path, start + 1,
                         "%s: auditor answer %s after verification %s" % (fid, max(late), ver["on"]))
     text = " ".join(p for _, p in paras)
+    checks = sorted(FIXCHECK.findall(text))
+    if checks:
+        fixed = checks[-1][2] == "fixed by"
+        if fixed != (data.get("resolution") == "fixed"):
+            rep.error(path, yi + 1, "%s: resolution %s, its last fix check (%s at %s) says %s"
+                      % (fid, data.get("resolution"), checks[-1][0], checks[-1][1], checks[-1][2]))
+        if ver is not None and checks[-1][0] > str(ver["on"]):
+            rep.error(path, yi + 1, "%s: fix checked %s, verification `on` still %s" % (fid, checks[-1][0], ver["on"]))
+    elif data.get("resolution") == "fixed":
+        rep.error(path, start + 1, "%s: resolution fixed without a `Fix checked <date> at <commit>: fixed by …` line" % fid)
     if data.get("evidence_regime") == "declarative" and not Q_ID.search(text + " " + " ".join(map(str, data.get("locations") or []))):
         rep.warn(path, start + 1, "%s: declarative finding cites no question ID" % fid)
     finding = Finding(path, start + 1, data, names, text)
-    finding.dates = dates + ([str(ver["on"])] if ver is not None else [])
+    finding.dates = dates + [c[0] for c in checks] + ([str(ver["on"])] if ver is not None else [])
     return finding
 
 
@@ -402,6 +413,8 @@ def check_leads(rep, path, axis, start, items, ids, refs):
             refs.append((path, i + 1, lid, m2.group(1), "error"))
         if last.startswith("open:") and "moved from" in last[:40]:
             rep.pending("lead-pass", path, i + 1, "%s: moved into %s, waits for a lead pass" % (lid, axis))
+        elif last.startswith("open:") and "from verify-findings" in last[:40]:
+            rep.pending("lead-pass", path, i + 1, "%s: opened by verify-findings, waits for a lead pass" % lid)
         if last.startswith("open:") and "axis not requested" in last:
             ids["not_requested"].setdefault(axis, []).append(lid)
 
@@ -639,10 +652,16 @@ def check_plan(rep, path, findings, ids, engagement_commit):
             for k, v in derived.items():
                 if k in d and v is not None and d[k] != v:
                     rep.error(path, d["_line"], "%s: %s %s, its findings give %s" % (rid, k, d[k], v))
+        if d.get("status") == "done":
+            for f in fs:
+                if f in findings and findings[f].data.get("resolution") != "fixed":
+                    rep.error(path, d["_line"], "%s: done, but %s is not fixed" % (rid, f))
         for w in d.get("waits_for") or []:
             w = str(w)
             if re.fullmatch(r"R-\d+", w) and w not in fixes:
                 rep.error(path, d["_line"], "%s: waits for unknown fix %s" % (rid, w))
+            elif re.fullmatch(r"R-\d+", w) and d.get("status") == "open" and fixes[w].get("status") != "open":
+                rep.pending("remediation-plan", path, d["_line"], "%s: waits for %s, which is %s" % (rid, w, fixes[w].get("status")))
             if re.fullmatch(r"Q-[A-Z0-9]+-\d+", w) and w not in ids["Q"]:
                 rep.error(path, d["_line"], "%s: waits for unknown question %s" % (rid, w))
     for f, rs in where.items():
@@ -673,6 +692,9 @@ def check_order(rep, path, lines, fixes):
             rep.error(path, d["_line"], "%s: open fix listed %d times in `## Order`" % (rid, ids.count(rid)))
     for rid in set(ids) - set(fixes):
         rep.error(path, None, "`## Order` lists %s, which has no section" % rid)
+    for rid in sorted(set(ids) & set(fixes)):
+        if fixes[rid].get("status") != "open":
+            rep.error(path, fixes[rid]["_line"], "%s: %s fix listed in `## Order`" % (rid, fixes[rid].get("status")))
     pos = {rid: k for k, rid in enumerate(ids)}
 
     def tier(d):

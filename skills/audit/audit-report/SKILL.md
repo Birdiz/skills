@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.23.0 (audit skills, see CHANGELOG)
+Version: 0.24.0 (audit skills, see CHANGELOG)
 
 A report is a **projection** of the findings: every claim traces to a finding,
 a lead, a coverage line, a fix of the plan or the engagement file. Input:
@@ -47,7 +47,8 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    this run's folder.
 4. **Consistency check** per finding: text agrees with the YAML (prose rating,
    remediation still valid after the note); citations open for the reader
-   (a file in the repository or the workspace, a versioned or dated public
+   (a file in the repository or the workspace, a `<short sha>:` pointer
+   in the clone of that commit a fix check made, a versioned or dated public
    URL, or an undated one with a copy in the workspace whose run output
    gives its fetch date; a URL of the
    running target, in evidence or `locations`, is evidence of its day, not a
@@ -73,7 +74,9 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    by is wrong or unreadable: a remediation stale or incomplete; a rating,
    `sensitive`, `promptable` or claim contradicted by the finding's own
    text, `finding-format`, its note or
-   an answer; findings with one cause at odds on the fix; a fix that drops
+   an answer; a `resolution` its note's last fix check contradicts, or a
+   `fixed` while a case its remediation names is shown missing at that
+   commit; findings with one cause at odds on the fix; a fix that drops
    a finding's check, leaves a part of its change untested, or
    contradicts its remediation; a location a ticket cannot carry (a
    workspace path), or `locations` holding only evidence; a note relying
@@ -135,6 +138,6 @@ prompts.
 Check that every cited ID exists with the status given, counts match the
 files, the summary and prompts carry no sensitive detail, and every requested
 deliverable exists. The end message says what the check found, lists the
-files, the counts (confirmed by severity, fixes by executor, quick-win
-fixes, unverified, refuted, open leads) and the questions waiting:
+files, the counts (confirmed open by severity, fixed, fixes open by
+executor and done, quick-win fixes, unverified, refuted, open leads) and the questions waiting:
 unanswered, never asked, and answered but undecided.

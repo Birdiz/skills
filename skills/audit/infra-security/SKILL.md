@@ -5,7 +5,7 @@ description: Audit the security of what builds, runs and exposes an application 
 
 # infra-security
 
-Version: 0.23.0 (audit skills, see CHANGELOG)
+Version: 0.24.0 (audit skills, see CHANGELOG)
 
 Find and evidence weaknesses in what builds, runs and exposes the product, in
 `<workspace>/findings/infra-security.md`, in `finding-format`, bound by its
