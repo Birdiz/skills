@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.25.0 (unreleased)
+## 0.25.0 (2026-10-28)
+
+First release.
 
 From the run validating 0.24.0, on a copy of the 30edaa4 workspace,
 gn-platform's main at 055ee1d (3 commits after 17a71f0): `verify-findings`
@@ -40,7 +42,12 @@ naming a fix a check already covered.
   lead pass the same day runs in `lead-pass-<date>-2`
 - validator: `remains of F-…` closures must name an existing finding
 
-## 0.24.0 (unreleased)
+## Development versions
+
+0.1.0 to 0.24.0 were development steps, each validated on a run and
+merged, never released; their notes are kept as history.
+
+## 0.24.0
 
 From the first run checking fixes at a later commit, all with 0.23.0 on
 a copy of the 30edaa4 workspace, gn-platform's main at 17a71f0 (39
@@ -96,7 +103,7 @@ validator saw neither `fixed` nor leads the verifier opened.
   error; a fix waiting for a done one is pending; leads `from
   verify-findings` wait for a lead pass
 
-## 0.23.0 (unreleased)
+## 0.23.0
 
 From clearing the gn-platform report's DRAFT, then a fourth `tickets` run
 on the same tracker, all with 0.22.0 on a copy of the 30edaa4 workspace:
@@ -166,7 +173,7 @@ state; 37 creations ran with no pause.
   decisions seen in the code named in the end report
 - rules of engagement: `audit-report` may make the engagement copy
 
-## 0.22.0 (unreleased)
+## 0.22.0
 
 From the third run of `tickets` on the same tracker, after `audit-report`
 on the same day: a copy of the gn-platform 30edaa4 workspace, findings
@@ -222,7 +229,7 @@ itself.
   runs included, the copy dated
 - rules of engagement: a second run the same day in `<YYYY-MM-DD>-2`
 
-## 0.21.0 (unreleased)
+## 0.21.0
 
 From the second run of `tickets` on the same tracker, two days after the
 first: a copy of the gn-platform 30edaa4 workspace, plan, findings and
@@ -258,7 +265,7 @@ from the skill's own form is no change.
   removed anywhere under `tickets/`, bodies sent kept elsewhere moved
   there
 
-## 0.20.0 (unreleased)
+## 0.20.0
 
 From the first run of `tickets` into a tracker (GitHub, private), with the
 validator inside every downstream step: a copy of the gn-platform 30edaa4
@@ -316,7 +323,7 @@ with a line saying it stays in a restricted tracker.
 - `audit-kickoff`: labels the tracker lacks are said; "waits for nothing"
   means no fix and no decision
 
-## 0.19.0 (unreleased)
+## 0.19.0
 
 A validator for the form of findings files and plans, which the steps
 that check them by hand now run when Python 3 is there. Run on the
@@ -347,7 +354,7 @@ hand otherwise, so no step depends on it.
 - `audit-report`: verification present and plan current through the
   validator; its other errors are discrepancies
 
-## 0.18.0 (unreleased)
+## 0.18.0
 
 From the first run of `tickets` (a copy of the gn-platform 30edaa4
 workspace, plan and report unchanged, `destination: local`, gn-platform's
@@ -380,7 +387,7 @@ waiting, for `remediation-plan`.
   name their cases or point to where they are listed
 - `audit-kickoff`: `tickets` routes a fix held by its plan check
 
-## 0.17.0 (unreleased)
+## 0.17.0
 
 Tickets, one per fix, the last step of an engagement; not yet run.
 Auditor's decisions: a fix gets its ticket once the plan is current and no
@@ -411,7 +418,7 @@ exploited, and stays local otherwise.
   written only by `tickets`, new issues only; `tool-output/tickets/`
 - `audit-setup`: detects a tracker CLI or MCP server
 
-## 0.16.0 (unreleased)
+## 0.16.0
 
 From the first run of `remediation-plan` and the report on its plan (a copy
 of the gn-platform 30edaa4 workspace, findings unchanged): 63 findings in 49
@@ -442,7 +449,7 @@ without a question, mixed executors, staleness of the plan undefined.
   recorded axis status shown beside the derived one; dated copies;
   questions waiting split three ways; top fixes from the plan's order
 
-## 0.15.0 (unreleased)
+## 0.15.0
 
 Findings grouped into fixes, the unit of work the deliverables and the
 coming tickets use. Auditor's decisions: findings share a fix when one
@@ -466,7 +473,7 @@ finding keeping its own check inside the fix.
   `02-remediation-plan.md` in the workspace. Rules of engagement:
   `tool-output/plan/`
 
-## 0.14.0 (unreleased)
+## 0.14.0
 
 From the first run of `infra-security` and `privacy` (a copy of the
 gn-platform 30edaa4 workspace, the axes added by amendment, then
@@ -545,7 +552,7 @@ as lists to accept at once.
   store holding some sensitive data counts, row for staff access
 - `code-quality` grid: a delivery check that does not block a merge
 
-## 0.13.0 (unreleased)
+## 0.13.0
 
 Two axes that rest partly on the owner's answers, in the same form (skill,
 `areas.md`) plus a questionnaire (`questions.md`); neither has run yet. They
@@ -589,7 +596,7 @@ then taken up by a lead pass.
 - `app-security` areas name their boundary with the two new axes;
   `audit-setup` detects `hadolint` and `zizmor`
 
-## 0.12.0 (unreleased)
+## 0.12.0
 
 From the first full run (gn-platform at a new commit: kickoff, recon, six
 axes in parallel against a local dev stack, verification, report): 42
@@ -644,7 +651,7 @@ no step recorded its own skill version.
   measurements, lowers dev-only measurements one level, does not count
   bounded growth
 
-## 0.11.0 (unreleased)
+## 0.11.0
 
 Three dynamic axes, in the same form (skill plus `areas.md`); none has run
 yet.
@@ -667,7 +674,7 @@ yet.
   the auditor's own data (active); crawls are sequential, one request per
   second at most, capped; no load or stress test in any regime
 
-## 0.10.0 (unreleased)
+## 0.10.0
 
 From the 0.9.0 rerun of `code-quality` and `architecture` (fresh copy of the
 gn-platform workspace, then `verify-findings`): 7 findings, 7 confirmed, no
@@ -705,7 +712,7 @@ weakness the owner documents as planned work.
 - `recon`: an existing install is checked for completeness, not only its
   lockfile
 
-## 0.9.0 (unreleased)
+## 0.9.0
 
 From the first run of `code-quality` and `architecture` (gn-platform, same
 commit and map as the first engagement, axes in parallel sub-agents, then
@@ -745,7 +752,7 @@ the engagement file at the same time.
 - `recon`: `tools:` in the map header. `audit-setup`: detects `docker` as the
   way to run named tools
 
-## 0.8.0 (unreleased)
+## 0.8.0
 
 Rewritten for brevity, following mattpocock/skills `writing-for-agents`. No
 behaviour change intended; file formats unchanged. 7 678 words to about
@@ -804,7 +811,7 @@ the severity grid); neither has run on a real codebase yet:
   preference
 - `audit-setup`: detect `lizard`, `scc` and `jscpd`
 
-## 0.7.0 (unreleased)
+## 0.7.0
 
 - Ship as a Claude Code plugin (`birdiz-skills`) through a marketplace in
   this repository
@@ -823,7 +830,7 @@ that could not be satisfied.
 - `recon`: same status for leads outside the plan, written in the engagement
   language
 
-## 0.6.0 (unreleased)
+## 0.6.0
 
 From the first report run. The report listed ten discrepancies between the
 findings and their verification notes, written before 0.4.0, and the owner's
@@ -839,7 +846,7 @@ answers had changed two findings with no rule for it.
   regenerated; accepted findings in their own section; skill versions
   actually used in the provenance
 
-## 0.5.0 (unreleased)
+## 0.5.0
 
 - Add `audit-report`: peer report, plain-language summary and remediation
   prompts, chosen from the engagement's audience. A projection of the
@@ -848,7 +855,7 @@ answers had changed two findings with no rule for it.
   describe the target state and never the attack
 - `audit-kickoff` and `verify-findings` hand over to `audit-report`
 
-## 0.4.0 (unreleased)
+## 0.4.0
 
 From the first verification run (11 findings: 11 confirmed, 0 refuted, 10
 corrected).
@@ -863,7 +870,7 @@ corrected).
   versioned URL is enough. Old keys (`impact`) are ignored
 - `app-security`: guessed identifiers are not passive
 
-## 0.3.0 (unreleased)
+## 0.3.0
 
 - Add `verify-findings`: the only step that confirms or refutes a finding,
   run in a context that did not write it, trying to refute rather than
@@ -873,7 +880,7 @@ corrected).
   auditor to open a new session when there are no sub-agents
 - `finding-format`: status changes belong to `verify-findings`
 
-## 0.2.0 (unreleased)
+## 0.2.0
 
 From the first real engagement (a self-audit, `app-security` only).
 
@@ -898,7 +905,7 @@ From the first real engagement (a self-audit, `app-security` only).
 - `audit-kickoff`: records the working copy and what the running target
   serves; end report lists the questions for the auditor
 
-## 0.1.0 (unreleased)
+## 0.1.0
 
 - Add `audit-setup`, `audit-kickoff`, `finding-format`, `recon`
 - Add `app-security`, the first audit axis

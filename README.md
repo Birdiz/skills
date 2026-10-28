@@ -27,9 +27,11 @@ local development stack. Two axes that rest partly on the owner's answers
 (`infra-security`, `privacy`) have run once, with the answers step and lead
 passes. Remediation grouping has run once, with the report on its plan.
 Tickets, one per fix, have run to local files, then to a GitHub tracker
-(four issues, one dependency link). A validator checks the form of findings
-files and plans; it has run inside verification, the plan, the report and
-tickets. See [Roadmap](#roadmap).
+(43 issues). Fixes the team made after the audit have
+been checked at the later commit, through to the plan, the report and the
+tickets. A validator checks the form of findings files and plans; it has
+run inside verification, the plan, the report and tickets. See
+[Roadmap](#roadmap).
 
 ## Install
 
@@ -151,9 +153,6 @@ findings and live elsewhere (`workspace_root` in the auditor profile).
 ## Roadmap
 
 - Run `infra-security` and `privacy` against a cloud account (cloud read)
-- Run `verify-findings` on gn-platform's current main for the fixes the team
-  closed or did since the audit (#102 to #105, R-017, R-024, R-025, R-043),
-  then `tickets` again (`fix done`, closed tickets)
 
 ## License
 
