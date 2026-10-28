@@ -5,7 +5,7 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.23.0 (audit skills, see CHANGELOG)
+Version: 0.25.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
@@ -68,6 +68,8 @@ the same checks by reading the files.
   stands with confidence at most medium.
 - **Openable**: cite only the audited repository, the workspace,
   `tool-output/`, or a public reference; never memory or a past conversation.
+  A fix check reads a later commit in its own clone (`verify-findings`, Fix
+  checks) and cites it as `<short sha>:<path>:<line>`.
   A public reference is versioned (a tag, a commit, a numbered edition; a
   branch is not) or dated, or kept as a copy in the workspace whose run
   output gives its fetch date, named in `references` as `<URL> (copy
@@ -137,7 +139,11 @@ the same checks by reading the files.
   human actions (rotate a key, sign, change DNS, record a decision) are `false`.
 - **`resolution`**, independent of `status`: `open` (default), `accepted`
   (owner keeps it; `**Auditor answer.**` with date and decision), `fixed`
-  (verified at a later commit).
+  (a fix check found every part of the remediation and the fix's Check
+  done at a later commit: the note's last `Fix checked <date> at <commit>:
+  fixed by …` line, set only by `verify-findings`, Fix checks). A finding
+  fixed in part stays `open`, its `Fix checked …: in part: …` line saying
+  what remains.
 - **`references`** may be empty when no framework names the problem; a
   reference is never stretched to fill it.
 - **Quick win** is a property of a fix, derived (`remediation-plan`): a
@@ -152,6 +158,9 @@ finishing, rewriting its status as one of:
 - `promoted to F-…`;
 - `closed: settled by F-…`, by a finding of any axis that covers it;
 - `closed: <why, pointer>`;
+- `closed: remains of F-…'s fix (Fix checked <date>)`, for a case a fix
+  check at a later commit found what remains of a fix (`verify-findings`,
+  Fix checks);
 - `closed: intended (Q-…), <pointer>`, for behaviour the code shows and the
   owner's answer says is wanted, an answer on what the owner's own content
   means included;

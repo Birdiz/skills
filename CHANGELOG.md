@@ -1,5 +1,101 @@
 # Changelog
 
+## 0.25.0 (unreleased)
+
+From the run validating 0.24.0, on a copy of the 30edaa4 workspace,
+gn-platform's main at 055ee1d (3 commits after 17a71f0): `verify-findings`
+checked F-PRI-003's `fixed` again and set it back to `open`, in part (an
+address with an apostrophe, and a former address, keep their e-mails after
+deletion), and moved the three `on` the validator flagged; the privacy
+lead pass closed L-PRI-09 and L-PRI-11 as settled by F-PRI-003;
+`remediation-plan` reopened R-045 and restored R-044's wait on it;
+`audit-report` produced a report with no DRAFT; `tickets` showed R-045
+`closed in tracker` with what remains, and asked nothing. Fix checks, done
+fixes and the in-part forms worked as written. What was loose: which
+commit a questioned `fixed` is checked at, and which line it writes;
+whether a Check must exist as a test; who closes a lead that has become
+what remains; where defects outside the engagement are kept; a done fix
+coming back open; remaining cases the Check does not name; when a fix
+check stops covering a fix as the branch moves; `closed in tracker`
+naming a fix a check already covered.
+
+- `verify-findings`: a questioned `fixed` is checked at the head when the
+  run starts, its `Fix checked` line being the revision's; an `on` an
+  earlier check left behind takes that check's date with a `Revised`
+  line; behaviour the code shows is enough, a part only running would
+  show remains; an open lead on a case that remains is closed `closed:
+  remains of F-…'s fix (Fix checked <date>)`; defects outside the
+  engagement go in `tool-output/verify/<run>/outside.md`
+- `remediation-plan`: a done fix whose finding comes back open reopens
+  under its ID, its dropped waits restored when their reason holds; a
+  remaining case the Check does not name is added to it; a directory
+  location shares a file with every location under it
+- `audit-report`: fixed findings and done fixes give the commit checked
+  and the commits that fixed them; outside defects read from
+  `outside.md`
+- `tickets`: a fix check covers a fix until a later candidate commit
+  follows it, `closed in tracker` included; an issue or pull request
+  naming the fix's ticket is a candidate
+- `finding-format`: the `remains of F-…'s fix` lead closure; a second
+  lead pass the same day runs in `lead-pass-<date>-2`
+- validator: `remains of F-…` closures must name an existing finding
+
+## 0.24.0 (unreleased)
+
+From the first run checking fixes at a later commit, all with 0.23.0 on
+a copy of the 30edaa4 workspace, gn-platform's main at 17a71f0 (39
+commits later): `verify-findings` checked the eight fixes `tickets` had
+named (closed in tracker, possibly done) and set five findings `fixed`
+(F-QUA-001, F-QUA-003, F-ARC-004, F-INF-002, F-PRI-003), three not fixed
+or in part (F-PRI-001, F-PRI-002, F-QUA-004); the privacy lead pass took
+up the two leads it opened; `remediation-plan` marked R-017, R-022,
+R-024, R-045 and R-050 done; `audit-report` stayed DRAFT on one item (the
+lead pass showed a case F-PRI-003's remediation names still missing at
+17a71f0: an address with an apostrophe survives deletion); `tickets`
+asked nothing and wrote `fix done` on #102, #103, #104. What was loose:
+no skill said how to check a fix at a later commit, where to read that
+commit, what `fixed` needs, what "in part" is, or how to cite a pointer
+there; a defect found in the fix's own code became a lead about code
+the engagement does not cover; a check that changed nothing did not
+move `on`, so the plan never saw it; a done fix had no form in the plan,
+the report or the index; a done fix never sent had no state; the
+validator saw neither `fixed` nor leads the verifier opened.
+
+- `verify-findings`: Fix checks, a mode of its own: the default branch's
+  head in a clone `<workspace>/repo-<short sha>/`; the finding's
+  remediation and its fix's Check as the test, every part and case;
+  `fixed`, in part or not fixed; a missed case the remediation covers is
+  what remains, a defect outside it is `seen at <sha>, outside this
+  engagement` in the end report, never a lead; one `Fix checked <date> at
+  <sha>: …` line, `on` moved whatever the outcome; a command that only
+  parses the project's files may run; dependency copies pinned to the
+  later lock; a questioned `fixed` goes back through revision mode; a
+  lead the verifier opens is `open: from verify-findings <date>; …`
+- `finding-format`: `fixed` set only by a fix check; in part stays
+  `open`; a later commit cited as `<short sha>:<path>:<line>`; a run
+  folder named after its start date
+- `remediation-plan`: a done fix keeps its keys with `findings: []`, out
+  of `## Order`, its dated line naming the commit; waits on a done fix
+  dropped; a fix done in part keeps its Change and Check, one dated line
+  saying what remains; files to create as `(new file)`, `(new
+  directory)`
+- `audit-report`: open findings counted, fixed ones apart and listed one
+  line each beside accepted ones; done fixes in a table; in-part fixes
+  and findings say what remains; a `fixed` contradicted by its note or by
+  a missing case is blocking; `<short sha>:` pointers open in their clone
+- `tickets`: `fix done` keeps a sent ticket's files, with a closed issue
+  in the same cell; a done fix never sent is `fix done, never sent`, its
+  files removed; done and dropped rows after the open ones; a fix check
+  at the branch head is shown beside the state instead of naming the fix
+  again; a sent ticket whose change shows in later code gets the
+  possibly-done line; a sent fix's struck copy is removed; `allowed: n/a`
+  leaves struck fixes struck
+- validator: `fixed` needs a `Fix checked …: fixed by` line and the
+  last fix check must agree with `resolution`; a fix check after `on` is
+  an error; a done fix in `## Order` or holding an open finding is an
+  error; a fix waiting for a done one is pending; leads `from
+  verify-findings` wait for a lead pass
+
 ## 0.23.0 (unreleased)
 
 From clearing the gn-platform report's DRAFT, then a fourth `tickets` run

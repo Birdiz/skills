@@ -4,23 +4,30 @@
 
 Complete, for a technical reader who will act on it or challenge it.
 
-1. **Summary**: confirmed findings by severity and axis; the number of
-   fixes, by executor; quick wins; the first three fixes of the plan's
+1. **Summary**: confirmed open findings by severity and axis, those
+   fixed since the audit counted apart; the number of open fixes, by
+   executor; quick wins; the first three fixes of the plan's
    order, one sentence each, and any high-severity fix waiting for a
    decision, with the decision.
 2. **Scope and coverage**: each axis's coverage in one common table (area,
    status, note); gaps as visible as findings.
 3. **Remediation plan**: the plan's order table, then each fix: title, ID,
-   its findings, why together, change, check, what it waits for. A finding
-   is counted in its axis; a fix, once.
-4. **Findings**, every confirmed one, by axis, severity, effort: title, ID,
+   its findings, why together, change, check, what it waits for, and a
+   part done at a later commit with what remains. A finding is counted in
+   its axis; a fix, once. Done fixes follow in one table: fix, title, its
+   findings, the commit checked, the commits that fixed it.
+4. **Findings**, every confirmed open one, by axis, severity, effort: title, ID,
    its fix, rating line (severity, confidence, effort, evidence regime),
    evidence condensed to its key pointers (the findings file holds the
    rest), technical explanation, remediation, what verification
-   established.
+   established, and a fix check in part: what remains, at which commit.
 5. **Not verified**, kept apart from confirmed ones: reason, and who can settle
    it.
-6. **Accepted**: owner's decision and date; outside quick wins.
+6. **Accepted and fixed**: accepted ones with the owner's decision and
+   date; fixed ones with the commit checked and the commits that fixed
+   them, one line each, and the defects a fix check saw outside this
+   engagement (`tool-output/verify/<run>/outside.md`). Both outside
+   quick wins.
 7. **Open leads and questions**: what each would change; answers received.
    Controls and facts declared by the owner and not observed (leads closed
    as declared, coverage lines `declared, not observed`), each with its

@@ -5,7 +5,7 @@ description: Group the confirmed findings of an audit into fixes (one piece of w
 
 # remediation-plan
 
-Version: 0.23.0 (audit skills, see CHANGELOG)
+Version: 0.25.0 (audit skills, see CHANGELOG)
 
 Turn findings into work. A **fix** is what one person does in one go (a pull
 request, a session in a console, a decision): it resolves one or more
@@ -136,7 +136,8 @@ when several executors take part.
   to where they are listed, a list that agrees with the finding (one that
   does not is replaced by the cases, named).
 - **`locations`**: where the change lands, not the evidence: each place
-  the change names, a file to create named as such, a directory only
+  the change names, a file to create named as such (`<path> (new
+  file)`, `<path>/ (new directory)`), a directory only
   for code whose file the change leaves open, a setting outside the
   repository in `finding-format`'s form (`forge: <setting>`).
 - **Quick win**: an open fix of severity medium or above, effort S, waiting
@@ -157,8 +158,23 @@ later run, a fix keeps its ID while any of its findings is still in it; a
 finding newly confirmed joins a fix by the same rules, or opens a new one;
 a finding fixed, accepted or refuted leaves its fix. A fix left empty
 becomes `done` when its findings were fixed, `dropped` otherwise, and stays
-in the file. Each change of membership after the first plan is one dated
-line under the fix.
+in the file: `findings: []`, its other keys as they were, out of `##
+Order`. Each change of membership after the first plan is one dated
+line under the fix; for a fix done, it names the findings and the commit
+their fix checks name. A fix waiting for one done or dropped stops
+waiting for it, one dated line. A done fix whose finding comes back open
+(a `fixed` checked again) reopens under its ID: `status: open`, the
+finding back in `findings`, back in `## Order`, a wait it dropped
+restored when its reason still holds, each one dated line.
+
+A fix whose findings a fix check found done in part stays as it is: its
+Change and Check describe the audited commit, like the plan's `commit`.
+One dated line under it says, from the notes, what is done at which
+commit and what remains, so tickets and the report carry it; a case
+remaining that the Check does not name is added to it, as a kind of
+input. Its
+`locations` stay those of the audited commit, even where a done fix
+later rewrote that code.
 
 An update applies this skill's current rules to the whole plan, not only
 to the findings that made it stale. A group a rule no longer allows (a
@@ -167,7 +183,8 @@ the fix keeps its ID with the part holding its most severe finding (the
 first listed on a tie), the other part takes the next free ID, grouped by
 the same rules, each change one dated line. Fixes whose `locations`
 the update makes share a file are judged again for `same-files`, the
-outcome stated in each one's grouping reason. The
+outcome stated in each one's grouping reason (a directory location
+shares a file with every location under it). The
 header's `generated` and `skill` become the update's; the first line of
 prose under the header keeps the earlier ones (`first generated
 2026-10-15 by remediation-plan@0.15.0`) and says in a few words what the

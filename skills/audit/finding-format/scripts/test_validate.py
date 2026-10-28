@@ -275,6 +275,53 @@ class ValidateTest(unittest.TestCase):
     def test_plan_order_row_differs(self):
         self.assertFlags("ERROR", "`## Order` effort `M`", plan=PLAN.replace("| medium | S |", "| medium | M |"))
 
+    FIXED = (FINDING.replace("resolution: open", "resolution: fixed").replace("on: 2026-10-10", "on: 2026-10-20")
+             .replace("Reproduced.\n", "Reproduced.\nFix checked 2026-10-20 at 9f8e7d6: fixed by 1234abc (PR #7).\n"))
+    DONE = (PLAN.replace("findings: [F-SEC-001]", "findings: []").replace("status: open", "status: done")
+            .replace("| 1 | R-001 | Secure the session cookie | medium | S | code | — | yes |\n", "")
+            .replace("generated: 2026-10-12", "generated: 2026-10-21"))
+
+    def test_fixed_finding_and_done_fix(self):
+        code, out = self.run_on(self.workspace(finding=self.FIXED, plan=self.DONE),
+                                "--require", "verification", "--require", "plan")
+        self.assertEqual(code, 0, out)
+        self.assertIn("errors 0, warnings 0, pending 0", out)
+
+    def test_fixed_without_fix_check(self):
+        self.assertFlags("ERROR", "resolution fixed without a `Fix checked",
+                         finding=FINDING.replace("resolution: open", "resolution: fixed"), plan=self.DONE)
+
+    def test_fix_check_in_part_keeps_open(self):
+        finding = self.FIXED.replace("fixed by 1234abc (PR #7)", "in part: the flag; remains the header")
+        self.assertFlags("ERROR", "resolution fixed, its last fix check (2026-10-20 at 9f8e7d6) says in part",
+                         finding=finding, plan=self.DONE)
+        code, out = self.run_on(self.workspace(finding=finding.replace("resolution: fixed", "resolution: open")))
+        self.assertEqual(code, 0, out)
+
+    def test_fix_check_moves_on(self):
+        self.assertFlags("ERROR", "fix checked 2026-10-20, verification `on` still 2026-10-10",
+                         finding=self.FIXED.replace("on: 2026-10-20", "on: 2026-10-10"), plan=self.DONE)
+
+    def test_fix_check_makes_plan_stale(self):
+        self.assertFlags("PENDING remediation-plan", "no longer confirmed and open", finding=self.FIXED)
+
+    def test_done_fix_in_order(self):
+        plan = self.DONE.replace("|---|---|---|---|---|---|---|---|\n",
+                                 "|---|---|---|---|---|---|---|---|\n| 1 | R-001 | Secure the session cookie | medium | S | code | — | no |\n")
+        self.assertFlags("ERROR", "R-001: done fix listed in `## Order`", finding=self.FIXED, plan=plan)
+
+    def test_done_fix_with_open_finding(self):
+        plan = PLAN.replace("status: open", "status: done")
+        self.assertFlags("ERROR", "R-001: done, but F-SEC-001 is not fixed", plan=plan)
+
+    def test_lead_from_verify_waits_for_pass(self):
+        ff = FINDINGS_FILE.replace("open: owner,\n  Q-SEC-01.", "open: from verify-findings 2026-10-20;\n  agent.")
+        self.assertFlags("PENDING lead-pass", "L-SEC-02: opened by verify-findings", findings_file=ff)
+
+    def test_lead_closed_as_remains_of_unknown_finding(self):
+        ff = FINDINGS_FILE.replace("open: owner,\n  Q-SEC-01.", "closed: remains of F-SEC-009's fix\n  (Fix checked 2026-10-20).")
+        self.assertFlags("ERROR", "F-SEC-009", findings_file=ff)
+
     def test_no_plan_with_confirmed_findings(self):
         self.assertFlags("ERROR", "no plan yet", plan=None, args=("--require", "plan"))
 

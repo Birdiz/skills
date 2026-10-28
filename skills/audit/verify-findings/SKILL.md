@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.23.0 (audit skills, see CHANGELOG)
+Version: 0.25.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -29,8 +29,8 @@ Refute: ask what would make the finding wrong; confirm only once every answer
 has been checked and failed. Take every `unverified` finding, file by file,
 by severity within each file, and save each file as soon as it is done. A
 finding that already has a `verification` key was verified before (an
-interrupted run resumes this way) and is skipped, outside revision mode,
-unless an `**Auditor answer.**` is dated after that key and no
+interrupted run resumes this way) and is skipped, outside revision mode
+and fix checks, unless an `**Auditor answer.**` is dated after that key and no
 `Re-checked …, answer of <that date>` line of the note covers it: then
 only what the answer changed is re-checked (its reason, its pointer, the
 rating against the axis's current grid, its references), and the
@@ -133,6 +133,56 @@ what the correction touches; add one line to the note, `Revised
 note citing the report names it by its run folder, which a later report
 does not reuse.
 
+## Fix checks
+
+When the auditor asks, or `tickets` names fixes for `verify-findings` on a
+later commit (closed in tracker, possibly done), this step checks whether
+those fixes' findings are fixed at that commit: the head of the tracker's
+default branch when the run starts, its full SHA recorded in the run's
+folder. It is read in a clone made for it, `<workspace>/repo-<short sha>/`,
+detached, never in the audited working copy. A finding's text, rating and
+`status` stay as written: they describe the audited commit.
+
+The test is the finding's remediation and its fix's Check, every part and
+every case, read at that commit, with the commits and pull requests that
+changed it. The rules of engagement hold: the project never runs, but a
+command that only parses its files and starts nothing (a configuration
+resolved) may, its output masked; dependency code comes from an install
+matching that commit's lock, else from copies pinned to the locked
+commits, fetched into the run's folder with their date. A part only the
+running target shows, with no target serving that commit, is not
+observable: it remains. What the code at that commit shows, every step
+pointed as for a finding, is enough: the Check is behaviour, not a test
+that must exist; a part no reading can show (one only running the
+project or the target would) remains.
+
+- Every part and case holds: `resolution: fixed`.
+- Some do: `open`, in part, saying what is done and what remains.
+- None does: `open`, not fixed.
+
+A case the remediation or the Check covers that the later code misses (an
+input the new code does not handle) is what remains, never a lead; a
+lead already open on that case is closed in its own file, `closed:
+remains of F-…'s fix (Fix checked <YYYY-MM-DD>)`. A defect outside them,
+in code the audited commit does not have, is neither a lead nor a
+finding of this engagement: one line in `tool-output/verify/<run>/
+outside.md`, `seen at <short sha>, outside this engagement`, with its
+pointers, which the report and the end report carry, for the auditor
+and a later engagement.
+
+The note gets one line, its parsed part in English: `Fix checked
+<YYYY-MM-DD> at <short sha>: fixed by <commits> (PR #<n>).`, `…: in part:
+<done>; remains <what>.` or `…: not fixed.`, then what was read, pointers
+at that commit written `<short sha>:<path>:<line>`. `on` takes the check's
+date whatever the outcome, so the plan sees it; an earlier check whose
+`on` stayed behind takes that check's date, with a `Revised <date>: on
+<old> → <check date>.` line. A `fixed` that a report or the auditor
+questions is checked again by the same test, at the head when this run
+starts; its `Fix checked` line is the revision's line, naming the report
+by its run folder and the line it supersedes. Nothing else of this skill
+runs in this mode: leads are not spot-checked or moved beyond the
+closures above, coverage is unchanged.
+
 ## Leads
 
 Open leads are left to their axis, uninvestigated. Spot-check, in the files
@@ -141,8 +191,9 @@ every one closed as declared (the answer says what the closure claims, and
 the repository does not contradict it). A wrong closure goes back to
 `open:` with the reason; a right closure on a wrong reason keeps its status,
 the reason rewritten; one that rests on an answer without saying so takes
-the declared form. A check that held is one line in the note of the axis. Anything new becomes a lead for its axis: a finding written by the
-verifier would have no verifier.
+the declared form. A check that held is one line in the note of the axis. Anything new becomes a lead for its axis, `open: from verify-findings
+<YYYY-MM-DD>; <who settles it>`, which the validator lists for a lead
+pass: a finding written by the verifier would have no verifier.
 
 Once every finding is decided, work through the files in turn (the verifier
 is the one step that reads them all, alone):
@@ -173,7 +224,9 @@ the others go in the end report, for the step that owns them. Its
 Per axis: confirmed, refuted, unverified, ratings changed, text corrected,
 leads reopened, moved, or closed as settled; then the questions added, the
 citations added between findings with one cause, the marks put in form
-(each old mark quoted), and the axes that need a lead pass; the findings whose text changed that a report or a ticket
+(each old mark quoted), and the axes that need a lead pass; fix checks:
+the commit, each finding fixed, in part (what remains) or not fixed, and
+what was seen outside this engagement; the findings whose text changed that a report or a ticket
 already carries, so the next `audit-report` and `tickets` take them up.
 Continue with those lead passes, or with `remediation-plan` when a plan
 exists, then `audit-report`.
