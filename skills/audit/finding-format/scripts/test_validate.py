@@ -318,6 +318,10 @@ class ValidateTest(unittest.TestCase):
         ff = FINDINGS_FILE.replace("open: owner,\n  Q-SEC-01.", "open: from verify-findings 2026-10-20;\n  agent.")
         self.assertFlags("PENDING lead-pass", "L-SEC-02: opened by verify-findings", findings_file=ff)
 
+    def test_lead_closed_as_remains_of_unknown_finding(self):
+        ff = FINDINGS_FILE.replace("open: owner,\n  Q-SEC-01.", "closed: remains of F-SEC-009's fix\n  (Fix checked 2026-10-20).")
+        self.assertFlags("ERROR", "F-SEC-009", findings_file=ff)
+
     def test_no_plan_with_confirmed_findings(self):
         self.assertFlags("ERROR", "no plan yet", plan=None, args=("--require", "plan"))
 

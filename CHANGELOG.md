@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.25.0 (unreleased)
+
+From the run validating 0.24.0, on a copy of the 30edaa4 workspace,
+gn-platform's main at 055ee1d (3 commits after 17a71f0): `verify-findings`
+checked F-PRI-003's `fixed` again and set it back to `open`, in part (an
+address with an apostrophe, and a former address, keep their e-mails after
+deletion), and moved the three `on` the validator flagged; the privacy
+lead pass closed L-PRI-09 and L-PRI-11 as settled by F-PRI-003;
+`remediation-plan` reopened R-045 and restored R-044's wait on it;
+`audit-report` produced a report with no DRAFT; `tickets` showed R-045
+`closed in tracker` with what remains, and asked nothing. Fix checks, done
+fixes and the in-part forms worked as written. What was loose: which
+commit a questioned `fixed` is checked at, and which line it writes;
+whether a Check must exist as a test; who closes a lead that has become
+what remains; where defects outside the engagement are kept; a done fix
+coming back open; remaining cases the Check does not name; when a fix
+check stops covering a fix as the branch moves; `closed in tracker`
+naming a fix a check already covered.
+
+- `verify-findings`: a questioned `fixed` is checked at the head when the
+  run starts, its `Fix checked` line being the revision's; an `on` an
+  earlier check left behind takes that check's date with a `Revised`
+  line; behaviour the code shows is enough, a part only running would
+  show remains; an open lead on a case that remains is closed `closed:
+  remains of F-…'s fix (Fix checked <date>)`; defects outside the
+  engagement go in `tool-output/verify/<run>/outside.md`
+- `remediation-plan`: a done fix whose finding comes back open reopens
+  under its ID, its dropped waits restored when their reason holds; a
+  remaining case the Check does not name is added to it; a directory
+  location shares a file with every location under it
+- `audit-report`: fixed findings and done fixes give the commit checked
+  and the commits that fixed them; outside defects read from
+  `outside.md`
+- `tickets`: a fix check covers a fix until a later candidate commit
+  follows it, `closed in tracker` included; an issue or pull request
+  naming the fix's ticket is a candidate
+- `finding-format`: the `remains of F-…'s fix` lead closure; a second
+  lead pass the same day runs in `lead-pass-<date>-2`
+- validator: `remains of F-…` closures must name an existing finding
+
 ## 0.24.0 (unreleased)
 
 From the first run checking fixes at a later commit, all with 0.23.0 on

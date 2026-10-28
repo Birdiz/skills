@@ -15,7 +15,7 @@ Complete, for a technical reader who will act on it or challenge it.
    its findings, why together, change, check, what it waits for, and a
    part done at a later commit with what remains. A finding is counted in
    its axis; a fix, once. Done fixes follow in one table: fix, title, its
-   findings, the commit.
+   findings, the commit checked, the commits that fixed it.
 4. **Findings**, every confirmed open one, by axis, severity, effort: title, ID,
    its fix, rating line (severity, confidence, effort, evidence regime),
    evidence condensed to its key pointers (the findings file holds the
@@ -24,8 +24,9 @@ Complete, for a technical reader who will act on it or challenge it.
 5. **Not verified**, kept apart from confirmed ones: reason, and who can settle
    it.
 6. **Accepted and fixed**: accepted ones with the owner's decision and
-   date; fixed ones with the commit and what fixed it, one line each, and
-   the defects a fix check saw outside this engagement. Both outside
+   date; fixed ones with the commit checked and the commits that fixed
+   them, one line each, and the defects a fix check saw outside this
+   engagement (`tool-output/verify/<run>/outside.md`). Both outside
    quick wins.
 7. **Open leads and questions**: what each would change; answers received.
    Controls and facts declared by the owner and not observed (leads closed

@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.24.0 (audit skills, see CHANGELOG)
+Version: 0.25.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -151,27 +151,37 @@ resolved) may, its output masked; dependency code comes from an install
 matching that commit's lock, else from copies pinned to the locked
 commits, fetched into the run's folder with their date. A part only the
 running target shows, with no target serving that commit, is not
-observable: it remains.
+observable: it remains. What the code at that commit shows, every step
+pointed as for a finding, is enough: the Check is behaviour, not a test
+that must exist; a part no reading can show (one only running the
+project or the target would) remains.
 
 - Every part and case holds: `resolution: fixed`.
 - Some do: `open`, in part, saying what is done and what remains.
 - None does: `open`, not fixed.
 
 A case the remediation or the Check covers that the later code misses (an
-input the new code does not handle) is what remains, never a lead. A
-defect outside them, in code the audited commit does not have, is neither
-a lead nor a finding of this engagement: one line in the end report,
-`seen at <short sha>, outside this engagement`, for the auditor and a
-later engagement.
+input the new code does not handle) is what remains, never a lead; a
+lead already open on that case is closed in its own file, `closed:
+remains of F-…'s fix (Fix checked <YYYY-MM-DD>)`. A defect outside them,
+in code the audited commit does not have, is neither a lead nor a
+finding of this engagement: one line in `tool-output/verify/<run>/
+outside.md`, `seen at <short sha>, outside this engagement`, with its
+pointers, which the report and the end report carry, for the auditor
+and a later engagement.
 
 The note gets one line, its parsed part in English: `Fix checked
 <YYYY-MM-DD> at <short sha>: fixed by <commits> (PR #<n>).`, `…: in part:
 <done>; remains <what>.` or `…: not fixed.`, then what was read, pointers
 at that commit written `<short sha>:<path>:<line>`. `on` takes the check's
-date whatever the outcome, so the plan sees it. A `fixed` that a report or
-the auditor questions is checked again, in revision mode, by the same
-test. Nothing else of this skill runs in this mode: leads are not
-spot-checked or moved, coverage is unchanged.
+date whatever the outcome, so the plan sees it; an earlier check whose
+`on` stayed behind takes that check's date, with a `Revised <date>: on
+<old> → <check date>.` line. A `fixed` that a report or the auditor
+questions is checked again by the same test, at the head when this run
+starts; its `Fix checked` line is the revision's line, naming the report
+by its run folder and the line it supersedes. Nothing else of this skill
+runs in this mode: leads are not spot-checked or moved beyond the
+closures above, coverage is unchanged.
 
 ## Leads
 

@@ -5,7 +5,7 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.24.0 (audit skills, see CHANGELOG)
+Version: 0.25.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
@@ -158,6 +158,9 @@ finishing, rewriting its status as one of:
 - `promoted to F-…`;
 - `closed: settled by F-…`, by a finding of any axis that covers it;
 - `closed: <why, pointer>`;
+- `closed: remains of F-…'s fix (Fix checked <date>)`, for a case a fix
+  check at a later commit found what remains of a fix (`verify-findings`,
+  Fix checks);
 - `closed: intended (Q-…), <pointer>`, for behaviour the code shows and the
   owner's answer says is wanted, an answer on what the owner's own content
   means included;

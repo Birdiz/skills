@@ -5,7 +5,7 @@ description: Turn the fixes of an audit's remediation plan into tickets, one per
 
 # tickets
 
-Version: 0.24.0 (audit skills, see CHANGELOG)
+Version: 0.25.0 (audit skills, see CHANGELOG)
 
 One **ticket** per open fix of the plan: the work handed to whoever does it,
 where they track work. Input: `00-engagement.md`, `02-remediation-plan.md`,
@@ -72,7 +72,8 @@ after it (Creating, step 4).
    commit is not the audited commit or one before it, through the
    tracker's API, never fetched into the audited working copy.
    Candidates are the commits touching the fix's `locations` and the
-   issues or pull requests naming its fix or finding IDs, each judged
+   issues or pull requests naming its fix or finding IDs or its ticket,
+   each judged
    from its diff (an issue by the merged pull requests its timeline says
    close or reference it): a shared file alone shows nothing, a directory
    location included.
@@ -86,9 +87,10 @@ after it (Creating, step 4).
    one keeps its state, that line beside it, and so does a sent one
    still open in the plan. All are named in the end report for
    `verify-findings` on a later commit, unless a fix check already
-   covered their findings at a commit the default branch has not moved
-   past: its outcome (`in part`, what remains; `not fixed`) goes beside
-   the state instead, and for a sent ticket the auditor tells the team. A fix waiting for a ready one
+   covered their findings at a commit no later candidate has followed:
+   its outcome (`in part`, what remains; `not fixed`) goes beside the
+   state instead, and for a sent ticket the auditor tells the team. The
+   same holds for `closed in tracker` (Later runs). A fix waiting for a ready one
    stays ready, blocked by it by title, linked only when both are
    created. The agent reads each diff with secret values masked, and
    writes its judgment into the script as data; the script prints, for
@@ -338,8 +340,9 @@ tell the team. Its state, from the plan and the tracker:
   planned) and what closed it: the closing event's commit, else the
   merged pull request that references the issue, as `PR #<n> (merge
   <short sha>)`, or `none given`;
-  named in the end report for `verify-findings` on a later commit. It
-  replaces `changed since sent`, whose line is still written in the same
+  named in the end report for `verify-findings` on a later commit, unless
+  a fix check covers it (Before starting, step 3). It replaces `changed
+  since sent`, whose line is still written in the same
   cell.
 
 The auditor handles these in the tracker. A struck fix stays struck while

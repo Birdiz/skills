@@ -5,7 +5,7 @@ description: Audit the accessibility of a web application on its running target,
 
 # accessibility
 
-Version: 0.24.0 (audit skills, see CHANGELOG)
+Version: 0.25.0 (audit skills, see CHANGELOG)
 
 Find and evidence what stops disabled people from using the product, in
 `<workspace>/findings/accessibility.md`, in `finding-format`, bound by its

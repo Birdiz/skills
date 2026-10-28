@@ -15,7 +15,7 @@ import os
 import re
 import sys
 
-VERSION = "finding-format@0.24.0"
+VERSION = "finding-format@0.25.0"
 
 AXES = {
     "code-quality": "QUA", "architecture": "ARC", "app-security": "SEC",
@@ -409,7 +409,7 @@ def check_leads(rep, path, axis, start, items, ids, refs):
             rep.error(path, i + 1, "%s: no status (`promoted to F-…`, `closed:`, `open:`)" % lid)
             continue
         last = text[statuses[-1].start():]
-        for m2 in re.finditer(r"(?:promoted to|settled by)\s+(F-[A-Z0-9]+-\d+)", text):
+        for m2 in re.finditer(r"(?:promoted to|settled by|remains of)\s+(F-[A-Z0-9]+-\d+)", text):
             refs.append((path, i + 1, lid, m2.group(1), "error"))
         if last.startswith("open:") and "moved from" in last[:40]:
             rep.pending("lead-pass", path, i + 1, "%s: moved into %s, waits for a lead pass" % (lid, axis))
