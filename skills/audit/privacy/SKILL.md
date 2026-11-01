@@ -5,7 +5,7 @@ description: Audit how an application handles personal data against the data pro
 
 # privacy
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 Find and evidence where the product's handling of personal data departs from
 the law that applies to its owner, in `<workspace>/findings/privacy.md`, in
@@ -28,7 +28,7 @@ finding.
 
 ## Before starting
 
-1. Read `00-engagement.md` (missing: stop, ask for `audit-kickoff`). If the
+1. Read `00-engagement.md` (missing: stop, ask the auditor to run `/birdiz-skills:audit-kickoff`). If the
    plan says `not-evaluable`, write the coverage with the reason and stop.
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`,
    [areas.md](areas.md) and [questions.md](questions.md).
@@ -40,8 +40,11 @@ finding.
    on are copied into `tool-output/privacy/`, in the engagement's language,
    consolidated when a consolidated version exists, with the version's date
    and the fetch date: the GDPR from EUR-Lex, or from the Publications
-   Office (CELEX 32016R0679) when EUR-Lex refuses scripts; the national law
-   from its official journal (Légifrance in France); the regulator's
+   Office (CELEX 32016R0679, asked with `Accept: application/xhtml+xml` and
+   `Accept-Language: fra` or the language wanted, or it answers with the
+   whole 62 MB object) when EUR-Lex refuses scripts; the national law
+   from its official journal (Légifrance in France), through a copy the
+   auditor saves when it refuses scripts; the regulator's
    guidance from its site. `references` name the GDPR in English (`GDPR Art.
    13(2)(a)`) and a national law by its official title.
 4. **Questions.** Purposes, legal bases, retention periods, processors and

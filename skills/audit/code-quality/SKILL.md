@@ -5,7 +5,7 @@ description: Audit code quality of a codebase (defects, error handling, complexi
 
 # code-quality
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 Find and evidence what makes the code wrong, fragile or costly to change, in
 `<workspace>/findings/code-quality.md`, in `finding-format`, bound by its
@@ -15,7 +15,7 @@ the function, the file, a module's inside; how modules fit together belongs to
 
 ## Before starting
 
-1. Read `00-engagement.md` (missing: stop, ask for `audit-kickoff`). If the
+1. Read `00-engagement.md` (missing: stop, ask the auditor to run `/birdiz-skills:audit-kickoff`). If the
    plan says `not-evaluable`, write the coverage with the reason and stop.
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`, and
    [areas.md](areas.md).
@@ -55,7 +55,9 @@ is reported all the same (`finding-format`, Rating).
    shows: copies already diverged, a fix applied in one copy only, logic
    nobody can test in isolation.
 4. **Tests** of the main flows: what they assert, what they mock away, what
-   has none. Read, never run.
+   has none. Read; run them only as the engagement's `execution` allows, in
+   its disposable copy (rules of engagement), the tests' output being
+   evidence the verifier can rerun.
 5. **Confirm on the target**, when the engagement has one and the rules of
    engagement allow it: one request reproducing a defect the code shows; the
    code path stays the evidence.

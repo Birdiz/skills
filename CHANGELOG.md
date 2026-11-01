@@ -1,5 +1,64 @@
 # Changelog
 
+## 0.26.0 (2026-11-01)
+
+From the first full audit on a codebase other than gn-platform, a Node and
+TypeScript application audited by its owner in one day, on localhost, with
+`app-security`, `privacy`, `code-quality` and a light `architecture`. Its
+report lost its DRAFT after three rounds. What the run showed: dates compared
+to the day raised nothing when everything happened on one day, so re-verification
+rested on the orchestrator's memory; a change an owner merely wants first moved
+a severity up and down; lifting a DRAFT for one low-severity fix cost 17% of the
+tokens; the worst defects came from running tests, which the rules forbid; each
+step rewrote the same pointer check; kickoff never asked who uses the target,
+and never tried the tools the profile lists.
+
+- `finding-format`, validator: a verification records `sha`, a hash of the
+  finding's text outside its note (`validate.py --fingerprint`), and a text
+  that differs is pending for `verify-findings`, even the same day. A fix
+  records `sources`, the same hashes, and a difference is pending for
+  `remediation-plan`. Dates stay; a workspace without hashes keeps them alone,
+  with one warning. An answer the day of the axis's last pass waits unless
+  marked `**Applied (YYYY-MM-DD).**`, under skills from this version on
+- `finding-format`: new `scripts/check-pointers.py`, which opens each pointer
+  and finds each quote at its line, run by each step that wrote pointers. A
+  lead pass's change no answer asked for is written `**Changed by lead pass.**`.
+  The coverage table is documented in `schema.md`, with a planned axis's
+  placeholder and `evaluated (light)`
+- `finding-format`, Rating: **blocks** is defined. A planned change is blocked
+  when it would fail or be unlawful until the fix. An owner's decision to fix
+  first raises nothing, and reaches the plan as a `priority`. A proposal states
+  a fact or a decision, never the rating it would give. A system online with
+  only its owner using it is rated like one not yet in production, stated once
+  in the engagement
+- `remediation-plan`: `priority` moves a fix up in its tier; an update may be
+  scoped to named fixes, and says so
+- `audit-report`: a blocking item that can change only one low-severity fix
+  nothing waits for is *holding*: it holds that fix, without a DRAFT. A report
+  that follows a DRAFT is final, what still blocks being **reservations**, its
+  fixes still held. Sections whose findings and fixes keep their judgments are
+  copied from the previous report; with `for: self`, a long explanation sends
+  to the findings file
+- `audit-kickoff`: one round of lifting a DRAFT; tests each tool of the profile
+  before confirmation; asks who uses the target (`## Exposure`) and records
+  `execution`, an axis's depth and focus, `prompts_scope`; "Amendment" covers
+  scope, tools and `execution`; gives the words of the request to the verifier.
+  The skills that send to it give its full command
+- Rules of engagement: `execution: none | disposable-copy | local-target`
+  ([ADR 0004](docs/adr/0004-execution-is-a-recorded-choice.md)), `none` on a
+  third party's target, which the validator enforces. On a target started that
+  way a step may invent an account and delete what it created. A harmless
+  marker may prove an injection. Every run of `verify`, `plan`, `report` and
+  `tickets` has a dated folder, the first included
+- `verify-findings`: each verdict is written when decided; a raise resting on a
+  decision alone goes back; revision gets the report's folder and item numbers
+- `tickets`: a run may be scoped to named fixes; a sensitive fix's local file
+  carries its marker, and the end report warns when the tracker is public;
+  `localhost` is no host of the target
+- `recon`: `gitnexus analyze --index-only`, since its default edits the copy.
+  `privacy`: the headers the CELEX source needs, and a saved copy when
+  Légifrance refuses scripts. `schema.md`: ASVS written as its text writes it
+
 ## 0.25.0 (2026-10-28)
 
 First release.

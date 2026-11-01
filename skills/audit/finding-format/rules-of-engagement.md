@@ -6,9 +6,26 @@ Binding on every audit step: recon, axes, verification.
   live in the dedicated clone or the workspace.
 - What runs: analysis tools reading the code, the no-scripts dependency install
   `recon` describes, requests to the target. The project itself never runs
-  (install scripts, build, tests, containers), and the agent starts no target.
+  (install scripts, build, tests, containers), and the agent starts no target,
+  unless the engagement's `execution` allows it (below).
   A target the auditor runs or provides (a local stack, a staging URL) may be
   observed and tested.
+- **Execution**, from the engagement, `none` unless the owner of their own
+  target allowed more (`audit-kickoff`, Authorization); on a third party's
+  target it is always `none`, since that code would run on the auditor's
+  machine. Tests can reach what they were never meant to, so with
+  `disposable-copy` a step may install with scripts, build, run the project's
+  tests, or exercise one dependency alone against a local fake server, only
+  in a copy made for it at the audited commit, `<workspace>/cache/run-<step>/`,
+  never in the working copy: no `.env` and no credential in it, and an
+  environment limited to what the command needs (`env -i`, `PATH`, a `HOME`
+  inside the copy). It first reads what the command runs (package scripts,
+  test setup); a command that would reach a real service is not run, and
+  becomes a lead. With `local-target` a step may also start the target from
+  such a copy, on a listed host under `testing: active`, with a port and a
+  store of its own, and stop it when done; `url_serves` says so. Each command
+  is a tool run (below), and the coverage names what ran and where. The
+  verifier may rerun it under the same value.
 - A tool an axis skill names runs when the profile lists it, or, when the
   profile lists `docker`, from an image pinned by digest (a pinned base image
   with the tool installed at a pinned version, when the tool has no image).
@@ -38,7 +55,10 @@ Binding on every audit step: recon, axes, verification.
   data through the product's own forms with the auditor's test accounts (a
   registration, a character), each creation listed under `## Created on
   target` in the step's file; it never deletes anything, and resetting the
-  data is the owner's.
+  data is the owner's. On a target started under `execution: local-target`,
+  whose store goes with it, a step may also invent its own account, and
+  delete through the product's own routes data it created, listed the same
+  way. Signing out is ordinary use.
 - Parallel steps share the target: each uses its own browser context, never
   a profile another step signs in with, and remembers that another step's
   data may appear.
@@ -91,6 +111,8 @@ Binding on every audit step: recon, axes, verification.
   Stop at the first proof; read or keep no data that is not the auditor's. A
   step that could leave scope, touch such data, or change or degrade the target
   beyond the listed creations above becomes a lead for the owner to test.
+  Proving that an injection executes takes a harmless marker (a fixed string
+  shown, nothing read or sent), which stays in the run's output.
 - A secret is recorded by location, kind and presence in history. In every
   workspace file (map, findings, notes, reports) its value, default and
   placeholder values included, is written `<redacted>`, never quoted in full
@@ -110,12 +132,13 @@ Binding on every audit step: recon, axes, verification.
   other step uses, where the product allows one per account.
 - Each tool run (scanners, analysers, audit commands, the `git log` commands
   and scripts an axis relies on) is scripted in
-  `tool-output/<step>/run-<name>.sh` (`<step>`: `recon`, the axis, `verify`,
-  `plan`, `report`, `tickets`; a later run of the same step in `tool-output/<step>/<run>/`,
-  `<run>` being `lead-pass-<YYYY-MM-DD>` (`-2` for a second one the same
-  day) or `round-2` for an axis, the
-  run's start date `<YYYY-MM-DD>` for the others, `<YYYY-MM-DD>-2`, `-3`… for a
-  second run the same day), raw output kept beside it, paths
+  `tool-output/<step>/<run>/run-<name>.sh`, with `<step>` one of `verify`,
+  `plan`, `report`, `tickets` and `<run>` the run's start date `<YYYY-MM-DD>`,
+  `<YYYY-MM-DD>-2`, `-3`… for a second run the same day, the first run
+  included (an older workspace's earlier runs stay where they are); `recon`
+  and an axis write in `tool-output/<step>/`, a later run of an axis in
+  `<run>` = `lead-pass-<YYYY-MM-DD>` (`-2` for a second one the same day) or
+  `round-2`. Raw output is kept beside it, paths
   relative to the workspace so a copy reruns in place, times in UTC, auditor
   artifacts (`.gitnexus/`, caches, the workspace) excluded; in a container,
   the working copy is mounted read-only. Rules or scripts written for the run are kept there too;

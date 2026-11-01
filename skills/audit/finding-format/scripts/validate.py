@@ -3,6 +3,10 @@
 finding-format (schema.md, SKILL.md) and remediation-plan. Read-only.
 
 Usage: python3 -I validate.py <workspace> [--require verification] [--require plan]
+       python3 -I validate.py <workspace> --fingerprint [F-...]
+
+--fingerprint prints each finding's text hash, the `sha` a verification records
+and the `sources` of a fix, and checks nothing.
 
 Prints one line per problem, then a summary:
   ERROR    the form breaks the schema, or a rule a parser or a later step relies on
@@ -11,11 +15,12 @@ Prints one line per problem, then a summary:
 Exit status: 0 no error, 1 errors, 2 the workspace cannot be read.
 Python 3.8 or later, standard library only.
 """
+import hashlib
 import os
 import re
 import sys
 
-VERSION = "finding-format@0.25.0"
+VERSION = "finding-format@0.26.0"
 
 AXES = {
     "code-quality": "QUA", "architecture": "ARC", "app-security": "SEC",
@@ -43,6 +48,8 @@ SECTIONS = ["Coverage", "Findings", "Leads", "Leads for other axes",
 REQUIRED_SECTIONS = SECTIONS[:3]
 AREA_STATUSES = ["evaluated", "partial", "not-evaluable", "not-requested"]
 VERIFIERS = ["sub-agent", "new session"]
+EXECUTIONS = ["none", "disposable-copy", "local-target"]
+SHA = re.compile(r"[0-9a-f]{12}")
 
 FIX_ENUMS = {
     "grouping": ["single", "one-change", "same-files"],
@@ -268,11 +275,31 @@ class Finding:
     def __init__(self, path, line, data, labels, text):
         self.path, self.line, self.data, self.labels, self.text = path, line, data, labels, text
         self.dates = []
+        self.sha = None
 
 
 def label_of(paragraph):
     m = re.match(r"^\*\*([^*]+?)\.\*\*", paragraph)
     return m.group(1) if m else None
+
+
+def fingerprint(title, yaml_body, items):
+    """Hash of what a verification vouches for: the heading, the YAML but its
+    `status` and `verification` keys, the prose but the verification note.
+    Spacing is ignored, so rewrapping a paragraph changes nothing."""
+    parts = [title]
+    for raw in yaml_body:
+        line = strip_comment(raw).strip()
+        if line and not re.match(r"(status|verification)\s*:", line):
+            parts.append(line)
+    in_note = False
+    for _, line, _, body in items:
+        if line is not None and label_of(line.strip()):
+            in_note = label_of(line.strip()) == "Verification"
+        if not in_note:
+            parts.extend(body if line is None else [line])
+    text = " ".join(" ".join(parts).split())
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
 
 
 def check_finding(rep, path, axis, title, start, items, engagement_commit):
@@ -321,16 +348,22 @@ def check_finding(rep, path, axis, title, start, items, engagement_commit):
 
     ver = data.get("verification")
     if ver is not None:
-        if not isinstance(ver, dict) or set(ver) != {"by", "on"}:
-            rep.error(path, yi + 1, "%s: verification must be {by: <who>, on: <YYYY-MM-DD>}" % fid)
+        if not isinstance(ver, dict) or set(ver) - {"sha"} != {"by", "on"}:
+            rep.error(path, yi + 1, "%s: verification must be {by: <who>, on: <YYYY-MM-DD>, sha: <hash>}" % fid)
             ver = None
         else:
             if ver["by"] not in VERIFIERS:
                 rep.error(path, yi + 1, "%s: verification by `%s` not in %s" % (fid, ver["by"], " | ".join(VERIFIERS)))
             if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(ver["on"])):
                 rep.error(path, yi + 1, "%s: verification on `%s` is not a date" % (fid, ver["on"]))
+            if "sha" in ver and not SHA.fullmatch(str(ver["sha"])):
+                rep.error(path, yi + 1, "%s: verification sha `%s` is not a 12-character hash" % (fid, ver["sha"]))
 
     rest = [it for it in items if it[0] > yi]
+    sha = fingerprint(title, body, rest)
+    if ver is not None and "sha" in ver and SHA.fullmatch(str(ver["sha"])) and ver["sha"] != sha:
+        rep.pending("verify-findings", path, start + 1,
+                    "%s: text changed since its verification (sha %s, now %s)" % (fid, ver["sha"], sha))
     paras = paragraphs(rest)
     labels = [(i, label_of(p), p) for i, p in paras if label_of(p)]
     names = [l for _, l, _ in labels]
@@ -388,6 +421,8 @@ def check_finding(rep, path, axis, title, start, items, engagement_commit):
         rep.warn(path, start + 1, "%s: declarative finding cites no question ID" % fid)
     finding = Finding(path, start + 1, data, names, text)
     finding.dates = dates + [c[0] for c in checks] + ([str(ver["on"])] if ver is not None else [])
+    finding.sha = sha
+    finding.unstamped = ver is not None and "sha" not in ver
     return finding
 
 
@@ -434,7 +469,7 @@ def check_other_axes(rep, path, items, refs):
         rep.pending("verify-findings", path, i + 1, "lead for %s not moved yet" % m.group(1))
 
 
-def check_questions(rep, path, axis, items, ids, last_pass):
+def check_questions(rep, path, axis, items, ids, last_pass, marks_applied):
     code = AXES[axis]
     for i, text in bullets(items):
         m = re.match(r"^[-*]\s+(?:\*\*)?(Q-[A-Z0-9]+-\d+)", text)
@@ -449,12 +484,17 @@ def check_questions(rep, path, axis, items, ids, last_pass):
             if qid in ids["Q"]:
                 rep.error(path, i + 1, "%s: ID used twice (also %s)" % (qid, ids["Q"][qid]))
             ids["Q"][qid] = "%s:%d" % (os.path.relpath(path, rep.root), i + 1)
-        for m2 in re.finditer(r"\*\*(Answer|Asked)\b[^*]*\*\*", text):
+        marks = list(re.finditer(r"\*\*(Answer|Asked|Applied)\b[^*]*\*\*", text))
+        for k, m2 in enumerate(marks):
             mark = m2.group(0)
+            applied = k + 1 < len(marks) and marks[k + 1].group(1) == "Applied"
+            if m2.group(1) == "Applied" and not re.fullmatch(r"\*\*Applied \(\d{4}-\d{2}-\d{2}\)\.\*\*", mark):
+                rep.error(path, i + 1, "%s: not `**Applied (YYYY-MM-DD).**`: %s" % (qid, mark))
             if m2.group(1) == "Answer" and not re.match(r"\*\*Answer \(\d{4}-\d{2}-\d{2}, [^)]+\)\s*:\*\*", mark):
                 rep.error(path, i + 1, "%s: answer not `**Answer (YYYY-MM-DD, who):**`: %s" % (qid, mark))
-            elif m2.group(1) == "Answer" and last_pass and mark[10:20] > last_pass:
-                rep.pending("lead-pass", path, i + 1, "%s: answered %s, after the axis's last pass (%s): waits for a lead pass" % (qid, mark[10:20], last_pass))
+            elif (m2.group(1) == "Answer" and last_pass and not applied
+                  and (mark[10:20] > last_pass or (marks_applied and mark[10:20] == last_pass))):
+                rep.pending("lead-pass", path, i + 1, "%s: answered %s, not applied by the axis's last pass (%s): waits for a lead pass" % (qid, mark[10:20], last_pass))
             if m2.group(1) == "Asked" and not re.match(r"\*\*Asked \(\d{4}-\d{2}-\d{2}\), not answered\.\*\*", mark):
                 rep.error(path, i + 1, "%s: not `**Asked (YYYY-MM-DD), not answered.**`: %s" % (qid, mark))
 
@@ -504,6 +544,13 @@ def last_pass(sections, axis):
     return None
 
 
+def marks_applied(lines, axis):
+    """Whether the axis's newest skill version writes `**Applied (…).**`: under
+    older ones an answer the day of the last pass says nothing either way."""
+    versions = [tuple(int(n) for n in v) for v in re.findall(r"\b%s@(\d+)\.(\d+)" % re.escape(axis), "\n".join(lines))]
+    return bool(versions) and max(versions) >= (0, 26)
+
+
 def check_findings_file(rep, path, axis, engagement_commit, ids, refs, findings):
     lines = read(path)
     sections = blocks(lines, 2)
@@ -538,7 +585,7 @@ def check_findings_file(rep, path, axis, engagement_commit, ids, refs, findings)
         elif name == "Leads for other axes":
             check_other_axes(rep, path, items, refs)
         elif name == "Questions for the auditor":
-            check_questions(rep, path, axis, items, ids, last_pass(sections[1:], axis))
+            check_questions(rep, path, axis, items, ids, last_pass(sections[1:], axis), marks_applied(lines, axis))
     text = "\n".join(lines)
     for regex in (F_ID, L_ID, Q_ID):
         for m in regex.finditer(text):
@@ -617,7 +664,7 @@ def check_plan(rep, path, findings, ids, engagement_commit):
         rep.warn(path, None, "%d fixes use **Why together.**, the older label of **Grouping.** (%s to %s)"
                  % (len(older), older[0], older[-1]))
 
-    where = {}
+    where, unsourced = {}, []
     for rid, d in fixes.items():
         fs = d.get("findings") or []
         if d.get("status") == "open" and not fs:
@@ -633,6 +680,16 @@ def check_plan(rep, path, findings, ids, engagement_commit):
                 if (fd.get("status"), fd.get("resolution")) != ("confirmed", "open"):
                     rep.pending("remediation-plan", path, d["_line"],
                                 "%s: %s is %s/%s, no longer confirmed and open" % (rid, f, fd.get("status"), fd.get("resolution")))
+        sources = d.get("sources")
+        if sources is not None and not isinstance(sources, dict):
+            rep.error(path, d["_line"], "%s: sources must be {F-...: <hash>, ...}" % rid)
+            sources = None
+        if d.get("status") == "open" and fs and sources is None:
+            unsourced.append(rid)
+        for f in fs if d.get("status") == "open" and sources is not None else []:
+            if f in findings and sources.get(f) != findings[f].sha:
+                rep.pending("remediation-plan", path, d["_line"],
+                            "%s: %s changed since the plan (sources %s, now %s)" % (rid, f, sources.get(f), findings[f].sha))
         known = [findings[f].data for f in fs if f in findings]
         if d.get("status") == "open" and d.get("grouping") == "same-files" and \
                 len({x.get("sensitive") is True for x in known}) > 1:
@@ -664,6 +721,9 @@ def check_plan(rep, path, findings, ids, engagement_commit):
                 rep.pending("remediation-plan", path, d["_line"], "%s: waits for %s, which is %s" % (rid, w, fixes[w].get("status")))
             if re.fullmatch(r"Q-[A-Z0-9]+-\d+", w) and w not in ids["Q"]:
                 rep.error(path, d["_line"], "%s: waits for unknown question %s" % (rid, w))
+    if unsourced:
+        rep.warn(path, None, "%d open fixes without `sources` (older skills): a finding changed the day of the plan does not show (%s to %s)"
+                 % (len(unsourced), unsourced[0], unsourced[-1]))
     for f, rs in where.items():
         if len(rs) > 1:
             rep.error(path, None, "%s is in several fixes: %s" % (f, ", ".join(rs)))
@@ -723,12 +783,13 @@ def check_order(rep, path, lines, fixes):
         for w in yw:
             if re.fullmatch(r"R-\d+", w) and pos.get(w, -1) > pos[rid]:
                 rep.error(path, n, "%s comes before %s, which it waits for" % (rid, w))
-        key = (tier(d), -SEVERITIES.index(d["severity"]) if d.get("severity") in SEVERITIES else 0,
+        key = (tier(d), 0 if d.get("priority") else 1,
+               -SEVERITIES.index(d["severity"]) if d.get("severity") in SEVERITIES else 0,
                EFFORTS.index(d["effort"]) if d.get("effort") in EFFORTS else 0)
         if prev is not None and key[0] < prev[1][0]:
             rep.error(path, n, "%s (tier %d) after %s (tier %d)" % (rid, key[0], prev[0], prev[1][0]))
         elif prev is not None and key[0] == prev[1][0] and key[0] == 0 and key < prev[1]:
-            rep.warn(path, n, "%s after %s: not by severity, then effort" % (rid, prev[0]))
+            rep.warn(path, n, "%s after %s: not by priority, severity, then effort" % (rid, prev[0]))
         prev = (rid, key)
 
 
@@ -747,14 +808,37 @@ def engagement_commit(root, rep):
     return None
 
 
+def check_engagement(root, rep):
+    path = os.path.join(root, "00-engagement.md")
+    if not os.path.exists(path):
+        return
+    fields = {}
+    for line in read(path):
+        m = re.match(r"^(owner|testing|execution):\s*(.*)$", line.strip())
+        if m:
+            fields.setdefault(m.group(1), strip_comment(m.group(2)).strip())
+    execution = fields.get("execution")
+    if execution is None or execution.startswith("<"):
+        return
+    if execution not in EXECUTIONS:
+        rep.error(path, None, "execution `%s` not in %s" % (execution, " | ".join(EXECUTIONS)))
+    elif execution != "none" and fields.get("owner", "").startswith("third party"):
+        rep.error(path, None, "execution `%s` on a third party's target: only `none` is allowed" % execution)
+    elif execution == "local-target" and fields.get("testing") != "active":
+        rep.error(path, None, "execution `local-target` needs `testing: active`")
+
+
 def main(argv):
     args = argv[1:]
     require = set()
     root = None
+    prints = None
     while args:
         a = args.pop(0)
         if a == "--require" and args:
             require.add(args.pop(0))
+        elif a == "--fingerprint":
+            prints = []
         elif a in ("-h", "--help"):
             print(__doc__)
             return 0
@@ -763,6 +847,8 @@ def main(argv):
             return 0
         elif root is None and not a.startswith("-"):
             root = a
+        elif prints is not None and not a.startswith("-"):
+            prints.append(a)
         else:
             print("unknown argument: %s" % a, file=sys.stderr)
             return 2
@@ -776,6 +862,7 @@ def main(argv):
 
     rep = Report(root)
     commit = engagement_commit(root, rep)
+    check_engagement(root, rep)
     ids = {"F": {}, "L": {}, "Q": {}, "Q_unnumbered": 0, "not_requested": {}}
     refs, findings = [], {}
     for name in sorted(os.listdir(fdir)):
@@ -787,6 +874,19 @@ def main(argv):
             rep.error(path, None, "`%s` is not an axis of finding-format" % axis)
             continue
         check_findings_file(rep, path, axis, commit, ids, refs, findings)
+
+    if prints is not None:
+        for fid in prints or sorted(findings):
+            if fid not in findings:
+                print("%s: no such finding" % fid, file=sys.stderr)
+                return 2
+            print("%s %s" % (fid, findings[fid].sha))
+        return 0
+
+    unstamped = sorted(fid for fid, f in findings.items() if f.unstamped)
+    if unstamped:
+        rep.warn(fdir, None, "%d verified findings without `sha` (older skills): a text changed the day of its verification does not show (%s to %s)"
+                 % (len(unstamped), unstamped[0], unstamped[-1]))
 
     known = set(ids["F"]) | set(ids["L"]) | set(ids["Q"])
     seen = set()

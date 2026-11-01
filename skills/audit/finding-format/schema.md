@@ -20,7 +20,7 @@ locations:
   - config/packages/framework.yaml:14
 commit: a1b2c3d
 references:
-  - OWASP ASVS 5.0 3.3.1
+  - OWASP ASVS 5.0.0 V3.3.1
 ```
 
 **Evidence.** What was observed, reproducibly.
@@ -33,6 +33,22 @@ wrong and why it matters, in everyday words, without exploit detail.
 
 **Remediation.** The fix, and how to check it worked.
 ````
+
+## Coverage
+
+The coverage section, opened by the skill that wrote it, closed by the axis
+line (`SKILL.md`, Coverage):
+
+```markdown
+skill: app-security@0.26.0, tools: [semgrep@1.0]
+
+| Area | Status | Notes |
+|---|---|---|
+| Session | evaluated | F-SEC-001. |
+| Files | partial | Waits for Q-SEC-01. |
+
+Axis: partial (Files)
+```
 
 ## IDs
 

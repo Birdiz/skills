@@ -5,7 +5,7 @@ description: Try to refute every unverified audit finding from a context that di
 
 # verify-findings
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 The only step that sets `status` to `confirmed` or `refuted`; everything
 downstream stands on it. Input: `00-engagement.md`, `01-codebase-map.md`,
@@ -18,7 +18,10 @@ An agent re-reading its own reasoning finds it convincing, so the verifier is
 a context that wrote none of the findings: a sub-agent given file paths only
 (workspace, working copy, this skill), never the conversation or a summary;
 facts about the environment (tools available, a browser that cannot open a
-host, a constraint on images) may be added, nothing about the findings.
+host, a constraint on images) may be added, nothing about the findings, and
+no file where their authors defend their reasoning (`audit-kickoff` gives the
+text of that request). In revision mode it gets the report's run folder and
+the item numbers: the items say the rest.
 Without sub-agents, if this session wrote a finding, stop and tell the auditor
 to invoke `verify-findings` in a new session: a blocker. Each note records `by:
 sub-agent | new session`.
@@ -27,18 +30,24 @@ sub-agent | new session`.
 
 Refute: ask what would make the finding wrong; confirm only once every answer
 has been checked and failed. Take every `unverified` finding, file by file,
-by severity within each file, and save each file as soon as it is done. A
+by severity within each file, and write each verdict into its file as soon
+as it is decided, so an interruption loses little. A
 finding that already has a `verification` key was verified before (an
 interrupted run resumes this way) and is skipped, outside revision mode
-and fix checks, unless an `**Auditor answer.**` is dated after that key and no
-`Re-checked …, answer of <that date>` line of the note covers it: then
-only what the answer changed is re-checked (its reason, its pointer, the
+and fix checks, unless its text no longer matches its `sha`, or an
+`**Auditor answer.**` is dated after that key and no
+`Re-checked …, answer of <that date>` line of the note covers it (the
+validator lists both): then
+only what changed is re-checked, as its `**Auditor answer.**` or `**Changed
+by lead pass.**` paragraphs say (its reason, its pointer, new evidence, the
 rating against the axis's current grid, its references), and the
 `**Verification.**` paragraph gets one line. When the re-check corrects
 nothing, the line is `Re-checked YYYY-MM-DD, answer of YYYY-MM-DD: no
-change.`, in English whatever the note's language, and `on` stays, so the
+change.` (`lead pass of YYYY-MM-DD` for a change no answer asked for), in
+English whatever the note's language, and `on` stays, so the
 plan is not made stale for nothing; when it corrects something, the line says
-what, and `on` takes the re-check's date. Earlier lines of the note stay as
+what, and `on` takes the re-check's date. Either way `sha` is taken again
+(Writing the result). Earlier lines of the note stay as
 history; the new line names any value it supersedes. Leads are
 spot-checked only where the answers re-checked closed them.
 
@@ -49,7 +58,9 @@ reloaded, another step's creations): re-observe with current identifiers and
 say so in the note.
 
 1. **Reproduce.** Open each location at the audited commit; rerun the evidence
-   commands the rules allow; a quote shows a drifted line at a glance, and
+   commands the rules allow, under the engagement's `execution` for what ran
+   the project; `check-pointers` (`finding-format`, Validator) lists the
+   drifted lines first; a quote shows a drifted line at a glance, and
    must be found at its pointer (a sentence cited from a file that does not
    contain it is corrected). Check what each count in the evidence actually
    matched. A pointer that does not match settles it: refute or correct.
@@ -71,10 +82,13 @@ say so in the note.
    the target contradicts it; the consequence follows from it. The owner's
    statement is not re-asked: what only the owner knows is taken as
    answered. Scanners are rerun on the axis's vulnerability database, not
-   updated, its date recorded.
+   updated, its date recorded; a tool with no local database (`npm audit`)
+   runs live, the note says so.
 4. **Rating**: severity against the axis grid; a stated adjustment holds
    only if its reason holds at its pointer (a sound move on a wrong reason is
-   kept, the reason rewritten); confidence; `sensitive` and `promptable`
+   kept, the reason rewritten); a raise for a planned change needs a real
+   obstacle, an owner's decision alone goes back (`finding-format`, Rating);
+   confidence; `sensitive` and `promptable`
    against `finding-format`; references against their source, each
    openable (`finding-format`, Evidence): an undated one gets a copy in
    the workspace whose run output gives its fetch date.
@@ -94,8 +108,13 @@ two keys:
 
 ```yaml
 status: confirmed
-verification: {by: sub-agent, on: 2026-10-08}
+verification: {by: sub-agent, on: 2026-10-08, sha: 3f2a9c1e7b04}
 ```
+
+`sha` is the finding's text hash, from `validate.py <workspace> --fingerprint
+<ID>` (`finding-format`, Validator), taken after the last correction, and
+only for a finding this run decided or re-checked: it says this text is the
+one verified. Lines of the note do not change it. Without Python 3, no `sha`.
 
 ```markdown
 **Verification.** by: sub-agent, verify-findings@0.13.0, tools: [git@2.50.1].
@@ -129,7 +148,8 @@ Discrepancies listed by `audit-report` or the auditor in verified findings
 blocking items of the latest report that name this step, are applied
 in place under the same rules, `confirmed` findings included. Re-check only
 what the correction touches; add one line to the note, `Revised
-<YYYY-MM-DD>: <what>.`, and move `on` (a correction, not a re-check). A
+<YYYY-MM-DD>: <what>.`, move `on` (a correction, not a re-check) and take
+`sha` again. A
 note citing the report names it by its run folder, which a later report
 does not reuse.
 
@@ -145,7 +165,8 @@ detached, never in the audited working copy. A finding's text, rating and
 
 The test is the finding's remediation and its fix's Check, every part and
 every case, read at that commit, with the commits and pull requests that
-changed it. The rules of engagement hold: the project never runs, but a
+changed it. The rules of engagement hold: the project runs only as
+`execution` allows, but a
 command that only parses its files and starts nothing (a configuration
 resolved) may, its output masked; dependency code comes from an install
 matching that commit's lock, else from copies pinned to the locked
@@ -174,7 +195,8 @@ The note gets one line, its parsed part in English: `Fix checked
 <YYYY-MM-DD> at <short sha>: fixed by <commits> (PR #<n>).`, `…: in part:
 <done>; remains <what>.` or `…: not fixed.`, then what was read, pointers
 at that commit written `<short sha>:<path>:<line>`. `on` takes the check's
-date whatever the outcome, so the plan sees it; an earlier check whose
+date whatever the outcome, so the plan sees it, and `sha` is taken again; an
+earlier check whose
 `on` stayed behind takes that check's date, with a `Revised <date>: on
 <old> → <check date>.` line. A `fixed` that a report or the auditor
 questions is checked again by the same test, at the head when this run
@@ -212,7 +234,8 @@ is the one step that reads them all, alone):
    (`finding-format`, Leads).
 
 Last, run the validator (`finding-format`, Validator) with `--require
-verification`, its output kept in `tool-output/verify/`. Its errors in
+verification`, and `check-pointers`, their output kept in
+`tool-output/verify/<run>/`. Its errors in
 what this step wrote, and answer marks out of form whose date and words
 leave no doubt (`finding-format`, Questions and answers), are fixed in
 place, and questions without ID numbered in the files this step writes;

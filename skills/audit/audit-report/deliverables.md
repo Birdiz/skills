@@ -12,7 +12,8 @@ Complete, for a technical reader who will act on it or challenge it.
 2. **Scope and coverage**: each axis's coverage in one common table (area,
    status, note); gaps as visible as findings.
 3. **Remediation plan**: the plan's order table, then each fix: title, ID,
-   its findings, why together, change, check, what it waits for, and a
+   its findings, why together, change, check, what it waits for, its
+   `priority`, and a
    part done at a later commit with what remains. A finding is counted in
    its axis; a fix, once. Done fixes follow in one table: fix, title, its
    findings, the commit checked, the commits that fixed it.
@@ -21,6 +22,9 @@ Complete, for a technical reader who will act on it or challenge it.
    evidence condensed to its key pointers (the findings file holds the
    rest), technical explanation, remediation, what verification
    established, and a fix check in part: what remains, at which commit.
+   With `for: self`, whose reader has the findings file, an explanation over
+   about ten lines keeps its conclusion and sends to the file by ID; `for:
+   client` keeps it whole unless the file is handed over too.
 5. **Not verified**, kept apart from confirmed ones: reason, and who can settle
    it.
 6. **Accepted and fixed**: accepted ones with the owner's decision and
@@ -64,7 +68,8 @@ parameter, host or method. A severity label comes with its meaning.
 ## Remediation prompts
 
 One self-contained prompt per `promptable` quick-win fix, covering all its
-findings; the other `promptable` fixes if the auditor asked, in the plan's
+findings; with `prompts_scope: all-promptable` (or, in an older engagement,
+if the auditor asked), the other `promptable` fixes too, in the plan's
 order.
 
 - `executable`, to a coding agent in the repository: stack and

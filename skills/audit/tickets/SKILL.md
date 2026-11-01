@@ -5,7 +5,7 @@ description: Turn the fixes of an audit's remediation plan into tickets, one per
 
 # tickets
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 One **ticket** per open fix of the plan: the work handed to whoever does it,
 where they track work. Input: `00-engagement.md`, `02-remediation-plan.md`,
@@ -37,7 +37,7 @@ after it (Creating, step 4).
    from what `--require` makes errors, which send to their step, its
    errors hold nothing of themselves: the report sorts them
    (`audit-report`, Before writing, step 5), and a blocking one reaches a
-   fix through the DRAFT list. The report's run folder is the one its
+   fix through its list. The report's run folder is the one its
    provenance's `run:` line names (`audit-report`, Before writing, step
    2), else the one its provenance names in words. An error
    missing from the validator output kept there (a newer validator, or a
@@ -54,7 +54,8 @@ after it (Creating, step 4).
    it stands; it writes `allowed: pending` with the reason and asks
    nothing; the next run, on a current report, computes again and asks.
 3. **Ready fixes**: each `open` fix of the plan, unless:
-   - a blocking item of the report's DRAFT list (the peer report's, or
+   - a blocking item of the report's list (DRAFT, holding or reservations;
+     the peer report's, or
      any deliverable's: they carry the same list) holds it, by its
      `Holds:` line; in a report without that line, by naming the fix or
      one of its findings as something it could change (an ID cited only
@@ -64,7 +65,7 @@ after it (Creating, step 4).
    - its check does not hold (Pointers): `waits: plan check`, for
      `remediation-plan`.
 
-   A report without DRAFT holds no fix.
+   A report with no such list holds no fix.
 
    **Done since the audit**: when the tracker's default branch has moved
    past the audited commit, read its commits after that commit, and the
@@ -103,8 +104,8 @@ after it (Creating, step 4).
 4. An existing `tickets/index.md` is updated, never rewritten from nothing
    (Later runs).
 
-Readiness is computed by a script in `tool-output/tickets/` (a later
-run in its own folder, as the rules of engagement name it), its output
+Readiness is computed by a script in `tool-output/tickets/<run>/`, as the
+rules of engagement name it, its output
 kept beside it. This run's scripts below all go in the same folder.
 
 ## Destination
@@ -118,7 +119,9 @@ From `## Tickets`:
   permissions), as its API reports it.
 - `destination: local`, or no `## Tickets` (an engagement older than this
   step): every ticket is a local file, for the auditor to hand over. A
-  tracker settled later is a kickoff amendment.
+  tracker settled later is a kickoff amendment. A sensitive fix's file
+  opens with its marker here too (A ticket), and when the tracker is not
+  `restricted` the end report says not to hand that file to it.
 
 Before creating, read the tracker's visibility again through its API; one
 that no longer matches the record stops every creation, and goes back to
@@ -168,6 +171,8 @@ A ticket leaves the workspace, so it carries the target state and what to
 test, never how the problem is exploited: no evidence, exploitation path,
 payload, request that triggers it, secret (by variable name only), personal
 data, production host or URL, workspace path, or lead or question ID.
+`localhost` and a loopback address are no host of the target: a check run
+locally may name them.
 
 - **Why** says what goes wrong and for whom, from the findings'
   plain-language explanations, never who could cause it, from where, by
@@ -305,6 +310,11 @@ each run's creations and links, the earlier runs' `skill` and `tools`,
 any choice the skill left open.
 
 ## Later runs
+
+When the auditor names the fixes a run concerns (one fix a report just
+released), the run reads the candidates of "Done since the audit" and
+regenerates local files for those only; the others keep their row and
+files, and the index's `## Notes` says `scoped: R-…; the rest not reviewed`.
 
 A fix never gets a second ticket. A fix is struck when an answer
 recorded in an index struck it, or when its row says so; a later run

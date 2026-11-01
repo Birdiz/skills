@@ -5,7 +5,7 @@ description: Schema and rules for audit findings, leads, coverage and the rules 
 
 # finding-format
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 A finding is written once, in one schema, whatever the axis; reports are
 projections of it. Layout, IDs, lead bullet, severity scale:
@@ -17,11 +17,13 @@ Findings live in `<workspace>/findings/<axis>.md`, one file per axis
 (including axes outside the plan that received leads), sections `## Coverage`,
 `## Findings`, `## Leads`, then if needed `## Leads for other axes`, `##
 Questions for the auditor` (the owner's included) and `## Created on target`.
-Recon may have created the file with leads and placeholders: the axis keeps
-the leads and replaces the rest.
+Recon may have created the file with leads and placeholders (a planned
+axis's coverage: `skill: recon@<version>`, then `Axis: waiting to run`): the
+axis keeps the leads and replaces the rest.
 Headings, bold labels, YAML keys and values, area names, status words
 (`evaluated`, `open:`, `closed:`) and the lines other steps parse (a
-verification's `Re-checked …: no change.`, a report's `Holds:`) stay in
+verification's `Re-checked …: no change.`, an answer's `**Applied (…).**`, a
+report's `Holds:`) stay in
 English for the parsers; titles and
 prose use the engagement's `language`.
 
@@ -34,23 +36,36 @@ lead statuses, question IDs and answer marks (numbered or not), area
 statuses, the IDs cited, and each fix against its findings
 (`remediation-plan`: membership, derived keys, a `same-files` group mixing
 sensitive and non-sensitive findings, `locations` pointing into the
-workspace). An auditor answer dated after the verification is pending
-for `verify-findings` until the note re-checks it (`verify-findings`, Per
-finding); an answer under a question dated after the axis's last pass
-(the newest dated coverage paragraph naming its skill and version) is
-pending for `lead-pass`. It writes
-nothing and needs only Python 3's standard library. Each line is `ERROR`
+workspace), and `execution` against the engagement's owner. A finding
+whose text no longer matches its verification's `sha`, or with an auditor
+answer dated after the verification, is pending for `verify-findings`
+until the note re-checks it (`verify-findings`, Per finding); an answer
+under a question, not marked applied, dated after the axis's last pass
+(the newest dated coverage paragraph naming its skill and version), or
+that day when the skill marks them, is pending for `lead-pass`; a finding whose text differs from its
+fix's `sources` is pending for `remediation-plan`. It writes
+nothing and needs only Python 3's standard library. `--fingerprint
+[F-…]` prints each finding's text hash and checks nothing: its heading, its
+YAML but `status` and `verification`, its prose but the verification note.
+Dates alone miss what changes the day of a verification; a workspace
+without hashes (older skills, no Python 3) relies on them, with one warning.
+Each line is `ERROR`
 (the form breaks this skill or `remediation-plan`), `WARNING` (a form of
 older skills, an ID cited and defined nowhere) or `PENDING <step>` (a step
 still to run: `verify-findings`, `remediation-plan`, `lead-pass`);
 `--require verification` and `--require plan` make the pending lines of
 those steps errors. Exit status 1 on any error.
 
-It checks form, never judgment: a pointer, a quote, a rating or a
-grouping stays with the step that owns it. A step that runs it keeps the
-output in its own `tool-output/` directory and lists
-`finding-format@<version>` in its tools. Without Python 3, the step makes
-the same checks by reading the files.
+It checks form, never judgment: a rating or a grouping stays with the step
+that owns it. `python3 -I <this skill>/scripts/check-pointers.py <workspace>`
+does the mechanical part of the evidence: each pointer opens (working copy,
+dependency installs, workspace, `repo-<short sha>/`) and each quote in a
+findings file is at its line. Whether the line proves the claim stays with
+the step. A step that wrote pointers runs it before finishing and corrects
+its own `MISMATCH` and `MISSING` lines; an `UNRESOLVED` line is read. A step
+that runs either script keeps the output in its own `tool-output/` directory
+and lists `finding-format@<version>` in its tools. Without Python 3, the step
+makes the same checks by reading the files.
 
 ## Evidence
 
@@ -110,12 +125,23 @@ the same checks by reading the files.
   planned by the owner (an answer, or the repository's own plans), raises
   one. Every move states its reason with a pointer in the technical
   explanation, so the verifier can check the reason and not only the move.
+- A problem **blocks** a planned change when that change cannot ship until
+  it is fixed: it would fail (the feature needs a path this defect breaks;
+  for code not yet written, the pointer is the code it must go through), or
+  it would be unlawful or break an obligation the owner is bound by (a
+  launch sending data to a recipient with no contract). The reason names the
+  change and the obstacle. An owner's decision to fix it first blocks
+  nothing, since the danger is the same whatever the calendar says: the
+  rating stays, and the decision reaches the plan as a priority
+  (`remediation-plan`, The plan).
 - A weakness the owner already documents as a known limit or planned work is
   still a finding: it exists at the audited commit. It cites that document
   and keeps its level; only an owner's answer makes it `accepted`.
-- A system not yet in production is rated for the deployment its owner
-  documents, and the finding says so: its absence lowers nothing, or the
-  rating would be wrong on launch day.
+- A system not yet in production, or online with only its owner using it,
+  is rated for the deployment its owner documents: its absence lowers
+  nothing, or the rating would be wrong on launch day. The engagement's `##
+  Exposure` says so for every finding; a finding repeats it only when its
+  rating turns on it.
 
 ## Fields
 
@@ -218,8 +244,11 @@ it. It may:
   `lead pass <YYYY-MM-DD>: skill: <name>@<version>, tools: [...]`.
 
 Everything else in the file stays as written: other areas, findings no
-answer concerns, earlier provenance. Its findings and the confirmed findings
-it changed then go through verification. A lead or question it opens waits
+answer concerns, earlier provenance. A change to a verified finding that no
+answer asks for (new evidence, a case added) gets its own paragraph after
+the note, `**Changed by lead pass.** <YYYY-MM-DD>: <what>, old text quoted`.
+Its findings and the confirmed findings it changed then go through
+verification, which the validator lists by their `sha`. A lead or question it opens waits
 for the next run: `audit-kickoff` does one round, and a lead pass run to
 clear a report's DRAFT belongs to that round.
 
@@ -227,7 +256,8 @@ clear a report's DRAFT belongs to that round.
 
 One bullet per question, `Q-<AXIS>-<NN>`, for what only the auditor or owner
 can settle, with the lead, finding or coverage area concerned, and the
-**proposal**: the answer the repository suggests, with its pointer. A fact
+**proposal**: the answer the repository suggests, with its pointer: a fact
+or a decision, never the rating it would give. A fact
 only the owner knows (MFA, volumes, contracts) has no proposal: the question
 is asked open, and no step invents one. A question asked in another file is
 not asked again: refer to its ID, and ask only what it leaves. A question
@@ -251,7 +281,9 @@ A mark out of this form whose date and words leave no doubt is put in
 form by `verify-findings`, which reads every file; the old mark is quoted
 in its end report.
 
-The axis's lead pass applies the answers. In a finding the answer changes,
+The axis's lead pass applies the answers, and marks each one it took up
+with `**Applied (YYYY-MM-DD).**` right after it, so a later answer the same
+day still shows. In a finding the answer changes,
 or whose question names it, as `**Auditor answer.**` after
 `**Verification.**`: the change (severity, confidence, references,
 remediation, `promptable`, `resolution: accepted`, any sentence stating the
@@ -266,8 +298,10 @@ unshown claim becomes a lead.
 
 ## Coverage
 
-Per area: `evaluated`, `partial` (gap stated), `not-evaluable` (missing
-capability named, no findings), `not-requested`, the last two kept distinct.
+In the table [schema.md](schema.md) gives. Per area: `evaluated`, `partial`
+(gap stated), `not-evaluable` (missing capability named, no findings),
+`not-requested`, the last two kept distinct. An area looked at only lightly
+because the engagement's axis plan says `light` is `evaluated (light)`.
 An area judged on answers names them, and lists the controls it takes as
 `declared, not observed (Q-…)`; one waiting for an answer that could change
 a finding or a rating in it, or promote a lead to a finding, is `partial`,

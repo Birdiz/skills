@@ -4,9 +4,13 @@ Ask only for fields with a reader: target and scope (all axes), owner
 (authorization), capabilities and wanted axes (axis plan), testing and hosts
 (security axes; asked only with a running target), audience (`audit-report`),
 tickets (`tickets`; the tracker fields only with a tracker), tools and MCP
-servers (record, provenance). Tools are pinned `name@version`;
+servers (record, provenance), exposure (proposals, inventories; it lowers no
+rating, `finding-format`, Rating), execution (`audit-kickoff`, Execution),
+depth and focus (what the axis stresses, in the auditor's words).
+Tools are pinned `name@version`;
 every connected MCP server left unused goes in `mcp_servers_excluded` and
-receives no code or finding.
+receives no code or finding. A browser tool the plan needs for a running URL
+stays out of it, and acts on the target as the rules of engagement allow.
 
 ```markdown
 # Engagement: <name>
@@ -21,9 +25,15 @@ repository: <path or URL | none>
 working_copy: <path of the dedicated clone, created with the workspace>
 commit: <sha | n/a>
 url: <URL | none>
-url_serves: <commit and environment the running target serves | n/a>
+url_serves: <commit and environment the running target serves, and who runs it: the auditor, or each step under `execution: local-target` | n/a>
 in_scope: [<list>]
 out_of_scope: [<list>]
+
+## Exposure
+users_today: <nobody | the owner alone, online or not | testers: how many | public>
+accounts: <how many, whose>
+third_party_data: <none | what, whose>
+opens: <YYYY-MM-DD | not planned | already open>
 
 ## Capabilities
 repository: <yes|no>
@@ -37,11 +47,14 @@ hosts: [<list> | n/a]
 authorized_by: <name, role | n/a>
 authorized_on: <YYYY-MM-DD | n/a>
 evidence: <"verbatim statement" (auditor-owned) | document reference (third party) | n/a>
+execution: <none|disposable-copy|local-target>
+execution_by: <"verbatim statement", who, YYYY-MM-DD | n/a>
 
 ## Audience
 readers: <peer|non-technical|both>
 for: <self|client>
 prompt_executor: <vendor-brief|executable|both|none>
+prompts_scope: <quick-wins|all-promptable | n/a>
 language: <fr|en|...>
 
 ## Tickets
@@ -61,9 +74,9 @@ mcp_servers: [<name@version>]
 mcp_servers_excluded: [<name>]
 
 ## Axis plan
-| Axis | Status | Missing |
-|---|---|---|
-| ... | evaluated/partial/not-evaluable | ... |
+| Axis | Status | Depth | Focus | Missing |
+|---|---|---|---|---|
+| ... | evaluated/partial/not-evaluable | full/light | ... | ... |
 ```
 
 ## Workspace

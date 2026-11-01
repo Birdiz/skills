@@ -5,7 +5,7 @@ description: Audit the security of what builds, runs and exposes an application 
 
 # infra-security
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 Find and evidence weaknesses in what builds, runs and exposes the product, in
 `<workspace>/findings/infra-security.md`, in `finding-format`, bound by its
@@ -19,7 +19,7 @@ deploy, cloud, backups.
 
 ## Before starting
 
-1. Read `00-engagement.md` (missing: stop, ask for `audit-kickoff`). If the
+1. Read `00-engagement.md` (missing: stop, ask the auditor to run `/birdiz-skills:audit-kickoff`). If the
    plan says `not-evaluable`, write the coverage with the reason and stop.
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`,
    [areas.md](areas.md) and [questions.md](questions.md); note `testing:` and

@@ -30,7 +30,8 @@ Tickets, one per fix, have run to local files, then to a GitHub tracker
 (43 issues). Fixes the team made after the audit have
 been checked at the later commit, through to the plan, the report and the
 tickets. A validator checks the form of findings files and plans; it has
-run inside verification, the plan, the report and tickets. See
+run inside verification, the plan, the report and tickets. A full audit has
+also run on a second codebase, end to end, in one day. See
 [Roadmap](#roadmap).
 
 ## Install
@@ -134,6 +135,9 @@ user-invoked one.
   detail in prompts, declared coverage, recorded authorization for active
   tests. See
   [ADR 0003](docs/adr/0003-invariants-are-not-configurable.md).
+- **Running the project is the owner's choice.** Off by default, never on a
+  third party's code. See
+  [ADR 0004](docs/adr/0004-execution-is-a-recorded-choice.md).
 - **One set of findings, several reports.** Peer report, plain-language
   summary and remediation prompts are projections of the same findings.
 

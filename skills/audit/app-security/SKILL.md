@@ -5,7 +5,7 @@ description: Audit application security of a codebase and, when available, its r
 
 # app-security
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 Find and evidence application security weaknesses in
 `<workspace>/findings/app-security.md`, in `finding-format`, bound by its
@@ -13,7 +13,7 @@ Find and evidence application security weaknesses in
 
 ## Before starting
 
-1. Read `00-engagement.md` (missing: stop, ask for `audit-kickoff`). If the
+1. Read `00-engagement.md` (missing: stop, ask the auditor to run `/birdiz-skills:audit-kickoff`). If the
    plan says `not-evaluable`, write the coverage with the reason and stop.
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`, and
    [areas.md](areas.md); note `testing:`.
@@ -67,7 +67,8 @@ report both sides: the gap is often the finding.
 - Evidence is the path: entry point, steps to the sink, the missing or
   ineffective control, each with file and line.
 - Show the weakness exists: conditions and consequence, without payload or
-  working exploit.
+  working exploit; a harmless marker a run used stays in its output (rules of
+  engagement).
 - A secret: file, line, kind, in history or not; value `<redacted>`, as
   `finding-format` requires.
 - `sensitive: true` by default here; `false` when any visitor already sees it,
