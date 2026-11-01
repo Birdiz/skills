@@ -5,7 +5,7 @@ description: Audit the architecture of a codebase (module boundaries, dependency
 
 # architecture
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 Find and evidence where the structure makes the system fragile or costly to
 change, in `<workspace>/findings/architecture.md`, in `finding-format`, bound
@@ -16,7 +16,7 @@ how they fail together; the inside of a function or file belongs to
 
 ## Before starting
 
-1. Read `00-engagement.md` (missing: stop, ask for `audit-kickoff`). If the
+1. Read `00-engagement.md` (missing: stop, ask the auditor to run `/birdiz-skills:audit-kickoff`). If the
    plan says `not-evaluable`, write the coverage with the reason and stop.
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`, and
    [areas.md](areas.md). The map's Modules section, and where the real

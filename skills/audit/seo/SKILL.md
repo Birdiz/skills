@@ -5,7 +5,7 @@ description: Audit the technical search engine optimisation of a web application
 
 # seo
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 Find and evidence what keeps the right pages from being found, understood
 and shown well by search engines, in `<workspace>/findings/seo.md`, in
@@ -16,7 +16,7 @@ answers; this axis audits what the site emits.
 
 ## Before starting
 
-1. Read `00-engagement.md` (missing: stop, ask for `audit-kickoff`). If the
+1. Read `00-engagement.md` (missing: stop, ask the auditor to run `/birdiz-skills:audit-kickoff`). If the
    plan says `not-evaluable`, write the coverage with the reason and stop.
 2. Read `01-codebase-map.md` (missing: run `recon`), `finding-format`, and
    [areas.md](areas.md).

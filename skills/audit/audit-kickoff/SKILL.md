@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # audit-kickoff
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 Write the **engagement file**, everything true for this audit only, then run
 the audit. Template, workspace and capability matrix:
@@ -17,7 +17,11 @@ Output: `<workspace_root>/<engagement-slug>/00-engagement.md`
 ## Process
 
 1. **Profile.** Read `~/.config/audit-skills/profile.md`; missing: stop, ask
-   the auditor to run `audit-setup`.
+   the auditor to run `/birdiz-skills:audit-setup`. Test what it lists: each
+   tool's version command, `docker info` for Docker, one call for an MCP
+   server or browser tool. One that does not answer is said now, with a
+   question when the auditor can fix it ("Start Docker?"); still down, the
+   fallback and what it costs go in the file before confirmation.
 2. **Detect** from the repository or URL at hand: languages, frameworks,
    infrastructure as code, frontend, commit to audit, remote host and its
    issue tracker (its visibility from its API, its labels, and the
@@ -30,7 +34,9 @@ Output: `<workspace_root>/<engagement-slug>/00-engagement.md`
    recommended answer ("1 ok, 2 b, 3 ok"), through the structured question
    tool when there is one. Ask only what detection left open. When the
    auditor reads the forge or cloud with their own login, settle the scope
-   of `cloud_read` here.
+   of `cloud_read` here. Always ask who uses the target today (`## Exposure`),
+   since proposals and inventories depend on it, and whether an axis has a
+   focus or a lighter depth.
 4. **Settle authorization**, and where tickets go (Tickets).
 5. **Plan the axes** from the capability matrix.
 6. **Create the workspace** outside the audited repository, and the
@@ -57,6 +63,17 @@ Settle it before the axis plan: `active` with its record, or `passive` with
 the auditor told what passive excludes. Confirmation waits until it is
 settled.
 
+### Execution
+
+Whether the agent may run the project (`finding-format`, rules of
+engagement, Execution). `none` unless the owner allows more; a third party's
+target stays `none`, with no question. On an auditor-owned target, when an
+axis in the plan would prove more by running it, ask "Do you, as owner of
+`<target>`, allow the agent to run the project on this machine: its tests in
+a throwaway copy (`disposable-copy`), or also the target itself on `<hosts>`
+(`local-target`)?". The answer, quoted verbatim with who and when, goes in
+`execution_by`. `local-target` needs `testing: active`.
+
 ## Tickets
 
 One per fix, written by `tickets` (fields:
@@ -82,7 +99,10 @@ no sensitive fix: say so when settling it.
 Tickets settled after confirmation are an amendment, recorded the same
 way. An axis added after confirmation is an amendment: the auditor's
 request, quoted with its date, under the axis plan, and the axis row added
-with its status. Give its `questions.md` as at confirmation. The steps already run
+with its status. Give its `questions.md` as at confirmation. So is a change
+of scope, tools or `execution`: the request quoted with its date beside the
+field changed, and a step already run takes it up in its next pass, its
+coverage saying what it did not see. The steps already run
 keep their versions; the new ones record theirs.
 
 ## After confirmation
@@ -94,7 +114,12 @@ Run in order, without asking again:
    when available; before the axes that need the running target, check again
    which commit it serves and which image runs it;
 3. `verify-findings` in a context that wrote no finding (no sub-agents: tell
-   the auditor to open a new session, and stop);
+   the auditor to open a new session, and stop), asked in these words and
+   nothing else, with no finding, severity, conclusion or file of remarks:
+   "Run `verify-findings` (`<its path>`) on the workspace `<path>`, working
+   copy `<path>`. Environment: `<tools available, what cannot be reached>`.";
+   in revision mode, adding "in revision mode, for items `<n, n>` of the
+   report in `<run folder>`.";
 4. **answers** to the questions under `## Questions for the auditor`
    across the findings files:
    - *sort*: keep the questions whose answer could change a finding, a
@@ -125,10 +150,11 @@ Run in order, without asking again:
    the copy; a step that listed none is attributed the version it ran
    under, from `skills_version`, and said so. `audit-report` makes this
    copy itself when it finds it out of date;
-8. `audit-report`; if it leaves a deliverable in DRAFT, the step its list
-   names for each item (`verify-findings` in revision mode, a lead pass,
-   `remediation-plan`, this skill for the engagement file), then
-   `audit-report` again;
+8. `audit-report`; if it leaves a deliverable in DRAFT, one round: the step
+   its list names for each item (`verify-findings` in revision mode, a lead
+   pass, `remediation-plan` scoped to the fixes named, this skill for the
+   engagement file), then `audit-report` again, which is final with what
+   still blocks as reservations (`audit-report`, Before writing, step 6);
 9. `tickets`, for the fixes it finds ready; it asks once before creating
    anything in a tracker, and routes a fix held by its plan check to
    `remediation-plan`.

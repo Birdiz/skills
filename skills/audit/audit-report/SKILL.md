@@ -5,7 +5,7 @@ description: Build the audit deliverables (confidential peer report, plain-langu
 
 # audit-report
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 A report is a **projection** of the findings: every claim traces to a finding,
 a lead, a coverage line, a fix of the plan or the engagement file. Input:
@@ -17,7 +17,8 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
 1. Read the engagement file, `finding-format`, every findings file, the
    plan, and the codebase map's header (commit, tools, skill).
 2. **Verification present**: every finding `confirmed`, `refuted`, or
-   `unverified` with a `**Verification.**` note, and none with an
+   `unverified` with a `**Verification.**` note, none whose text differs
+   from its `sha`, and none with an
    `**Auditor answer.**` dated after its note that the note has not
    re-checked. Any other goes to `verify-findings` first, in a separate
    context.
@@ -27,8 +28,8 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    `remediation-plan` first.
    The validator (`finding-format`, Validator), run with `--require
    verification --require plan`, its output kept in this run's folder
-   (`tool-output/report/`, or a later run's folder as the rules of
-   engagement name it), checks both; its other errors are discrepancies
+   (`tool-output/report/<run>/`, as the rules of engagement name it), checks
+   both; its other errors are discrepancies
    (step 5): cosmetic when the form alone is wrong (a mark, a label),
    blocking otherwise.
    **Engagement current**: when a step ran since `audit-kickoff` last
@@ -94,9 +95,12 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    names missing from `locations`, when the change names where it lands;
    the map's install drifted with no note relying on it, for `recon`),
    listed under "Method and limits" and fixed at the
-   next revision.
-6. **Draft** while a blocking one remains: deliverables open with `DRAFT`
-   and the list, numbered, each item naming by ID the findings and fixes
+   next revision. A blocking one is *holding* when it can change only one
+   open fix, of low or info severity, that no other fix waits for: it holds
+   that fix and marks nothing else, since a reader loses nothing else by it.
+6. **Draft** while a blocking one that is not holding remains: deliverables
+   open with `DRAFT` and the list; holding items are listed the same way
+   without `DRAFT`. The list is numbered, each item naming by ID the findings and fixes
    whose text it could change, and ending with its own line `Holds: R-…, R-…`
    (or `Holds: nothing`), in English, that `tickets` reads: every fix holding one of
    those findings, a change that depends on what the step finds included.
@@ -106,6 +110,12 @@ a lead, a coverage line, a fix of the plan or the engagement file. Input:
    the findings' text, the axis's lead pass for its coverage,
    `remediation-plan` for the plan, `audit-kickoff` for the engagement
    file. The end message asks for those steps, then a new report.
+   A report that follows a DRAFT (the latest `superseded-*` report opens with
+   one) is final, its round spent: what still blocks becomes **reservations**,
+   at the top of each deliverable in the same numbered form, `Holds:` lines
+   kept, so those fixes stay out of tickets, and nothing opens with `DRAFT`.
+   The end message names them; a further round is the auditor's call, and
+   then the steps they name and a new report.
 
 Fixes happen in the findings files, through the skill that owns them, and the
 report is regenerated; a finding changed after the report means a new report,
@@ -120,7 +130,10 @@ discrepancy, sorted as above.
 - `prompt_executor` other than `none`: `reports/remediation-prompts.md`.
 
 Structure of each: [deliverables.md](deliverables.md). Written in the
-engagement's `language`, headings free. A previous report is moved to
+engagement's `language`, headings free. A section whose findings and fixes
+keep their judgments (Before writing, step 4) is copied from the previous
+deliverable, not written again; counts, provenance, lists and the order table
+are always recomputed. A previous report is moved to
 `reports/superseded-<its date>/` (`-2`, `-3`… when that folder exists)
 before writing, never overwritten; the hand-over check leaves those
 folders out.

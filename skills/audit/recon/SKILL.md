@@ -5,11 +5,11 @@ description: Map an unfamiliar codebase before auditing it (stacks, entry points
 
 # recon
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 Build the **codebase map** once, so every axis starts from the same
-understanding. Input: `00-engagement.md` (missing: stop, ask for
-`audit-kickoff`). Output: `<workspace>/01-codebase-map.md`. Bound by [rules of
+understanding. Input: `00-engagement.md` (missing: stop, ask the auditor to
+run `/birdiz-skills:audit-kickoff`). Output: `<workspace>/01-codebase-map.md`. Bound by [rules of
 engagement](../finding-format/rules-of-engagement.md).
 
 Without the repository capability, map what the running target shows and say
@@ -79,9 +79,10 @@ generated: <YYYY-MM-DD>
 - **Unknowns**: numbered; what, why it matters, "Settled by: <agent | auditor |
   owner>: <how>".
 
-The agent settles by reading code or running an analysis tool; running the
-project or stating an intent falls to the auditor or owner (for an
-auditor-owned target, the auditor may paste a command's output).
+The agent settles by reading code or running an analysis tool, and by
+running the project when the engagement's `execution` allows it; otherwise
+running the project, and always stating an intent, falls to the auditor or
+owner (for an auditor-owned target, the auditor may paste a command's output).
 
 ## Rules
 
@@ -90,7 +91,10 @@ auditor-owned target, the auditor may paste a command's output).
 - A graph edge the map relies on is checked; one found wrong goes under
   Unknowns. Edges the map does not use are not inventoried.
 - A graph tool may register its index outside the workspace (a registry
-  entry): record where.
+  entry): record where. It may also write into the copy: run GitNexus with
+  `gitnexus analyze --index-only`, whose default edits `AGENTS.md`,
+  `CLAUDE.md` and skills; for another tool read `--help`, and check `git
+  status` afterwards.
 - The map describes. Problems seen on the way become short leads (observation,
   pointers, settling check) in the relevant `findings/<axis>.md`, in the
   engagement language; an axis outside the plan gets its file with coverage

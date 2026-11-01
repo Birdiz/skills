@@ -5,7 +5,7 @@ description: Group the confirmed findings of an audit into fixes (one piece of w
 
 # remediation-plan
 
-Version: 0.25.0 (audit skills, see CHANGELOG)
+Version: 0.26.0 (audit skills, see CHANGELOG)
 
 Turn findings into work. A **fix** is what one person does in one go (a pull
 request, a session in a console, a decision): it resolves one or more
@@ -27,7 +27,8 @@ Remediations stay owned by their findings; the plan joins them.
    `fixed` ones have nothing to plan.
 3. An existing plan is updated, never rewritten from nothing (Updating).
    The plan is stale, and this step runs again, when a finding enters or
-   leaves the set above, or when a finding's `verification` `on` or an
+   leaves the set above, when a finding's text differs from its fix's
+   `sources`, or when a finding's `verification` `on` or an
    auditor answer is dated after the plan's `generated` (a `Re-checked …:
    no change.` line does not date the note).
 
@@ -95,6 +96,7 @@ executor: code            # code | operations | owner
 promptable: true          # every finding promptable
 sensitive: false          # any finding sensitive
 waits_for: []             # R-… to do first, Q-… or a decision named
+sources: {F-A11Y-008: 3f2a9c1e7b04, F-PERF-008: 81c0d2e4f7a9}
 locations:
   - assets/styles/app.css:120
 ```
@@ -121,6 +123,14 @@ when several executors take part.
   executor `owner` and waits for nothing. A fix waiting for a decision is
   still planned, so the decision shows as the blocker; a remediation with
   a first step that waits for nothing says so in the change.
+- **`sources`**: each finding's text hash when this fix last read it, from
+  `validate.py <workspace> --fingerprint` (`finding-format`, Validator), so
+  the validator sees a finding that changes after, even the same day.
+  Without Python 3, no `sources`.
+- **`priority`**, only when the owner decided to do this fix before a planned
+  change it does not block (`finding-format`, Rating): `priority: <the
+  change>, <Q-… or pointer>`. It moves the fix up in its tier, never its
+  severity, and is told beside what the fix waits for.
 - **Change** describes the target state, never the attack: tickets and
   prompts are drawn from it. **Check** keeps every case each finding
   showed, described as behaviour to test (a redirect to another host, in
@@ -147,7 +157,8 @@ when several executors take part.
 
 Three tiers: fixes waiting for nothing, then fixes waiting only for other
 fixes (each after those it waits for), then fixes waiting for a decision,
-with the decision. Within a tier: severity, then effort, then ID. The order
+with the decision. Within a tier: `priority` first, then severity, then
+effort, then ID. The order
 is the `## Order` table. A first plan numbers its fixes in that order;
 later fixes take the next free ID, so IDs stop following the order.
 
@@ -177,7 +188,10 @@ input. Its
 later rewrote that code.
 
 An update applies this skill's current rules to the whole plan, not only
-to the findings that made it stale. A group a rule no longer allows (a
+to the findings that made it stale, and takes `sources` again for what it
+read, unless the auditor or a report's item names the fixes it concerns: a
+scoped update reads and changes only those, and its line under the header
+says `scoped: R-…; the rest not reviewed`. A group a rule no longer allows (a
 `same-files` group mixing sensitive and non-sensitive findings) is split:
 the fix keeps its ID with the part holding its most severe finding (the
 first listed on a tie), the other part takes the next free ID, grouped by
@@ -194,7 +208,7 @@ report that name this step are taken up the same way.
 ## Checking
 
 Every script that computes what the plan states is kept in
-`tool-output/plan/`; the header's `tools` are those whose output the plan
+`tool-output/plan/<run>/`; the header's `tools` are those whose output the plan
 relies on. A script there, run with `bash`, checks that every confirmed
 open finding is in exactly one open fix, that every ID cited exists (a
 finding with the status given, a question waited for still undecided), that

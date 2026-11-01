@@ -50,8 +50,19 @@ findings and reports.
 - **Promptable**: a finding whose remediation a coding agent could apply.
 - **Invariant**: a rule no setting can turn off.
 - **Rules of engagement**: what an audit step may touch and run: read-only
-  repository, no execution of the project, passive by default, active only on
-  authorized hosts.
+  repository, no execution of the project unless its owner allows it on their
+  own target, passive by default, active only on authorized hosts.
+- **Execution**: what the engagement lets an agent run of the project: nothing
+  (`none`), its tests in a throwaway copy (`disposable-copy`), or also the
+  target (`local-target`). More than `none` only on the auditor's own target.
+- **Exposure**: who uses the target today. Recorded at kickoff; it lowers no
+  rating.
+- **Priority**: an owner's decision to do a fix before a planned change it
+  does not block. It orders the plan and leaves severity alone.
+- **Holding item**: a report problem that can change only one low-severity
+  fix nothing else waits for. It holds that fix, without a DRAFT.
+- **Reservation**: what still blocks after the round that follows a DRAFT.
+  The report is final, says so at the top, and the fixes concerned stay held.
 - **Projection**: a deliverable derived from the findings files alone; it adds
   no analysis and is regenerated, never edited, when they change.
 - **Peer report**: the complete, confidential deliverable for a technical
