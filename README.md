@@ -146,7 +146,7 @@ user-invoked one.
   <img alt="One set of verified findings projected into a peer report, a summary and remediation prompts" src="docs/assets/projections-light.svg">
 </picture>
 
-Vocabulary is defined in [CONTEXT.md](CONTEXT.md); the visual identity in
+Vocabulary is defined in [GLOSSARY.md](GLOSSARY.md); the visual identity in
 [docs/brand.md](docs/brand.md).
 
 ## Never commit an engagement

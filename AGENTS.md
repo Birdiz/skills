@@ -12,4 +12,4 @@ The five default triage labels (`needs-triage`, `needs-info`, `ready-for-agent`,
 
 ### Domain docs
 
-Single-context: the glossary is `CONTEXT.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
+Single-context: the glossary is `GLOSSARY.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
