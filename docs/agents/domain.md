@@ -1,0 +1,37 @@
+# Domain Docs
+
+How the engineering skills should consume this repo's domain documentation when exploring the codebase.
+
+## Before exploring, read these
+
+- **`CONTEXT.md`** at the repo root: this repo's glossary, the shared vocabulary for the skills, findings and reports. It plays the role other repos give to `GLOSSARY.md`.
+- **`docs/adr/`**: read ADRs that touch the area you're about to work in.
+
+This repo is single-context: there is no `GLOSSARY-MAP.md` and no per-context glossary.
+
+When a term gets resolved, add it to `CONTEXT.md`. Never create a `GLOSSARY.md`: it would duplicate `CONTEXT.md`. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) records new ADRs in `docs/adr/` when decisions actually get resolved.
+
+## File structure
+
+```
+/
+├── CONTEXT.md
+├── docs/adr/
+│   ├── 0001-files-as-contract.md
+│   ├── 0002-two-level-setup.md
+│   ├── 0003-invariants-are-not-configurable.md
+│   └── 0004-execution-is-a-recorded-choice.md
+└── skills/
+```
+
+## Use the glossary's vocabulary
+
+When your output names a domain concept (in an issue title, a refactor proposal, a hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms the glossary explicitly avoids.
+
+If the concept you need isn't in the glossary yet, that's a signal: either you're inventing language the project doesn't use (reconsider) or there's a real gap (note it for `/domain-modeling`).
+
+## Flag ADR conflicts
+
+If your output contradicts an existing ADR, surface it explicitly rather than silently overriding:
+
+> _Contradicts ADR-0003 (invariants are not configurable), but worth reopening because…_
