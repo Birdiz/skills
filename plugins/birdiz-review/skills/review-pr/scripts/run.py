@@ -21,6 +21,9 @@ The spec and tickets are found from the PR body's closing references, then
 issue references in the commits, then a spec file under docs/, specs/ or
 .scratch/ named after the branch; `--spec` names it instead, `--no-spec`
 says there is none. When none is found, an `ASK:` line says so.
+A judgment step whose sources are evaluable gets its worksheet in
+findings/ and a `STEP: <step> <step file>` line: run it on the run
+directory, then brief.py.
 Prints a summary, then `RUN: <run directory>` as its last line.
 Exit status: 0 run written, 2 refused (empty diff, unknown ref, not a
 repository): nothing written.
@@ -52,6 +55,7 @@ for _p in reversed(_paths()):
         sys.path.insert(0, _p)
 
 from finding_core import NAME  # noqa: E402
+import intent  # noqa: E402
 import review_format as fmt  # noqa: E402
 import review_run  # noqa: E402
 import sources  # noqa: E402
@@ -107,6 +111,10 @@ def main(argv):
     print(verdict[0] if verdict else "no verdict line")
     if found.get("ask"):
         print("ASK: %s" % found["ask"])
+    skill = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for axis in fmt.STEPS_IN_VERSION:
+        if fmt.axis_status(run.coverage.get(axis)) == ("not-evaluable", intent.NOT_RUN_YET):
+            print("STEP: %s %s" % (axis, os.path.join(skill, "steps", axis + ".md")))
     print("RUN: %s" % root)
     return 0
 

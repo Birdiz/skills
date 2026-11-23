@@ -153,6 +153,16 @@ The `birdiz-review` plugin's own vocabulary.
   dimension it feeds becomes `not-evaluable (contract drift: ...)`, and the
   run goes on. Absent is not drift: a PR body without `Merge Danger` is
   **not declared**.
+- **Intent**: whether a change does what its tickets asked, judged by the
+  intent step: each acceptance criterion (`#41 AC2`) found in the hunks,
+  partly found or not found; each changed file justified by a criterion, a
+  ticket or the spec, or **out of scope**; no change against the spec's
+  Implementation Decisions or Out of Scope. **Misread intent** (more than
+  half of the criteria not found, a file out of scope, a decision broken)
+  proposes `close-and-reprompt`.
+- **Worksheet**: the findings file `run.py` writes for a judgment step,
+  with every row the step must fill and `?` where it judges, so that no
+  criterion or file can be left out.
 - **Dimension**: one part of a full review: the judgment steps (intent,
   contracts, structure) and the later gates, test integrity and
   adversarial review. One not run is a coverage gap, stated in the verdict.

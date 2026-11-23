@@ -10,6 +10,7 @@ the repository yet: its objects are fetched from `origin` by ref
 Trees are written from git objects into the run directory, which lives
 under the user's state directory, never inside the repository.
 """
+import codecs
 import datetime
 import json
 import os
@@ -265,12 +266,57 @@ def changes(repo, base, head):
     return out
 
 
-def git_changes(repo, target, git_version):
+HUNK = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@")
+
+
+def patch(repo, base, head):
+    """The unified diff between two commits, renames detected, as bytes:
+    what the judgment steps read as `diff.patch`."""
+    return git(repo, "-c", "core.quotePath=false", "diff", "--no-ext-diff", "--no-textconv", "--no-color",
+               "-M", base, head, binary=True)
+
+
+def _patch_path(text, side):
+    """The path of a `--- a/x` / `+++ b/x` header line, None for /dev/null."""
+    text = text.rstrip("\n").split("\t", 1)[0]
+    if text == "/dev/null":
+        return None
+    if len(text) >= 2 and text[0] == text[-1] == '"':
+        text = codecs.escape_decode(text[1:-1].encode("utf-8"))[0].decode("utf-8", "replace")
+    return text[2:] if text.startswith(side + "/") else text
+
+
+def hunks(patch_bytes):
+    """{path: [[start, count]]}: the new-side line range of each hunk of the
+    patch, per file (the old path for a deleted file, whose ranges are
+    empty)."""
+    out, path, old, in_header = {}, None, None, False
+    for raw in patch_bytes.decode("utf-8", "replace").split("\n"):
+        if raw.startswith("diff --git "):
+            path, old, in_header = None, None, True
+        elif in_header and raw.startswith("--- "):
+            old = _patch_path(raw[4:], "a")
+        elif in_header and raw.startswith("+++ "):
+            path = _patch_path(raw[4:], "b") or old
+            out.setdefault(path, [])
+        elif raw.startswith("@@"):
+            in_header = False
+            m = HUNK.match(raw)
+            if m and path is not None:
+                start, count = int(m.group(1)), int(m.group(2) if m.group(2) is not None else 1)
+                if count or start:
+                    out[path].append([start, count])
+    return out
+
+
+def git_changes(repo, target, git_version, ranges=None):
     """The git file-change signals: added, deleted, renamed files and new
-    directories. Stack-agnostic, so not a content detector: it says a file
-    changed in a notable way, not what the change means."""
+    directories, and the new-side line ranges of each file's hunks.
+    Stack-agnostic, so not a content detector: it says a file changed in a
+    notable way, not what the change means."""
     base, head = target["merge_base"], target["head"]["sha"]
     files = changes(repo, base, head)
+    ranges = ranges or {}
     base_dirs = set(git(repo, "ls-tree", "-r", "-d", "-z", "--name-only", base).split("\0"))
     new_dirs = set()
     for change, path, _, _ in files:
@@ -284,6 +330,7 @@ def git_changes(repo, target, git_version):
         entry = {"path": path, "change": change}
         if origin:
             entry["from"], entry["similarity"] = origin, int(score or 0)
+        entry["hunks"] = [] if change == "deleted" else ranges.get(path, [])
         entries.append(entry)
         if change == "modified":
             continue
@@ -405,10 +452,13 @@ def start(repo_arg, target_arg, now=None, pr=None, spec=None, no_spec=False, for
         git_version = next(t.get("version") for t in tools if t["name"] == "git")
         os.makedirs(os.path.join(tmp, fmt.SIGNALS))
         rel = "%s/%s.json" % (fmt.SIGNALS, GIT_DETECTOR)
-        write_json(os.path.join(tmp, rel), git_changes(repo, target, git_version))
+        diff_bytes = patch(repo, target["merge_base"], target["head"]["sha"])
+        with open(os.path.join(tmp, fmt.PATCH), "wb") as fh:
+            fh.write(diff_bytes)
+        write_json(os.path.join(tmp, rel), git_changes(repo, target, git_version, hunks(diff_bytes)))
         skipped = extract_tree(repo, target["head"]["sha"], os.path.join(tmp, fmt.TREE + head12))
-        sources.gather(repo, tmp, target, dict(pr_header, **pr_body) if pr_header else None,
-                       spec, no_spec, forge)
+        found = sources.gather(repo, tmp, target, dict(pr_header, **pr_body) if pr_header else None,
+                               spec, no_spec, forge)
         header = {
             "schema": fmt.VERSION, "core": CORE, "repo": name, "branch": target["branch"],
             "target": target["target"], "base": target["base"], "head": target["head"],
@@ -419,15 +469,16 @@ def start(repo_arg, target_arg, now=None, pr=None, spec=None, no_spec=False, for
             "steps_in_version": list(fmt.STEPS_IN_VERSION),
             "risk_map": read_risk_map(repo, target["base"]["sha"]),
             "sources": sources.SOURCES,
+            "patch": fmt.PATCH,
         }
         if pr_header:
             header["pr"] = pr_header
         write_json(os.path.join(tmp, fmt.HEADER), header)
         os.makedirs(os.path.join(tmp, fmt.FINDINGS))
+        changed = [path for _, path, _, _ in files]
         for axis in fmt.AXES:
-            if axis not in fmt.STEPS_IN_VERSION:
-                with open(os.path.join(tmp, fmt.FINDINGS, axis + ".md"), "w", encoding="utf-8") as fh:
-                    fh.write(fmt.coverage_not_run(axis))
+            with open(os.path.join(tmp, fmt.FINDINGS, axis + ".md"), "w", encoding="utf-8") as fh:
+                fh.write(fmt.findings_at_start(axis, found, changed))
         if os.path.exists(final):
             shutil.rmtree(final)
         os.rename(tmp, final)
