@@ -22,16 +22,24 @@ read. The stack-agnostic content detectors read migrations, configuration
 and environment templates, routes, OpenAPI and GraphQL contracts,
 dependency manifests and lockfiles, and test assertions, with `squawk` and
 `oasdiff` when the machine has them; a file no content detector reads, such
-as source code until the stack adapters land, stays `unproven`. Two
-judgment steps exist. `intent` ([steps/intent.md](steps/intent.md)) maps
+as source code until the stack adapters land, stays `unproven`. A
+structure detector classifies each new file (module, layer, entry point,
+migration, config, test), lists each new dependency with its category,
+and reads the glossary and the ADRs the domain doc names. Three judgment
+steps exist. `intent` ([steps/intent.md](steps/intent.md)) maps
 each acceptance criterion to the hunks that implement it, justifies each
 changed file by a ticket or flags it out of scope, and flags each change
 against the spec's decisions. `contracts`
 ([steps/contracts.md](steps/contracts.md)) judges each detector signal
 (`one-way`, `breaking`, `minor`), reads the code for API breaks with the
 fan-in of each changed public symbol, and compares the Door the PR body
-declares with the one it detects. No `structure` step exists yet, and the
-brief says which dimensions did not run.
+declares with the one it detects. `structure`
+([steps/structure.md](steps/structure.md)) judges each new dependency
+(`needed`, `not needed`), each new type name the glossary lacks, and each
+new import between modules, and flags a second way of doing what the
+codebase already does, a change against an ADR or a decision no ADR
+records. The import graph waits for a stack adapter, and the brief says so
+with the dimensions that did not run.
 
 ## Invariants
 
@@ -83,8 +91,9 @@ Scripts are in `scripts/`, run with `python3 -I`, standard library only.
    step at a time. No `STEP:` line for `intent` means its sources are not
    evaluable (no spec, contract drift): `run.py` already wrote its
    coverage with the reason, and the verdict says intent was not checked.
-   `contracts` always has its line. Then `python3 -I scripts/brief.py <run>`.
-4. **Check the run.** `python3 -I scripts/validate.py <run> --require brief --require contracts`,
+   `contracts` and `structure` always have their line. Then
+   `python3 -I scripts/brief.py <run>`.
+4. **Check the run.** `python3 -I scripts/validate.py <run> --require brief --require contracts --require structure`,
    adding `--require intent` when there was a `STEP: intent` line, then
    `python3 -I scripts/check-pointers.py <run>`. An `ERROR`,
    `MISMATCH` or `MISSING` line is a defect of the run: report it, never
@@ -93,8 +102,10 @@ Scripts are in `scripts/`, run with `python3 -I`, standard library only.
    `brief.md` by hand.
 5. **Present the brief.** Give the run directory, then the brief's sections
    in order: a disagreement between the declared and detected Door first,
-   as written. Then the coverage gaps in full (the spec and tickets found,
-   any contract drift, a detector tool missing) and the verdict line as
+   as written, then the new structure (new modules, layers, entry points,
+   dependencies). Then the coverage gaps in full (the spec and tickets found,
+   any contract drift, a detector tool missing, the import graph, glossary
+   or ADRs not evaluable) and the verdict line as
    written, with its round. Do not
    soften `unproven`: it means read the file, since nothing proved it safe.
    A `close-and-reprompt` for misread intent names the criteria not found,

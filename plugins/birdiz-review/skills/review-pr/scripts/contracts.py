@@ -24,6 +24,7 @@ import re
 
 from finding_core.markdown import blocks, read
 import intent
+import structure
 
 AXIS = "contracts"
 NOT_RUN_YET = intent.NOT_RUN_YET
@@ -43,11 +44,14 @@ UNFILLED = intent.UNFILLED
 
 def signal_rows(outputs):
     """[{sid, rel, detector, path, line, kind, reason}]: every signal of the
-    detectors but git-changes, in the order of `outputs` [(rel, output)]."""
+    detectors but git-changes and the import graphs, in the order of
+    `outputs` [(rel, output)]."""
     out = []
     for rel, o in outputs:
         if not isinstance(o, dict) or o.get("detector") in NOT_SIGNALS:
             continue
+        if str(o.get("detector", "")).startswith(structure.GRAPH_PREFIX):
+            continue  # a new import edge is the structure step's to judge
         for s in o.get("signals") or []:
             if isinstance(s, dict) and s.get("path"):
                 out.append({"sid": "S%d" % (len(out) + 1), "rel": rel, "detector": o.get("detector") or rel,

@@ -26,7 +26,7 @@ import risk_map  # the format of review.md, which review-pr reads
 
 AGENT_FILES = ("CLAUDE.md", "AGENTS.md")       # Pocock's setup edits CLAUDE.md first
 TRACKER_DOC = pocock.TRACKER_DOC
-DOMAIN_DOC = "docs/agents/domain.md"
+DOMAIN_DOC = pocock.DOMAIN_DOC
 SUBSECTION = "### Review"
 SUBSECTION_BODY = "Stacks and risk map for the review skills. See `docs/agents/review.md`."
 
@@ -197,19 +197,10 @@ def check_pocock(repo):
     if text is None:
         add("domain doc", DOMAIN_DOC, "missing", "the review can't find the glossary and ADRs without it")
         return out
-    legacy = sorted(set(re.findall(r"\bCONTEXT(?:-MAP)?\.md\b", text)))
-    names_glossary = "GLOSSARY.md" in text
     # "there is no GLOSSARY-MAP.md" mentions the map without naming it
-    names_map = "GLOSSARY-MAP.md" in text and (
-        not names_glossary or os.path.isfile(os.path.join(repo, "GLOSSARY-MAP.md")))
-    adr_dirs = sorted(set(re.findall(r"`?((?:[\w.<>-]+/)*adr)/`?", text)))
-    problems = []
-    if legacy:
-        problems.append("names legacy %s; the review reads GLOSSARY.md / GLOSSARY-MAP.md" % ", ".join(legacy))
-    if not (names_glossary or names_map):
-        problems.append("names no GLOSSARY.md or GLOSSARY-MAP.md")
-    if not adr_dirs:
-        problems.append("names no ADR directory (e.g. docs/adr/)")
+    doc = pocock.domain_doc(text, os.path.isfile(os.path.join(repo, pocock.GLOSSARY_MAP)))
+    names_map, adr_dirs = doc["names_map"], doc["adr_dirs"]
+    problems = doc["glossary_drift"] + doc["adr_drift"]
     if problems:
         add("domain doc", DOMAIN_DOC, "drift", "; ".join(problems))
     else:

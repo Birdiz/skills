@@ -21,8 +21,10 @@ from urllib.parse import quote
 
 import detectors
 import review_format as fmt
+import pocock
 import risk_map
 import sources
+import structure
 from finding_core import NAME as CORE
 
 # The run root: a fixed default under the user's state directory, not a setting.
@@ -339,7 +341,9 @@ def git_changes(repo, target, git_version, ranges=None):
 
 
 def run_detectors(repo, run_dir, target, tools, entries, patch_bytes, head_dir):
-    """The stack-agnostic detectors (detectors.py), on the changed files:
+    """The stack-agnostic detectors (detectors.py), on the changed files,
+    then the structure detector (structure.py), which also reads the domain
+    doc committed at the base and the directories of the merge base:
     head content from the tree written from git objects, base content and
     the word search read from the merge base's objects. A tool needing the
     base side of a file gets it in a scratch directory of the run
@@ -356,7 +360,12 @@ def run_detectors(repo, run_dir, target, tools, entries, patch_bytes, head_dir):
 
     ctx = detectors.Context(entries, patch_bytes, head_dir, read_base, mentions, tools,
                             os.path.join(run_dir, ".tool-trees"))
-    return detectors.run_all(ctx, fmt.VERSION)
+    outputs = detectors.run_all(ctx, fmt.VERSION)
+    base_dirs = {d for d in git(repo, "ls-tree", "-r", "-d", "-z", "--name-only", base).split("\0") if d}
+    doc = git(repo, "cat-file", "blob", "%s:%s" % (target["base"]["sha"], pocock.DOMAIN_DOC), check=False, binary=True)
+    outputs.append((structure.DETECTOR, structure.detect(ctx, fmt.VERSION, base_dirs,
+                                                         detectors.decode(doc) if doc else None, outputs)))
+    return outputs
 
 
 def diff_of(target):

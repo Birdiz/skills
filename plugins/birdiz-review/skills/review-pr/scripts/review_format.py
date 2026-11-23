@@ -21,6 +21,10 @@
   `contracts.py`): each detector signal judged, the detected Door against
   the declared one, shown at the top of the brief beside the risk zones and
   the fan-in.
+- The structure step's tables in `findings/structure.md` (see
+  `structure.py`): new dependencies, candidate domain terms and import
+  changes judged, beside the new files by class, in the brief's New
+  structure section.
 """
 import fnmatch
 import json
@@ -33,6 +37,7 @@ from finding_core.validator import CORE_KEYS, Extension
 import contracts
 import intent
 import risk_map
+import structure
 
 VERSION = "review-pr@0.1.0"
 
@@ -41,10 +46,10 @@ TITLES = {"intent": "Intent", "contracts": "Contracts", "structure": "Structure"
 AREAS = {
     "intent": ["Criteria to hunks", "Files to tickets or criteria", "Out of scope and decisions"],
     "contracts": contracts.AREAS,
-    "structure": ["New files", "Import graph", "Dependencies", "Pattern divergence", "ADRs", "Glossary"],
+    "structure": structure.AREAS,
 }
 # The steps this version runs; the others get a coverage saying so.
-STEPS_IN_VERSION = ["intent", "contracts"]
+STEPS_IN_VERSION = ["intent", "contracts", "structure"]
 # Review dimensions no version has yet: always printed with the verdict.
 LATER = ["gates", "test integrity", "adversarial"]
 
@@ -59,7 +64,8 @@ HEADER_KEYS = ["schema", "core", "repo", "branch", "target", "base", "head",
 OUTPUT_KEYS = ["detector", "version", "content", "applies_to", "covered", "not_covered", "signals"]
 
 BUCKETS = ["must-read", "glance", "skim", "unproven"]
-SECTIONS = ["Declared vs detected", "Must read", "Glance", "Skim", "Unproven", "Coverage gaps", "Verdict"]
+SECTIONS = ["Declared vs detected", "New structure", "Must read", "Glance", "Skim", "Unproven", "Coverage gaps",
+            "Verdict"]
 BUCKET_SECTION = {"must-read": "Must read", "glance": "Glance", "skim": "Skim", "unproven": "Unproven"}
 VERDICTS = ["merge", "fix", "close-and-reprompt"]
 VERDICT_LINE = re.compile(r"^Proposed verdict: (%s), round (\d+)(?: \((.+)\))?\.$" % "|".join(VERDICTS))
@@ -149,7 +155,7 @@ class Run:
         if self.header.get("sources"):
             self.sources = load_json(os.path.join(root, str(self.header["sources"])))
         self.findings, self.coverage = [], {}
-        self.intent = self.contracts = None
+        self.intent = self.contracts = self.structure = None
         for axis in AXES:
             path = os.path.join(root, FINDINGS, axis + ".md")
             if os.path.exists(path):
@@ -160,6 +166,8 @@ class Run:
                     self.intent = intent.read_file(path)
                 elif axis == contracts.AXIS:
                     self.contracts = contracts.read_file(path)
+                elif axis == structure.AXIS:
+                    self.structure = structure.read_file(path)
 
     def changed(self):
         """Every changed file, as the git detector lists them, in order."""
@@ -194,6 +202,14 @@ class Run:
         """The contracts tables when the contracts step ran."""
         status, _ = axis_status(self.coverage.get(contracts.AXIS))
         return self.contracts if status in ("evaluated", "partial") else None
+
+    def structure_checked(self):
+        """The structure tables when the structure step ran."""
+        status, _ = axis_status(self.coverage.get(structure.AXIS))
+        return self.structure if status in ("evaluated", "partial") else None
+
+    def structure_output(self):
+        return structure.structure_output(list(self.outputs.items()))
 
 
 def axis_status(line):
@@ -326,6 +342,8 @@ def verdict(run, round_no):
         reasons.append(intent.summary_line(checked))
     if run.contracts_checked() is not None:
         reasons.append(contracts.summary_line(run.contracts_checked()))
+    if run.structure_checked() is not None:
+        reasons.append(structure.summary_line(run.structure_checked(), run.structure_output()))
     parts = []
     others = [a for a, _ in not_run if a != "intent"] + LATER
     if unchecked is not None:
@@ -350,6 +368,10 @@ def render_brief(run, zones=None):
 
     out += ["## Declared vs detected", ""]
     out += declared_lines(run, zones)
+    out.append("")
+
+    out += ["## New structure", ""]
+    out += structure.brief_lines(run.structure_output(), run.structure_checked(), list(run.outputs.items()))
     out.append("")
 
     changed = set(run.changed())
@@ -387,6 +409,8 @@ def render_brief(run, zones=None):
         if status != "evaluated":
             out.append("- %s (`%s`): %s%s." % (axis, code, "not run" if status == "not-evaluable" else status,
                                               " (%s)" % why if why else ""))
+    for area, status in sorted((run.structure_output() or {}).get("areas", {}).items()):
+        out.append("- structure, %s: %s." % (area, status))
     out.append("- %s: not in this version." % ", ".join(LATER))
     content = sorted(rel for rel, o in run.outputs.items() if o.get("content") is True)
 
@@ -597,15 +621,17 @@ class ReviewExtension(Extension):
     optional = ["declared", "detected"]
     enums = {"attention": ["must-read", "glance"]}
     prose = ["Evidence", "Reviewer question"]
-    sections = ["Coverage"] + intent.SECTIONS + contracts.SECTIONS + ["Findings", "Leads"]
+    sections = ["Coverage"] + intent.SECTIONS + contracts.SECTIONS + structure.SECTIONS + ["Findings", "Leads"]
     verify_step = "verification"
-    requirable = {"brief": "brief", "intent": "intent", "contracts": "contracts"}
+    requirable = {"brief": "brief", "intent": "intent", "contracts": "contracts", "structure": "structure"}
 
     def check_section(self, name, path, axis, start, items, sections, lines, ids, refs):
         if name in intent.SECTIONS and axis != intent.AXIS:
             self.rep.error(path, start + 1, "`## %s` belongs to the intent findings file" % name)
         if name in contracts.SECTIONS and axis != contracts.AXIS:
             self.rep.error(path, start + 1, "`## %s` belongs to the contracts findings file" % name)
+        if name in structure.SECTIONS and axis != structure.AXIS:
+            self.rep.error(path, start + 1, "`## %s` belongs to the structure findings file" % name)
 
     def __init__(self, rep, root):
         super().__init__(rep, root)
@@ -708,11 +734,22 @@ class ReviewExtension(Extension):
                         lambda line, msg: self.rep.pending("contracts", path, line, msg),
                         ).run(path, axis_status(run.coverage.get(contracts.AXIS)))
 
+    def check_structure(self):
+        run, path = self.run, os.path.join(self.root, FINDINGS, structure.AXIS + ".md")
+        if not os.path.exists(path):
+            return
+        own = {f.fid: f.line for f in run.findings if f.axis == structure.AXIS}
+        structure.Check(list(run.outputs.items()), own,
+                        lambda line, msg: self.rep.error(path, line, msg),
+                        lambda line, msg: self.rep.pending("structure", path, line, msg),
+                        ).run(path, axis_status(run.coverage.get(structure.AXIS)))
+
     def finish(self, findings, ids):
         if self.run is None:
             return ""
         self.check_intent()
         self.check_contracts()
+        self.check_structure()
         rep, run = self.rep, self.run
         path = os.path.join(self.root, BRIEF)
         if not os.path.exists(path):
@@ -823,13 +860,15 @@ class ReviewLayout(pointers.Layout):
 def findings_at_start(axis, found, changed, outputs=()):
     """What `run.py` writes for each axis: a step not in this version, or
     whose sources are not evaluable, gets a coverage saying why; the intent
-    step on evaluable sources gets its worksheet, and the contracts step
-    always does, with a row per signal of the detector `outputs`
-    [(rel, output)]."""
+    step on evaluable sources gets its worksheet, and the contracts and
+    structure steps always do, with their rows drawn from the detector
+    `outputs` [(rel, output)]."""
     if axis not in STEPS_IN_VERSION:
         return coverage_not_run(axis)
     if axis == contracts.AXIS:
         return contracts.worksheet(outputs, found, VERSION)
+    if axis == structure.AXIS:
+        return structure.worksheet(outputs, VERSION)
     dim = intent.dimension(found)
     if dim != "evaluable":
         m = re.match(r"not-evaluable \((.*)\)$", dim, re.S)

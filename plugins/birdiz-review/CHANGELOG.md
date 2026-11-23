@@ -175,3 +175,48 @@ The contracts step ([#42](https://github.com/Birdiz/skills/issues/42)):
   Radius beside the risk zones the change touches and the most referenced
   changed public symbols. A `blocks_merge` finding with sound intent
   proposes `fix`, and a reason line counts the contracts judgments.
+
+The structure step ([#43](https://github.com/Birdiz/skills/issues/43)):
+
+- A `structure` detector, not a content detector and without signals of
+  its own, writes `signals/structure.json`: each new file classified by
+  path convention (`module`, `layer`, `entry point`, `migration`, `config`,
+  `test`, else `source` or `other`) with its module and whether that
+  module is new; each dependency a changed manifest adds, with its
+  category (HTTP client, validation, state, logging, ORM, date, test
+  framework) and the dependencies of the same category already there; the
+  domain doc at the base and the glossary and ADRs it names at the head;
+  the type names the diff defines that no glossary term names and the
+  repository did not have.
+- The third judgment step, [`steps/structure.md`](skills/review-pr/steps/structure.md).
+  `run.py` writes its worksheet on every run and prints
+  `STEP: structure <step file>`. The step judges each new dependency
+  `needed` or `not needed` with why, each new type name a `domain term` or
+  not, and each new import between modules `fits` or `boundary`. It raises
+  `STR` findings for these and for a new module or layer nothing asks for,
+  a second way of doing what the codebase already does (HTTP client,
+  validation, state, logging), a change against an ADR, and a hard to
+  reverse decision no ADR records.
+- No glossary makes the Glossary area `not-evaluable (no glossary)`, and
+  no ADR `not-evaluable (no ADRs)`: absent is not drift. A domain doc that
+  names no glossary or no ADR directory, a glossary map that links no
+  glossary, or a glossary with no `**Term**:` line is `not-evaluable
+  (contract drift: ...)`. A missing domain doc reads Pocock's defaults.
+  The Pocock contract now lists the glossary, the glossary map and the
+  ADRs, and `review-setup` reads the domain doc with the same code.
+- The import graph comes from the stack adapters, in one stack-neutral
+  format: each side's files mapped to modules and the file-level imports.
+  `structure.py` computes the new cross-module edges and the new cycles
+  whatever the stack, and signals the importing file of each; the
+  contracts step leaves them to the structure step. Until an adapter
+  writes one, the Import graph area is `not-evaluable (no stack adapter
+  supplies an import graph)`, listed in the brief's coverage gaps.
+- The validator checks the rows against the detector outputs (every
+  dependency, term and import has one row, `not needed`, `domain term`
+  and `boundary` cite a finding, a dependency says why) and keeps the
+  areas the run fixed as they are. An unfilled worksheet is `PENDING
+  structure`, an error with `--require structure`.
+- The brief gains a New structure section after Declared vs detected: the
+  new modules, the new files by class, each new dependency with the
+  step's judgment, the import graph, the glossary and the ADRs. A reason
+  line of the verdict counts the structure judgments.

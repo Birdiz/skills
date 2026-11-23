@@ -166,7 +166,7 @@ The `birdiz-review` plugin's own vocabulary.
   proposes `close-and-reprompt`.
 - **Worksheet**: the findings file `run.py` writes for a judgment step,
   with every row the step must fill and `?` where it judges, so that no
-  criterion, file or signal can be left out.
+  criterion, file, signal, dependency or term can be left out.
 - **Contracts**: what a change breaks outside the diff, judged by the
   contracts step from the detectors' signals and the code: each signal is
   **one-way** (reverting the merge does not undo it: data dropped, a
@@ -179,6 +179,18 @@ The `birdiz-review` plugin's own vocabulary.
   beside the detected risk zones and fan-in.
 - **Fan-in**: the references to a changed public symbol outside the diff,
   counted by a word search and labelled heuristic.
+- **Structure**: the new shape a change gives the codebase, judged by the
+  structure step: new files by **class** (`module`, `layer`, `entry
+  point`, `migration`, `config`, `test`), new dependencies **needed** or
+  **not needed**, new type names that are **domain terms** the glossary
+  lacks, new imports between modules that **fit** or cross a
+  **boundary**, a **pattern divergence** (a second way of doing what the
+  codebase already does) and a change against an ADR or a decision no ADR
+  records.
+- **Import graph**: the file-level imports of each side of a change,
+  mapped to modules, which a stack adapter supplies in one stack-neutral
+  format. The review computes the new cross-module edges and the new
+  cycles from it. Without an adapter, the import graph is not evaluable.
 - **Dimension**: one part of a full review: the judgment steps (intent,
   contracts, structure) and the later gates, test integrity and
   adversarial review. One not run is a coverage gap, stated in the verdict.
