@@ -1,0 +1,15 @@
+WARNING  00-engagement.md  no `commit:` in the engagement file: commits not compared
+ERROR    00-engagement.md  execution `sometimes` not in none | disposable-copy | local-target
+PENDING verify-findings findings/seo.md:13  F-SEO-001: text changed since its verification (sha 222222222222, now 7422a63be146)
+WARNING  findings  1 verified findings without `sha` (older skills): a text changed the day of its verification does not show (F-SEO-002 to F-SEO-002)
+ERROR    02-remediation-plan.md  plan `generated: soon` is not a date
+ERROR    02-remediation-plan.md:18  R-001: key `sensitive` missing
+ERROR    02-remediation-plan.md:18  R-001: executor `robot` not in code | operations | owner
+ERROR   remediation-plan 02-remediation-plan.md:16  R-001: F-SEO-001 changed since the plan (sources 333333333333, now 7422a63be146)
+ERROR    02-remediation-plan.md:16  R-001: waits for unknown fix R-005
+ERROR   remediation-plan findings/seo.md:43  F-SEO-002: confirmed and open, in no open fix
+ERROR    02-remediation-plan.md:12  R-001: `## Order` executor `code`, YAML `robot`
+finding-format@0.26.0: 2 findings (unverified 0, confirmed 2, refuted 0), 0 leads, 0 questions, 1 fixes (1 open)
+errors 8, warnings 2, pending 1 (required: plan)
+RESULT: FAIL
+# exit 1

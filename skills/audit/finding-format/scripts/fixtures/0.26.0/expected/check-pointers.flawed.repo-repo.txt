@@ -1,0 +1,19 @@
+MISSING    findings/app-security.md:106  src/Debug.php:3: no such file
+MISMATCH   findings/app-security.md:164  src/Controller/Login.php:12 "session->set('user'": line 13
+MISMATCH   findings/app-security.md:256  src/Controller/Login.php:14 "redirect($request->get('next'))": nowhere in the file
+UNRESOLVED findings/app-security.md:336  framework.yaml:5: found nowhere
+UNRESOLVED findings/app-security.md:354  framework.yaml:6: found nowhere
+MISSING    findings/app-security.md:355  src/Pay.php:1: no such file
+MISSING    findings/privacy.md:42  client-docs/policy.md:9: the file has 4 lines
+UNRESOLVED findings/privacy.md:43  helper.php:4: found nowhere
+MISMATCH   findings/privacy.md:44  law.txt:1 "Article 12": nowhere in the file
+MISSING    01-codebase-map.md:10  src/Gone.php:3: no such file
+MISSING    01-codebase-map.md:11  src/Upload.php:40: the file has 4 lines
+MISSING    02-remediation-plan.md:201  templates/base.html.twig:12: no such file
+MISSING    02-remediation-plan.md:225  src/Error.php:1: no such file
+MISSING    02-remediation-plan.md:248  src/Headers.php:1: no such file
+MISSING    02-remediation-plan.md:325  src/Missing.php:1: no such file
+finding-format@0.26.0: 35 pointers opened in 6 files, 17 with a quote; looked in: repo, deps, .
+mismatch 3, missing 9, unresolved 3
+RESULT: FAIL
+# exit 1

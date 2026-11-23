@@ -1,0 +1,145 @@
+ERROR    00-engagement.md  execution `disposable-copy` on a third party's target: only `none` is allowed
+WARNING  findings/app-security.md  section `## Notes` is not in finding-format
+ERROR    findings/app-security.md:14  area `Secrets`: status `done` not in evaluated | partial | not-evaluable | not-requested
+ERROR    findings/app-security.md:17  area `Headers`: status `` not in evaluated | partial | not-evaluable | not-requested
+PENDING verify-findings findings/app-security.md:25  F-SEC-001: text changed since its verification (sha 000000000000, now 62b69c07cf52)
+PENDING verify-findings findings/app-security.md:25  F-SEC-001: auditor answer 2026-10-12 after verification 2026-10-10
+WARNING  findings/app-security.md:61  F-SEC-002: key `owner_note` is not in the schema
+ERROR    findings/app-security.md:61  F-SEC-002: sensitive must be true or false
+PENDING verify-findings findings/app-security.md:59  F-SEC-002: not verified yet
+WARNING  findings/app-security.md:59  F-SEC-002: declarative finding cites no question ID
+ERROR    findings/app-security.md:89  F-QUA-003: ID does not follow F-SEC-<NNN> for this file
+ERROR    findings/app-security.md:91  F-QUA-003: key `effort` missing
+ERROR    findings/app-security.md:91  F-QUA-003: severity `severe` not in info | low | medium | high | critical
+ERROR    findings/app-security.md:91  F-QUA-003: confidence `sure` not in high | medium | low
+ERROR    findings/app-security.md:91  F-QUA-003: locations must be a non-empty list
+ERROR    findings/app-security.md:91  F-QUA-003: references must be a list (empty allowed)
+ERROR    findings/app-security.md:91  F-QUA-003: commit `zzz123` is not a hexadecimal SHA
+ERROR    findings/app-security.md:89  F-QUA-003: **Technical explanation.** given 2 times
+ERROR    findings/app-security.md:89  F-QUA-003: **Plain-language explanation.** missing
+ERROR    findings/app-security.md:89  F-QUA-003: prose sections out of order (Evidence, Remediation, Technical explanation)
+PENDING verify-findings findings/app-security.md:89  F-QUA-003: not verified yet
+ERROR    findings/app-security.md:116  F-SEC-004: axis `privacy` in the app-security file
+WARNING  findings/app-security.md:116  F-SEC-004: commit 0badc0de differs from the engagement's a1b2c3d4e5f6
+ERROR    findings/app-security.md:116  F-SEC-004: verification by `robot` not in sub-agent | new session
+ERROR    findings/app-security.md:116  F-SEC-004: verification on `yesterday` is not a date
+ERROR    findings/app-security.md:116  F-SEC-004: verification sha `abc` is not a 12-character hash
+ERROR    findings/app-security.md:114  F-SEC-004: resolution fixed without a `Fix checked <date> at <commit>: fixed by …` line
+ERROR    findings/app-security.md:146  F-SEC-005: id `F-SEC-050` differs from the heading
+WARNING  findings/app-security.md:144  F-SEC-005: an **Auditor answer.** carries no date
+ERROR    findings/app-security.md:178  F-SEC-006: status confirmed without a `verification` key
+ERROR    findings/app-security.md:176  F-SEC-006: status confirmed without a **Verification.** note
+ERROR    findings/app-security.md:176  F-SEC-006: resolution accepted without an **Auditor answer.**
+ERROR    findings/app-security.md:205  F-SEC-007: fix checked 2026-10-20, verification `on` still 2026-10-10
+ERROR    findings/app-security.md:238  F-SEC-008: verification must be {by: <who>, on: <YYYY-MM-DD>, sha: <hash>}
+ERROR    findings/app-security.md:236  F-SEC-008: status refuted without a **Verification.** note
+ERROR    findings/app-security.md:236  F-SEC-008: `verification` key without a **Verification.** note
+ERROR    findings/app-security.md:264  F-SEC-009: **Auditor answer.** comes before **Verification.**
+ERROR    findings/app-security.md:266  F-SEC-009: **Verification.** note without a `verification` key
+PENDING verify-findings findings/app-security.md:264  F-SEC-009: not verified yet
+ERROR    findings/app-security.md:313  F-SEC-001: key `key` given twice
+ERROR    findings/app-security.md:314  F-SEC-001: flow mapping entry without a colon: b
+ERROR    findings/app-security.md:315  F-SEC-001: unreadable YAML line: this line is unreadable
+WARNING  findings/app-security.md:297  F-SEC-001: key `key` is not in the schema
+PENDING verify-findings findings/app-security.md:295  F-SEC-001: not verified yet
+ERROR    findings/app-security.md:295  F-SEC-001: ID used twice (also findings/app-security.md:25)
+ERROR    findings/app-security.md:326  F-SEC-010: no YAML block right after the heading
+ERROR    findings/app-security.md:330  finding heading is not `### F-<AXIS>-<NNN> <title>`: Notes about sessions
+ERROR    findings/app-security.md:340  L-SEC-03: no status (`promoted to F-…`, `closed:`, `open:`)
+ERROR    findings/app-security.md:341  L-SEC-1: ID does not follow L-SEC-<NN> for this file
+ERROR    findings/app-security.md:342  L-SEC-02: ID used twice (also findings/app-security.md:338)
+PENDING lead-pass findings/app-security.md:343  L-SEC-04: moved into app-security, waits for a lead pass
+PENDING lead-pass findings/app-security.md:344  L-SEC-05: opened by verify-findings, waits for a lead pass
+ERROR    findings/app-security.md:348  lead bullet without `**L-SEC-<NN> <title>.**`: - A bullet without an ID.
+PENDING verify-findings findings/app-security.md:354  lead for privacy not moved yet
+ERROR    findings/app-security.md:355  lead for unknown axis `payments`
+PENDING verify-findings findings/app-security.md:355  lead for payments not moved yet
+ERROR    findings/app-security.md:356  lead for another axis is not `- **<axis>: <title>.**`: - Cookie lifetime, no axis given.
+ERROR    findings/app-security.md:367  Q-SEC-3: ID does not follow Q-SEC-<NN> for this file
+WARNING  findings/app-security.md:368  question without ID (older skills): the next step writing this file numbers it
+ERROR    findings/app-security.md:368  question: not `**Asked (YYYY-MM-DD), not answered.**`: **Asked 2026-10-12, not answered**
+ERROR    findings/app-security.md:369  Q-SEC-04: answer not `**Answer (YYYY-MM-DD, who):**`: **Answer 2026-10-12:**
+ERROR    findings/app-security.md:370  Q-SEC-05: not `**Applied (YYYY-MM-DD).**`: **Applied 2026-10-13.**
+ERROR    findings/app-security.md:371  Q-SEC-01: ID used twice (also findings/app-security.md:362)
+PENDING lead-pass findings/app-security.md:372  Q-SEC-06: answered 2026-10-13, not applied by the axis's last pass (2026-10-13): waits for a lead pass
+ERROR    findings/code-quality.md  section `## Leads` missing
+ERROR    findings/code-quality.md:3  coverage is empty
+ERROR    findings/notes.md  `notes` is not an axis of finding-format
+ERROR    findings/privacy.md  sections out of order or repeated: Coverage, Leads, Findings, Questions for the auditor
+WARNING  findings/privacy.md:3  coverage does not open with `skill: <name>@<version>` (older skills)
+ERROR    findings/privacy.md:56  F-PRI-002: resolution fixed, its last fix check (2026-10-12 at 9f8e7d6) says not fixed
+WARNING  findings/privacy.md:54  F-PRI-002: declarative finding cites no question ID
+WARNING  findings  4 verified findings without `sha` (older skills): a text changed the day of its verification does not show (F-PRI-001 to F-SEC-050)
+ERROR    findings/app-security.md:346  L-SEC-07 points to F-SEC-099, which does not exist
+ERROR    findings/app-security.md:347  L-SEC-08 points to F-SEC-077, which does not exist
+ERROR    findings/app-security.md:358  moved lead points to L-PRI-09, which does not exist
+WARNING  findings/app-security.md:144  F-SEC-005 is cited but defined nowhere in findings/
+WARNING  findings/app-security.md:326  F-SEC-010 is cited but defined nowhere in findings/
+WARNING  findings/app-security.md:346  F-SEC-099 is cited but defined nowhere in findings/
+WARNING  findings/app-security.md:347  F-SEC-077 is cited but defined nowhere in findings/
+WARNING  findings/app-security.md:376  F-PRI-042 is cited but defined nowhere in findings/
+WARNING  findings/app-security.md:358  L-PRI-09 is cited but defined nowhere in findings/
+WARNING  findings/app-security.md:376  Q-INF-07 is cited but defined nowhere in findings/
+ERROR    02-remediation-plan.md  plan header `tools:` missing
+WARNING  02-remediation-plan.md  plan commit 0badc0de differs from the engagement's a1b2c3d4e5f6
+ERROR    02-remediation-plan.md  section `## Discrepancies` missing
+ERROR    02-remediation-plan.md:73  R-3: ID does not follow R-<NNN>
+ERROR    02-remediation-plan.md:75  R-3: promptable must be true or false
+ERROR    02-remediation-plan.md:75  R-3: waits_for must be a list
+ERROR    02-remediation-plan.md:75  R-3: id `R-003` differs from the heading
+ERROR    02-remediation-plan.md:139  R-006: **Check.** missing
+ERROR    02-remediation-plan.md:159  R-007: no YAML block right after the heading
+ERROR    02-remediation-plan.md:202  R-009: key `id` given twice
+ERROR    02-remediation-plan.md:303  R-001: ID used twice
+WARNING  02-remediation-plan.md  1 fixes use **Why together.**, the older label of **Grouping.** (R-001 to R-001)
+ERROR    02-remediation-plan.md:48  R-002: grouping single with 2 findings
+PENDING remediation-plan 02-remediation-plan.md:48  R-002: F-SEC-002 is unverified/open, no longer confirmed and open
+ERROR    02-remediation-plan.md:48  R-002: finding F-SEC-099 does not exist
+ERROR    02-remediation-plan.md:48  R-002: sources must be {F-...: <hash>, ...}
+ERROR    02-remediation-plan.md:48  R-002: location `findings/app-security.md (F-SEC-002)` points into the workspace, not where the change lands
+ERROR    02-remediation-plan.md:48  R-002: promptable True, its findings give False
+ERROR    02-remediation-plan.md:48  R-002: waits for unknown question Q-SEC-77
+ERROR    02-remediation-plan.md:73  R-3: finding F-SEC-005 does not exist
+ERROR    02-remediation-plan.md:95  R-004: done, but F-SEC-009 is not fixed
+ERROR    02-remediation-plan.md:139  R-006: open fix without findings
+PENDING remediation-plan 02-remediation-plan.md:163  R-008: F-SEC-001 is unverified/open, no longer confirmed and open
+PENDING remediation-plan 02-remediation-plan.md:163  R-008: F-SEC-007 is confirmed/fixed, no longer confirmed and open
+ERROR    02-remediation-plan.md:163  R-008: same-files group mixes sensitive and non-sensitive findings
+ERROR    02-remediation-plan.md:163  R-008: location `./tickets/R-008.md` points into the workspace, not where the change lands
+ERROR    02-remediation-plan.md:163  R-008: location `L-PRI-03` points into the workspace, not where the change lands
+ERROR    02-remediation-plan.md:163  R-008: severity medium, its findings give high
+ERROR    02-remediation-plan.md:163  R-008: sensitive False, its findings give True
+PENDING remediation-plan 02-remediation-plan.md:187  R-009: F-PRI-002 is confirmed/fixed, no longer confirmed and open
+ERROR    02-remediation-plan.md:211  R-011: finding F-SEC-005 does not exist
+PENDING remediation-plan 02-remediation-plan.md:234  R-012: F-SEC-006 is confirmed/accepted, no longer confirmed and open
+ERROR    02-remediation-plan.md:234  R-012: severity high, its findings give info
+PENDING remediation-plan 02-remediation-plan.md:257  R-013: F-SEC-004 is confirmed/fixed, no longer confirmed and open
+ERROR    02-remediation-plan.md:257  R-013: severity medium, its findings give low
+PENDING remediation-plan 02-remediation-plan.md:257  R-013: waits for R-004, which is done
+PENDING remediation-plan 02-remediation-plan.md:280  R-014: F-SEC-008 is refuted/open, no longer confirmed and open
+WARNING  02-remediation-plan.md  7 open fixes without `sources` (older skills): a finding changed the day of the plan does not show (R-002 to R-014)
+ERROR    02-remediation-plan.md  F-SEC-001 is in several fixes: R-001, R-008
+ERROR    02-remediation-plan.md  F-SEC-005 is in several fixes: R-3, R-011
+PENDING remediation-plan findings/app-security.md:114  F-SEC-004: verified or answered yesterday, after the plan (generated 2026-10-12)
+PENDING remediation-plan findings/app-security.md:203  F-SEC-007: verified or answered 2026-10-20, after the plan (generated 2026-10-12)
+PENDING remediation-plan findings/app-security.md:264  F-SEC-009: verified or answered 2026-10-21, after the plan (generated 2026-10-12)
+ERROR    02-remediation-plan.md:139  R-006: open fix listed 0 times in `## Order`
+ERROR    02-remediation-plan.md  `## Order` lists R-010, which has no section
+ERROR    02-remediation-plan.md:303  R-001: dropped fix listed in `## Order`
+ERROR    02-remediation-plan.md:117  R-005: dropped fix listed in `## Order`
+ERROR    02-remediation-plan.md:11  R-002 comes before R-009, which it waits for
+ERROR    02-remediation-plan.md:12  R-001: `## Order` title `Secure the session cookie`, YAML `Twice`
+ERROR    02-remediation-plan.md:12  R-001: `## Order` severity `low`, YAML `medium`
+ERROR    02-remediation-plan.md:12  R-001: `## Order` effort `M`, YAML `S`
+ERROR    02-remediation-plan.md:12  R-001: quick win `yes`, derived no
+ERROR    02-remediation-plan.md:12  R-001 (tier 0) after R-002 (tier 2)
+ERROR    02-remediation-plan.md:14  R-009: quick win `maybe` is not yes or no
+ERROR    02-remediation-plan.md:14  R-009 (tier 0) after R-008 (tier 2)
+WARNING  02-remediation-plan.md:18  R-012 after R-011: not by priority, severity, then effort
+ERROR    02-remediation-plan.md:19  R-013: `## Order` waits for ['R-014'], YAML ['R-014', 'R-004']
+ERROR    02-remediation-plan.md:19  R-013 comes before R-014, which it waits for
+ERROR    02-remediation-plan.md:20  R-014 (tier 0) after R-013 (tier 1)
+finding-format@0.26.0: 11 findings (unverified 4, confirmed 6, refuted 1), 12 leads, 10 questions, 12 fixes (8 open)
+errors 98, warnings 21, pending 22
+RESULT: FAIL
+# exit 1

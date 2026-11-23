@@ -1,0 +1,5 @@
+UNRESOLVED findings/app-security.md:114  framework.yaml:5: found nowhere
+finding-format@0.26.0: 15 pointers opened in 4 files, 6 with a quote; looked in: repo, deps, .
+mismatch 0, missing 0, unresolved 1
+RESULT: OK
+# exit 0
