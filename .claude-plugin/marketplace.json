@@ -4,7 +4,7 @@
     "name": "Thomas Bouzy",
     "url": "https://github.com/Birdiz"
   },
-  "description": "Thomas Bouzy's agent skills, as installable Claude Code plugins.",
+  "description": "Thomas Bouzy's agent skills, as installable Claude Code plugins: technical audits and pull request reviews.",
   "plugins": [
     {
       "name": "birdiz-audit",
@@ -12,6 +12,13 @@
       "description": "Agent skills for technical audits: recon, app security, infrastructure security, privacy, code quality, architecture, accessibility, SEO, performance, independent verification, remediation plans, reports, tickets.",
       "category": "engineering",
       "keywords": ["audit", "security", "infrastructure", "privacy", "gdpr", "code-quality", "architecture", "accessibility", "seo", "performance", "tickets", "skills"]
+    },
+    {
+      "name": "birdiz-review",
+      "source": "./plugins/birdiz-review",
+      "description": "Agent skills for reviewing agent-written pull requests: an attention map of where to read and why, what was not covered, and a proposed verdict. Never writes to the reviewed branch.",
+      "category": "engineering",
+      "keywords": ["review", "pull-request", "code-review", "agents", "attention-map", "skills"]
     }
   ]
 }

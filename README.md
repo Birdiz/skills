@@ -18,6 +18,11 @@ Small, composable, and readable by any coding agent. The structure is
 inspired by [mattpocock/skills](https://github.com/mattpocock/skills); the
 content is specific to auditing.
 
+A second plugin, `birdiz-review`, reviews pull requests written by coding
+agents: where to read and why, what the review did not cover, and a
+proposed verdict. It is new: its first version is the bare run, with no
+detector that reads file contents yet.
+
 ## Status
 
 Early. The foundation, six axes (`app-security`, `code-quality`,
@@ -45,6 +50,13 @@ also run on a second codebase, end to end, in one day. See
 ```
 
 To update: `/plugin marketplace update birdiz`.
+
+The review skills are a separate plugin, installable with or without the
+audit skills, namespaced `birdiz-review:<name>`:
+
+```
+/plugin install birdiz-review@birdiz
+```
 
 **Coming from `birdiz-skills` (0.26.0 or earlier):** the plugin is now
 `birdiz-audit`, and its commands are `/birdiz-audit:<name>`. Workspaces
@@ -136,6 +148,14 @@ gives you every skill twice.
 A user-invoked skill may rely on model-invoked ones, never on another
 user-invoked one.
 
+**Review** (`birdiz-review`)
+
+- [review-pr](plugins/birdiz-review/skills/review-pr/SKILL.md): one review
+  run on a branch or a `base..head` range, written outside the repository:
+  a bucket for every changed file (`must-read`, `glance`, `skim`,
+  `unproven`), the coverage gaps and a proposed verdict (`merge`, `fix`,
+  `close-and-reprompt`) with its round. Never writes to the reviewed branch.
+
 ## Design
 
 - **Files are the contract.** Skills communicate through files in the
@@ -160,6 +180,9 @@ user-invoked one.
   a plugin copies only its directory; `tools/sync_core.py` keeps every copy
   identical to `core/`, and CI fails on drift. See
   [ADR 0005](docs/adr/0005-two-plugins-share-a-copied-core.md).
+- **A review never touches what it reviews.** No write to the reviewed
+  branch, every coverage gap reported, and "safe to skim" only on detector
+  evidence. See [ADR 0006](docs/adr/0006-review-invariants.md).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/projections-dark.svg">
@@ -178,10 +201,12 @@ tests (Python 3.11 or later, as CI does; the scripts also run on 3.8):
 python3 -I tools/sync_core.py
 python3 -I -m unittest discover -s tools -p 'test_*.py'
 python3 -I -m unittest discover -s plugins/birdiz-audit/skills/finding-format/scripts -p 'test_*.py'
+python3 -I -m unittest discover -s plugins/birdiz-review/skills/review-pr/scripts -p 'test_*.py'
 ```
 
-Changes are listed in the plugin's
-[changelog](plugins/birdiz-audit/CHANGELOG.md).
+Changes are listed in each plugin's changelog:
+[birdiz-audit](plugins/birdiz-audit/CHANGELOG.md),
+[birdiz-review](plugins/birdiz-review/CHANGELOG.md).
 
 ## Never commit an engagement
 

@@ -9,7 +9,7 @@ Shared by every plugin: a finding means the same thing in a review as in an
 audit.
 
 - **Plugin**: one installable set of skills with its own directory,
-  version and changelog (`birdiz-audit`, later `birdiz-review`). Each
+  version and changelog (`birdiz-audit`, `birdiz-review`). Each
   carries its own copy of the finding core, synced from `core/`.
 - **Finding**: an observed, evidenced problem in the common schema.
 - **Lead**: a suspicion without evidence. Not reportable as a finding. The
@@ -90,3 +90,50 @@ The `birdiz-audit` plugin's own vocabulary.
   findings only, sensitive ones by consequence only.
 - **Remediation prompt**: a self-contained instruction for a coding agent or
   a developer, describing the target state, never the attack.
+
+## Review
+
+The `birdiz-review` plugin's own vocabulary.
+
+- **Review run**: one review of one head of a branch or range, written to a
+  **run directory** keyed by repository, branch and head short sha, under
+  the user's state directory and never inside the reviewed repository. A
+  new run on the same head replaces it.
+- **Run header**: what a run records about itself: the target, base, head
+  and merge base, the diff, and the detector tools found on this machine
+  with their versions.
+- **Detector**: a standard-library script that reads the diff and writes a
+  JSON output with its own coverage (the files it could judge, the ones it
+  could not and why) and its signals. A **content detector** reads what a
+  file's content means, for the file types it declares; a stack-agnostic
+  signal, such as the git file changes, only says a file changed in a
+  notable way.
+- **Signal**: a detector's note that a file changed in a way worth a look
+  (added, renamed, a changed public symbol). Not a finding: a judgment step
+  decides whether it is one.
+- **Bucket**: where the brief puts a changed file, exactly one each, by
+  fixed rules in this order: **must-read** (a finding asks for it),
+  **unproven** (no content detector covered its type: read it),
+  **glance** (a signal, a finding or a risk zone, with the reason),
+  **skim** (every applicable content detector covered it and found
+  nothing; the proof names them).
+- **Risk map**: the repository's path globs mapped to risk zones (auth,
+  personal data, payments, concurrency, irreversible actions, public API).
+  A file in a zone is at least `glance`. Not read by this version.
+- **Attention**: a review finding's claim on the reviewer, `must-read` or
+  `glance`. A finding can move a file up; nothing but detector evidence
+  makes it `skim`.
+- **Reviewer question**: the question a review finding asks the reviewer to
+  answer at its location.
+- **Brief**: the projection of a run (its header, detector outputs and
+  findings) the reviewer reads: declared against detected risk, the
+  buckets, the coverage gaps and the proposed verdict. Regenerated, never
+  edited.
+- **Verdict**: the brief's proposal, `merge`, `fix` or
+  `close-and-reprompt`, always with the dimensions that did not run. The
+  reviewer decides.
+- **Round**: the number of distinct heads reviewed on one branch. The third
+  with a merge-blocking finding proposes `close-and-reprompt`.
+- **Dimension**: one part of a full review: the judgment steps (intent,
+  contracts, structure) and the later gates, test integrity and
+  adversarial review. One not run is a coverage gap, stated in the verdict.

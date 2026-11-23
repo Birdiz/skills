@@ -6,15 +6,17 @@ plugin's skills read or run must be inside that directory.
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 
 sys.dont_write_bytecode = True
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 NAMESPACE = re.compile(r"/(birdiz-[a-z]+):")
-ENTRY_POINTS = ("validate.py", "check-pointers.py")
+ENTRY_POINTS = ("validate.py", "check-pointers.py", "run.py", "brief.py")
 
 
 def load(path):
@@ -104,6 +106,23 @@ class TestPlugins(unittest.TestCase):
                 with self.subTest(entry_point=os.path.relpath(path, ROOT)):
                     self.assertEqual(done.returncode, 0, done.stderr)
                     self.assertTrue(done.stdout.strip().startswith(core + os.sep), done.stdout)
+
+    def test_each_plugin_runs_from_its_directory_alone(self):
+        """Installed, a plugin is its directory copied into a cache, with no
+        other plugin beside it: every entry point must run from there."""
+        for entry in marketplace():
+            tmp = tempfile.mkdtemp()
+            self.addCleanup(shutil.rmtree, tmp)
+            alone = os.path.join(tmp, "cache", entry["name"])
+            shutil.copytree(plugin_root(entry), alone, ignore=shutil.ignore_patterns("__pycache__"))
+            for path in files_of(os.path.join(alone, "skills"), ".py"):
+                if os.path.basename(path) not in ENTRY_POINTS:
+                    continue
+                done = subprocess.run([sys.executable, "-I", path, "--help"], cwd=tmp,
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                with self.subTest(plugin=entry["name"], entry_point=os.path.relpath(path, alone)):
+                    self.assertEqual(done.returncode, 0, done.stderr)
+                    self.assertIn("Usage:", done.stdout)
 
 
 if __name__ == "__main__":
