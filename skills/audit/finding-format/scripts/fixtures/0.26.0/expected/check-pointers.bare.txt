@@ -1,0 +1,5 @@
+MISSING    findings/performance.md:29  tool-output/lighthouse.json:12: no such file
+finding-format@0.26.0: 0 pointers opened in 1 files, 0 with a quote; looked in: .
+mismatch 0, missing 1, unresolved 0
+RESULT: FAIL
+# exit 1

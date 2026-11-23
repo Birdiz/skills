@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.27.0 (unreleased)
+
+The finding rules move into a core library that a second plugin can share,
+without changing the format: every 0.26.0 workspace validates exactly as
+before.
+
+- New `core/finding_core/`, version `finding-core@0.1.0`: the YAML and
+  Markdown readers, the finding schema core (evidence, finding and lead,
+  status owned by a verifier, severity and confidence, coverage, `sensitive`,
+  `promptable`, ID shapes) as a validator parameterized by an extension, and
+  the pointer and quote check with the workspace layout supplied by the
+  extension
+- `finding-format`: `scripts/audit_format.py` is the audit extension (axes,
+  extra keys, prose sections, section order, questions, auditor answers, fix
+  checks, the engagement's `execution`, the remediation plan, the workspace
+  layout). `validate.py` and `check-pointers.py` stay where they were, as
+  thin entry points: they find the core themselves, so they still run under
+  `python3 -I` on Python 3.11 and later, and write no bytecode
+- Both scripts now print `finding-format@0.27.0 (finding-core@0.1.0)` where
+  they printed `finding-format@0.26.0`; nothing else in their output changes
+- `test_golden.py`: synthetic 0.26.0 workspaces under
+  `scripts/fixtures/0.26.0/`, with the output the 0.26.0 scripts gave, which
+  the scripts must reproduce byte for byte apart from the version string
+
 ## 0.26.0 (2026-11-01)
 
 From the first full audit on a codebase other than gn-platform, a Node and

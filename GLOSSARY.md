@@ -28,6 +28,11 @@ findings and reports.
 - **Codebase map**: the shared description of the audited code, written once
   by `recon` and read by every axis.
 - **Finding**: an observed, evidenced problem in the common schema.
+- **Finding core**: the part of that schema every plugin shares (evidence,
+  finding and lead, status owned by a verifier, severity and confidence,
+  coverage, `sensitive`, `promptable`, ID shapes, the pointer and quote
+  check), with its own version. A plugin's **extension** adds its axes,
+  keys, prose sections, section order and workspace layout.
 - **Lead**: a suspicion without evidence. Not reportable as a finding. The
   owning axis closes each one: promoted, closed, or open.
 - **Coverage**: what an axis evaluated, partially evaluated, could not

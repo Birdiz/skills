@@ -1,0 +1,7 @@
+WARNING  00-engagement.md  engagement file missing: commits not compared
+WARNING  findings  1 verified findings without `sha` (older skills): a text changed the day of its verification does not show (F-PERF-001 to F-PERF-001)
+ERROR   remediation-plan 02-remediation-plan.md  no plan yet
+finding-format@0.26.0: 1 findings (unverified 0, confirmed 1, refuted 0), 0 leads, 0 questions, 0 fixes (0 open)
+errors 1, warnings 2, pending 0 (required: plan)
+RESULT: FAIL
+# exit 1

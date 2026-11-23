@@ -1,0 +1,4 @@
+finding-format@0.26.0: 4 findings (unverified 0, confirmed 3, refuted 1), 4 leads, 3 questions, 3 fixes (2 open)
+errors 0, warnings 0, pending 0
+RESULT: OK
+# exit 0
