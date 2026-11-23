@@ -22,7 +22,8 @@ When a term gets resolved, add it to `GLOSSARY.md`. The `/domain-modeling` skill
 │   ├── 0003-invariants-are-not-configurable.md
 │   ├── 0004-execution-is-a-recorded-choice.md
 │   ├── 0005-two-plugins-share-a-copied-core.md
-│   └── 0006-review-invariants.md
+│   ├── 0006-review-invariants.md
+│   └── 0007-pocock-artifact-contract.md
 ├── core/                  # the finding core, edited here only
 ├── plugins/
 │   ├── birdiz-audit/      # one plugin: manifest, skills, changelog, copy of core/

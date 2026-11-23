@@ -3,9 +3,12 @@
 diff, detect the tools, run the detectors, write the run directory and its
 brief. Never writes to the reviewed repository.
 
-Usage: python3 -I run.py <branch | base..head> [--repo <path>]
+Usage: python3 -I run.py <branch | base..head> [--repo <path>] [--spec <#N | path> | --no-spec]
+       python3 -I run.py --pr <number> [--repo <path>] [--spec <#N | path> | --no-spec]
 
-A branch is compared with the remote's default branch (else `main`, else
+A pull request is read with `gh`: its head and base commits, fetched from
+origin by ref when missing (objects only, nothing checked out), and its
+body. A branch is compared with the remote's default branch (else `main`, else
 `master`); a range `base..head` (or `base...head`) with its base. Either
 way the diff runs from the merge base to the head, read from git objects:
 nothing is checked out, the working copy is never read or written.
@@ -14,6 +17,10 @@ The run directory is
 (~/.local/state when XDG_STATE_HOME is unset), with `/` and other
 characters escaped in <repo> and <branch>. A run on a head that already
 has one replaces it: same head, same round.
+The spec and tickets are found from the PR body's closing references, then
+issue references in the commits, then a spec file under docs/, specs/ or
+.scratch/ named after the branch; `--spec` names it instead, `--no-spec`
+says there is none. When none is found, an `ASK:` line says so.
 Prints a summary, then `RUN: <run directory>` as its last line.
 Exit status: 0 run written, 2 refused (empty diff, unknown ref, not a
 repository): nothing written.
@@ -47,15 +54,25 @@ for _p in reversed(_paths()):
 from finding_core import NAME  # noqa: E402
 import review_format as fmt  # noqa: E402
 import review_run  # noqa: E402
+import sources  # noqa: E402
 
 
 def main(argv):
     args = argv[1:]
-    repo, target = ".", None
+    repo, target, pr, spec, no_spec = ".", None, None, None, False
     while args:
         a = args.pop(0)
         if a == "--repo" and args:
             repo = args.pop(0)
+        elif a == "--pr" and args:
+            pr = args.pop(0).lstrip("#")
+            if not pr.isdigit():
+                print("--pr takes a pull request number", file=sys.stderr)
+                return 2
+        elif a == "--spec" and args:
+            spec = args.pop(0)
+        elif a == "--no-spec":
+            no_spec = True
         elif a in ("-h", "--help"):
             print(__doc__)
             return 0
@@ -67,11 +84,11 @@ def main(argv):
         else:
             print("unknown argument: %s" % a, file=sys.stderr)
             return 2
-    if target is None:
+    if (target is None) == (pr is None) or (spec and no_spec):
         print(__doc__, file=sys.stderr)
         return 2
     try:
-        root, run = review_run.start(repo, target)
+        root, run = review_run.start(repo, target, pr=int(pr) if pr else None, spec=spec, no_spec=no_spec)
     except review_run.Refused as e:
         print("REFUSED: %s" % e, file=sys.stderr)
         return 2
@@ -84,7 +101,12 @@ def main(argv):
     print("tools found: %s; not found: %s" % (", ".join(found) or "none", ", ".join(absent) or "none"))
     with open(os.path.join(root, fmt.BRIEF), encoding="utf-8") as fh:
         verdict = [line for line in fh.read().split("\n") if line.startswith("Proposed verdict:")]
+    found = fmt.load_json(os.path.join(root, h.get("sources", sources.SOURCES)))
+    for line in fmt.sources_lines(found):
+        print("sources: %s" % line)
     print(verdict[0] if verdict else "no verdict line")
+    if found.get("ask"):
+        print("ASK: %s" % found["ask"])
     print("RUN: %s" % root)
     return 0
 

@@ -141,6 +141,18 @@ The `birdiz-review` plugin's own vocabulary.
   reviewer decides.
 - **Round**: the number of distinct heads reviewed on one branch. The third
   with a merge-blocking finding proposes `close-and-reprompt`.
+- **Sources**: what a change was supposed to do, as a run found and read
+  it: the PR body, the spec and its tickets. The tickets the PR closes are
+  **in scope**; the spec's other tickets are **siblings**.
+- **Pocock contract**: the artifacts the review reads from Matt Pocock's
+  skills (tracker doc, domain doc, spec, tickets, PR body), the sections it
+  relies on in each, and the upstream commit last checked. Each artifact
+  is checked when it is read.
+- **Contract drift**: an artifact that lacks a section the contract relies
+  on, such as a ticket whose `Acceptance criteria` heading was renamed. The
+  dimension it feeds becomes `not-evaluable (contract drift: ...)`, and the
+  run goes on. Absent is not drift: a PR body without `Merge Danger` is
+  **not declared**.
 - **Dimension**: one part of a full review: the judgment steps (intent,
   contracts, structure) and the later gates, test integrity and
   adversarial review. One not run is a coverage gap, stated in the verdict.

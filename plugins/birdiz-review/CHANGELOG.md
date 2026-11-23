@@ -63,3 +63,40 @@ The repo facts and the risk map
   and the validator rejects a brief that puts one there. The brief's
   coverage gaps say whether the risk map was found and which rows were
   left out.
+
+The spec, the tickets and the Pocock contract
+([#40](https://github.com/Birdiz/skills/issues/40)):
+
+- `review-pr --pr <number>` reviews a pull request. It reads the PR with
+  `gh`, and fetches its head (and base) from origin by ref when the
+  repository lacks them: objects only, no ref written, nothing checked out.
+  Its run directory is keyed by the PR's head branch, so its rounds add up
+  with branch runs.
+- Every run looks for what the change was supposed to do, first match
+  wins. The order: the user's answer (`--spec #N | <path>`, `--no-spec`);
+  the closing references in the PR body; issue references in the commits;
+  a spec file under `docs/`, `specs/` or `.scratch/` named after the
+  branch. When nothing is found, an `ASK:` line tells the skill to ask the
+  user.
+- Issues are read through the tracker the tracker doc names at the base:
+  GitHub with `gh`, local markdown from the head tree. Other trackers, and
+  a missing tracker doc, make intent `not-evaluable` with the reason. A
+  ticket's parent is its spec. A spec's tickets are its sub-issues, else
+  the issues with a `Part of #<spec>` line, else the `issues/` files
+  beside a local spec. The tickets the PR closes are in scope, and the
+  others are siblings.
+- Each artifact is checked against the Pocock contract when it is read.
+  Acceptance criteria are read in both `to-tickets` templates. A GitHub
+  ticket without `Parent` or `Blocked by` sections is not drift. A PR body
+  without `Merge Danger` is "not declared". A missing section the review
+  relies on is contract drift, and makes the dimension it feeds
+  `not-evaluable (contract drift: <artifact>, <what>)`. The run continues.
+- The run writes `sources.json` and a copy of each artifact under
+  `sources/`. The brief states the PR's declared Door and Blast Radius, or
+  that the risk was not declared, and lists the spec and tickets found and
+  any drift among its coverage gaps. The validator checks `sources.json`.
+- [`pocock-contract.md`](skills/review-pr/pocock-contract.md) lists each
+  artifact read, the sections relied on and the upstream commit last
+  checked (`mattpocock/skills@abeeaf9`).
+  [ADR 0007](../../docs/adr/0007-pocock-artifact-contract.md) records the
+  decision. `review-setup` checks the tracker doc with the same code.
