@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href=".claude-plugin/plugin.json"><img alt="version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FBirdiz%2Fskills%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version&color=E8772E"></a>
+  <a href="plugins/birdiz-audit/.claude-plugin/plugin.json"><img alt="version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FBirdiz%2Fskills%2Fmain%2Fplugins%2Fbirdiz-audit%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version&color=E8772E"></a>
   <a href="#install"><img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-1B1F3B"></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-5D6480"></a>
 </p>
@@ -37,17 +37,29 @@ also run on a second codebase, end to end, in one day. See
 ## Install
 
 **Claude Code (recommended): as a plugin.** Skills are namespaced
-`birdiz-skills:<name>` and update with each release.
+`birdiz-audit:<name>` and update with each release.
 
 ```
 /plugin marketplace add Birdiz/skills
-/plugin install birdiz-skills@birdiz
+/plugin install birdiz-audit@birdiz
 ```
 
 To update: `/plugin marketplace update birdiz`.
 
+**Coming from `birdiz-skills` (0.26.0 or earlier):** the plugin is now
+`birdiz-audit`, and its commands are `/birdiz-audit:<name>`. Workspaces
+need no change.
+
+```
+/plugin uninstall birdiz-skills@birdiz
+/plugin marketplace update birdiz
+/plugin install birdiz-audit@birdiz
+```
+
 **Other agents, or to edit the skills:** copy the folders under
-`skills/audit/` into the agent's skills directory.
+`plugins/birdiz-audit/skills/`, and `plugins/birdiz-audit/core/`, into the
+agent's skills directory: the validator looks for `core/` above its own
+folder.
 
 Pick one: installing both, or keeping copies saved in your Claude account,
 gives you every skill twice.
@@ -79,44 +91,44 @@ gives you every skill twice.
 
 **User-invoked** (they orchestrate)
 
-- [audit-setup](skills/audit/audit-setup/SKILL.md): configure the auditor
+- [audit-setup](plugins/birdiz-audit/skills/audit-setup/SKILL.md): configure the auditor
   profile: agent, tools, severity scale, language.
-- [audit-kickoff](skills/audit/audit-kickoff/SKILL.md): frame one engagement
+- [audit-kickoff](plugins/birdiz-audit/skills/audit-kickoff/SKILL.md): frame one engagement
   and create its workspace.
 
 **Model-invoked** (they hold the discipline)
 
-- [finding-format](skills/audit/finding-format/SKILL.md): the schema and
+- [finding-format](plugins/birdiz-audit/skills/finding-format/SKILL.md): the schema and
   rules every finding follows, and a validator for the form of findings
   files and plans (Python 3, standard library only).
-- [recon](skills/audit/recon/SKILL.md): map an unfamiliar codebase before
+- [recon](plugins/birdiz-audit/skills/recon/SKILL.md): map an unfamiliar codebase before
   auditing it.
-- [app-security](skills/audit/app-security/SKILL.md): the application
+- [app-security](plugins/birdiz-audit/skills/app-security/SKILL.md): the application
   security axis.
-- [infra-security](skills/audit/infra-security/SKILL.md): images,
+- [infra-security](plugins/birdiz-audit/skills/infra-security/SKILL.md): images,
   containers, network exposure, edge, secrets delivery, pipeline, cloud,
   backups, from the IaC, the running target and the owner's answers.
-- [privacy](skills/audit/privacy/SKILL.md): personal data inventory,
+- [privacy](plugins/birdiz-audit/skills/privacy/SKILL.md): personal data inventory,
   information, consent, trackers, third parties, retention and rights,
   against the law that applies to the owner.
-- [code-quality](skills/audit/code-quality/SKILL.md): defects, error
+- [code-quality](plugins/birdiz-audit/skills/code-quality/SKILL.md): defects, error
   handling, hotspots, duplication and tests, judged by their cost.
-- [architecture](skills/audit/architecture/SKILL.md): boundaries,
+- [architecture](plugins/birdiz-audit/skills/architecture/SKILL.md): boundaries,
   dependency direction, data ownership and failure between components.
-- [accessibility](skills/audit/accessibility/SKILL.md): keyboard, names and
+- [accessibility](plugins/birdiz-audit/skills/accessibility/SKILL.md): keyboard, names and
   roles, forms, contrast, reflow, against WCAG or RGAA, traced to templates.
-- [seo](skills/audit/seo/SKILL.md): indexability, crawl, duplicates, titles,
+- [seo](plugins/birdiz-audit/skills/seo/SKILL.md): indexability, crawl, duplicates, titles,
   structured data, rated for the documented production configuration.
-- [performance](skills/audit/performance/SKILL.md): server work per request,
+- [performance](plugins/birdiz-audit/skills/performance/SKILL.md): server work per request,
   queries, remote calls, front-end loading, cost growing with data.
-- [verify-findings](skills/audit/verify-findings/SKILL.md): try to refute
+- [verify-findings](plugins/birdiz-audit/skills/verify-findings/SKILL.md): try to refute
   every finding from a context that did not write it.
-- [remediation-plan](skills/audit/remediation-plan/SKILL.md): group
+- [remediation-plan](plugins/birdiz-audit/skills/remediation-plan/SKILL.md): group
   confirmed findings into fixes (one change, or the same files and
   executor), ordered, with who does each and what it waits for.
-- [audit-report](skills/audit/audit-report/SKILL.md): peer report,
+- [audit-report](plugins/birdiz-audit/skills/audit-report/SKILL.md): peer report,
   plain-language summary and remediation prompts, from verified findings.
-- [tickets](skills/audit/tickets/SKILL.md): one ticket per fix, following
+- [tickets](plugins/birdiz-audit/skills/tickets/SKILL.md): one ticket per fix, following
   the target's conventions, in its tracker with the owner's permission
   (sensitive fixes only in an access-restricted one), local files
   otherwise; never edits a ticket once created.
@@ -144,6 +156,10 @@ user-invoked one.
   read them, live once in [`core/`](core/finding_core/); the audit's
   validator and pointer checker extend it with the audit's axes, keys,
   sections and workspace layout.
+- **One directory per plugin, each with its copy of the core.** Installing
+  a plugin copies only its directory; `tools/sync_core.py` keeps every copy
+  identical to `core/`, and CI fails on drift. See
+  [ADR 0005](docs/adr/0005-two-plugins-share-a-copied-core.md).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/projections-dark.svg">
@@ -152,6 +168,20 @@ user-invoked one.
 
 Vocabulary is defined in [GLOSSARY.md](GLOSSARY.md); the visual identity in
 [docs/brand.md](docs/brand.md).
+
+## Develop
+
+Edit the core in `core/` only, then copy it into the plugins and run the
+tests (Python 3.11 or later, as CI does; the scripts also run on 3.8):
+
+```
+python3 -I tools/sync_core.py
+python3 -I -m unittest discover -s tools -p 'test_*.py'
+python3 -I -m unittest discover -s plugins/birdiz-audit/skills/finding-format/scripts -p 'test_*.py'
+```
+
+Changes are listed in the plugin's
+[changelog](plugins/birdiz-audit/CHANGELOG.md).
 
 ## Never commit an engagement
 
