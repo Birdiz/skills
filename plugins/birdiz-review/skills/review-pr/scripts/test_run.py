@@ -171,6 +171,12 @@ class TestRun(unittest.TestCase):
         self.assertEqual(code, 0, out)
         expected = os.path.join(self.fx.state, "birdiz-review", "runs", "shop", "feature%2Fx", self.fx.head[:12])
         self.assertEqual(os.path.realpath(root), os.path.realpath(expected))
+        os.environ["XDG_STATE_HOME"], saved = self.fx.state, os.environ.get("XDG_STATE_HOME")
+        try:
+            import review_run
+            self.assertEqual(review_run.branch_runs(self.fx.repo, "feature/x"), os.path.dirname(expected))
+        finally:
+            os.environ.pop("XDG_STATE_HOME") if saved is None else os.environ.__setitem__("XDG_STATE_HOME", saved)
         header = json.loads(read(os.path.join(root, "run.json")))
         self.assertEqual(header["head"]["sha"], self.fx.head)
         self.assertEqual(header["base"]["sha"], self.fx.base)

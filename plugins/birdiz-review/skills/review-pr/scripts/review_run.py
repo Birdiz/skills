@@ -119,6 +119,13 @@ def key(text):
     return "%2E" + k[1:] if k.startswith(".") else k
 
 
+def branch_runs(repo, branch):
+    """The directory holding one run directory per reviewed head of `branch`
+    (`<run root>/<repo>/<branch>/`); it may not exist. A branch has been
+    reviewed when one of its subdirectories holds a `run.json`."""
+    return os.path.join(state_root(), key(repo_name(repo)), key(branch))
+
+
 def resolve(repo, target):
     """The run's target: base, head, merge base, branch."""
     if "..." in target:
@@ -304,7 +311,7 @@ def start(repo_arg, target_arg, now=None):
             raise Refused("the run root %s is inside the reviewed repository %s" % (root, top_))
     name = repo_name(repo)
     head12 = target["head"]["sha"][:12]
-    branch_dir = os.path.join(root, key(name), key(target["branch"]))
+    branch_dir = branch_runs(repo, target["branch"])
     final = os.path.join(branch_dir, head12)
     if os.path.exists(final) and not os.path.isfile(os.path.join(final, fmt.HEADER)):
         raise Refused("%s exists and is not a run directory: left as it is" % final)
