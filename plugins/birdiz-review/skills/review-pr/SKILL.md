@@ -12,15 +12,19 @@ tells the reviewer where to look, what was not checked, and proposes a
 verdict the reviewer takes or leaves. The run directory, the review finding
 and the brief are described in [run-directory.md](run-directory.md).
 
-This version is the bare run: the git file-change signals, a bucket for
-every changed file, the coverage gaps, the brief and the verdict. The risk
-map `review-setup` writes is read at the base: a changed file in a risk zone
+This version runs the git file-change signals, a bucket for every changed
+file, the coverage gaps, the brief and the verdict. The risk map
+`review-setup` writes is read at the base: a changed file in a risk zone
 names its zone and is never `skim`. The run finds what the change was
 supposed to do: the PR body, the spec and the tickets, each checked against
 the Pocock contract ([pocock-contract.md](pocock-contract.md)) when it is
-read. No content detector and no judgment step (`intent`, `contracts`,
-`structure`) exists yet, so every changed file is `unproven` and the brief
-says which dimensions did not run.
+read. One judgment step exists, `intent` ([steps/intent.md](steps/intent.md)):
+each acceptance criterion mapped to the hunks that implement it, each
+changed file justified by a ticket or flagged out of scope, each change
+against the spec's decisions flagged. No content detector and no
+`contracts` or `structure` step exists yet, so every changed file is
+`unproven` unless a finding marks it `must-read`, and the brief says which
+dimensions did not run.
 
 ## Invariants
 
@@ -50,7 +54,8 @@ Scripts are in `scripts/`, run with `python3 -I`, standard library only.
    checked out. The run refuses an empty diff and an unknown ref or PR
    (exit 2, nothing written): say so and stop. Otherwise it prints the
    tools found on this machine, the `sources:` lines (how the spec and
-   tickets were found, and the intent status), the verdict line and, last,
+   tickets were found, and the intent status), the verdict line, a
+   `STEP: <step> <step file>` line for each judgment step to run and, last,
    `RUN: <run directory>`.
    - The spec and tickets are found from the PR's closing references, then
      issue references in the commits, then a spec file named after the
@@ -62,16 +67,27 @@ Scripts are in `scripts/`, run with `python3 -I`, standard library only.
      artifact no longer has a section the review relies on, and the
      dimension it feeds is `not-evaluable`. Report it as written; never
      guess what the drifted section meant.
-3. **Check the run.** `python3 -I scripts/validate.py <run> --require brief`,
+3. **Run the judgment steps.** For each `STEP:` line, start a sub-agent
+   with fresh context, and give it only the step file's path and the run
+   directory: "Follow `<step file>` on the run directory `<run>`." It reads
+   files and writes its findings file, and asks nothing. Without
+   sub-agents, follow the step file yourself, in order, after the run, one
+   step at a time. No `STEP:` line for `intent` means its sources are not
+   evaluable (no spec, contract drift): `run.py` already wrote its
+   coverage with the reason, and the verdict says intent was not checked.
+   Then `python3 -I scripts/brief.py <run>`.
+4. **Check the run.** `python3 -I scripts/validate.py <run> --require brief --require intent`,
    then `python3 -I scripts/check-pointers.py <run>`. An `ERROR`,
    `MISMATCH` or `MISSING` line is a defect of the run: report it, never
    edit the brief to hide it. The brief is a projection: when a findings
    file changes, run `python3 -I scripts/brief.py <run>`, never edit
    `brief.md` by hand.
-4. **Present the brief.** Give the run directory, then the brief's sections
+5. **Present the brief.** Give the run directory, then the brief's sections
    in order, the coverage gaps in full (the spec and tickets found, any
-   contract drift) and the verdict line as written, with its round. Do not soften `unproven`: it means read the file, since
-   nothing proved it safe.
+   contract drift) and the verdict line as written, with its round. Do not
+   soften `unproven`: it means read the file, since nothing proved it safe.
+   A `close-and-reprompt` for misread intent names the criteria not found,
+   the files out of scope or the decisions broken: give them as written.
 
 Running again on the same head replaces its run directory and is not a new
 round; a new head of the same branch is. Nothing else is kept between runs.

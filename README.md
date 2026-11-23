@@ -159,7 +159,10 @@ user-invoked one.
   run on a pull request, a branch or a `base..head` range, written outside
   the repository: the spec and tickets it was meant to implement, each
   checked against the [Pocock contract](plugins/birdiz-review/skills/review-pr/pocock-contract.md),
-  a bucket for every changed file (`must-read`, `glance`, `skim`,
+  the intent step (each acceptance criterion mapped to the hunks that
+  implement it, each changed file justified or flagged out of scope, each
+  change against the spec's decisions flagged), a bucket for every changed
+  file (`must-read`, `glance`, `skim`,
   `unproven`), the coverage gaps and a proposed verdict (`merge`, `fix`,
   `close-and-reprompt`) with its round. A file in a risk zone is never
   `skim`. Never writes to the reviewed branch.

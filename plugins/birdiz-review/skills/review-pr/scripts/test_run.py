@@ -296,10 +296,10 @@ class TestRun(unittest.TestCase):
         self.assertEqual(code, 0, out)
         brief = read(os.path.join(root, "brief.md"))
         gaps = brief.split("## Coverage gaps")[1].split("## Verdict")[0]
-        for line in ("- intent (`INT`): not run", "- contracts (`BRK`): not run", "- structure (`STR`): not run",
-                     "- gates, test integrity, adversarial: not in this version."):
+        for line in ("- intent (`INT`): not run (no spec found).", "- contracts (`BRK`): not run",
+                     "- structure (`STR`): not run", "- gates, test integrity, adversarial: not in this version."):
             self.assertIn(line, gaps)
-        self.assertIn("Proposed verdict: merge, round 1 (intent not checked: step not in this version;"
+        self.assertIn("Proposed verdict: merge, round 1 (intent not checked: no spec found;"
                       " contracts, structure, gates, test integrity, adversarial not run).", brief)
 
     def test_the_round_counts_distinct_heads_of_the_same_branch(self):

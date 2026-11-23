@@ -14,6 +14,9 @@
   `repo-<head short sha>/` in the run directory.
 - The sources: `sources.json` and `sources/`, the PR body, spec and tickets
   the run read and how each one fared against the Pocock contract.
+- The intent step's tables in `findings/intent.md` (see `intent.py`): what
+  the validator checks against the sources and the hunks, and what misread
+  intent adds to the verdict.
 """
 import fnmatch
 import json
@@ -23,6 +26,7 @@ import re
 from finding_core import pointers
 from finding_core.markdown import blocks, bullets, label_of, paragraphs, parse_yaml, read
 from finding_core.validator import CORE_KEYS, Extension
+import intent
 import risk_map
 
 VERSION = "review-pr@0.1.0"
@@ -36,7 +40,7 @@ AREAS = {
     "structure": ["New files", "Import graph", "Dependencies", "Pattern divergence", "ADRs", "Glossary"],
 }
 # The steps this version runs; the others get a coverage saying so.
-STEPS_IN_VERSION = []
+STEPS_IN_VERSION = ["intent"]
 # Review dimensions no version has yet: always printed with the verdict.
 LATER = ["gates", "test integrity", "adversarial"]
 
@@ -44,6 +48,7 @@ HEADER = "run.json"
 SIGNALS = "signals"
 FINDINGS = "findings"
 BRIEF = "brief.md"
+PATCH = "diff.patch"
 TREE = "repo-"
 HEADER_KEYS = ["schema", "core", "repo", "branch", "target", "base", "head",
                "merge_base", "diff", "started", "tools", "detectors"]
@@ -140,12 +145,15 @@ class Run:
         if self.header.get("sources"):
             self.sources = load_json(os.path.join(root, str(self.header["sources"])))
         self.findings, self.coverage = [], {}
+        self.intent = None
         for axis in AXES:
             path = os.path.join(root, FINDINGS, axis + ".md")
             if os.path.exists(path):
                 found, line = read_findings_file(path, axis)
                 self.findings.extend(found)
                 self.coverage[axis] = line
+                if axis == intent.AXIS:
+                    self.intent = intent.read_file(path)
 
     def changed(self):
         """Every changed file, as the git detector lists them, in order."""
@@ -159,6 +167,22 @@ class Run:
     def tree(self):
         head = (self.header.get("head") or {}).get("sha", "")
         return os.path.join(self.root, TREE + head[:12])
+
+    def change_entries(self):
+        """Changed file -> its git-changes entry (`change`, `hunks`, ...)."""
+        out = {}
+        for o in self.outputs.values():
+            for f in o.get("files") or []:
+                if isinstance(f, dict) and f.get("path"):
+                    out.setdefault(f["path"], f)
+        return out
+
+    def intent_checked(self):
+        """The intent tables when the intent step ran on evaluable sources."""
+        status, _ = axis_status(self.coverage.get(intent.AXIS))
+        if status in ("evaluated", "partial") and intent.dimension(self.sources) == "evaluable":
+            return self.intent
+        return None
 
 
 def axis_status(line):
@@ -264,25 +288,35 @@ def blocking(findings):
 
 
 def verdict(run, round_no):
-    """(verdict, qualifier, reasons)."""
+    """(verdict, qualifier, reasons). Misread intent and the stop rule
+    propose `close-and-reprompt`; misread intent only when the intent step
+    ran on evaluable sources."""
     blocks_ = blocking(run.findings)
     not_run = [(a, axis_status(run.coverage.get(a))) for a in AXES]
     not_run = [(a, why) for a, (status, why) in not_run if status not in ("evaluated", "partial")]
-    intent = dict(not_run).get("intent")
-    if blocks_ and round_no >= 3:
+    if intent.dimension(run.sources) != "evaluable" and "intent" not in dict(not_run):
+        not_run.insert(0, ("intent", intent.dimension(run.sources)[len("not-evaluable ("):-1]))
+    unchecked = dict(not_run).get("intent")
+    checked = run.intent_checked()
+    misread = intent.close_reasons(checked) if checked is not None else []
+    if misread or (blocks_ and round_no >= 3):
         word = "close-and-reprompt"
-        reasons = ["Round %d, a third distinct head or later, still has merge-blocking findings (%s):"
-                   " stop coaching this branch and reprompt." % (round_no, ", ".join(f.fid for f in blocks_))]
+        reasons = list(misread)
+        if blocks_ and round_no >= 3:
+            reasons.append("Round %d, a third distinct head or later, still has merge-blocking findings (%s):"
+                           " stop coaching this branch and reprompt." % (round_no, ", ".join(f.fid for f in blocks_)))
     elif blocks_:
         word = "fix"
         reasons = ["Blocks the merge: %s." % ", ".join("%s (%s)" % (f.fid, f.first_location()) for f in blocks_)]
     else:
         word = "merge"
         reasons = ["No finding blocks the merge."]
+    if checked is not None:
+        reasons.append(intent.summary_line(checked))
     parts = []
     others = [a for a, _ in not_run if a != "intent"] + LATER
-    if intent is not None:
-        parts.append("intent not checked: %s" % (intent or "not evaluated"))
+    if unchecked is not None:
+        parts.append("intent not checked: %s" % (unchecked or "not evaluated"))
         parts.append("%s not run" % ", ".join(others))
     else:
         parts.append("attention map only: %s not run" % ", ".join(others))
@@ -305,10 +339,14 @@ def render_brief(run, zones=None):
     out += declared_lines(run)
     out.append("")
 
+    changed = set(run.changed())
+    loose = {b: [f for f in run.findings if f.data.get("attention") == b and not changed.intersection(f.files())]
+             for b in ("must-read", "glance")}
     for bucket in BUCKETS:
         out += ["## %s" % BUCKET_SECTION[bucket], ""]
         files = [p for p in run.changed() if placed[p][0] == bucket]
-        if not files:
+        items = loose.get(bucket, [])
+        if not files and not items:
             out += ["None.", ""]
             continue
         for path in files:
@@ -325,6 +363,9 @@ def render_brief(run, zones=None):
                            % (path, ", ".join(proof)))
             else:
                 out.append("- `%s`: %s." % (path, "; ".join(reasons_)))
+        for f in items:
+            q = " **Question:** %s" % f.question if f.question else ""
+            out.append("- %s `%s`: %s.%s" % (f.fid, f.first_location(), f.title.rstrip("."), q))
         out.append("")
 
     out += ["## Coverage gaps", ""]
@@ -464,6 +505,8 @@ def parse_brief(path):
         if BUCKET_SECTION[bucket] not in sections:
             continue
         for i, text in bullets(sections[BUCKET_SECTION[bucket]][1]):
+            if re.match(r"^[-*]\s+F-[A-Z0-9]+-\d+\b", text):
+                continue  # a finding that points at no changed file
             m = re.match(r"^[-*]\s+`([^`]+)`", text)
             listed.append((m.group(1) if m else None, bucket, i + 1, text))
     return lines, sections, listed
@@ -480,8 +523,13 @@ class ReviewExtension(Extension):
     optional = ["declared", "detected"]
     enums = {"attention": ["must-read", "glance"]}
     prose = ["Evidence", "Reviewer question"]
+    sections = ["Coverage"] + intent.SECTIONS + ["Findings", "Leads"]
     verify_step = "verification"
-    requirable = {"brief": "brief"}
+    requirable = {"brief": "brief", "intent": "intent"}
+
+    def check_section(self, name, path, axis, start, items, sections, lines, ids, refs):
+        if name in intent.SECTIONS and axis != intent.AXIS:
+            self.rep.error(path, start + 1, "`## %s` belongs to the intent findings file" % name)
 
     def __init__(self, rep, root):
         super().__init__(rep, root)
@@ -564,9 +612,20 @@ class ReviewExtension(Extension):
             rep.error(path, yi + 1, "%s: status %s, but no verifier exists in this version: it stays unverified"
                       % (fid, data.get("status")))
 
+    def check_intent(self):
+        run, path = self.run, os.path.join(self.root, FINDINGS, intent.AXIS + ".md")
+        if not os.path.exists(path):
+            return
+        own = {f.fid: f.line for f in run.findings if f.axis == intent.AXIS}
+        intent.Check(self.root, run.sources, run.change_entries(), own,
+                     lambda line, msg: self.rep.error(path, line, msg),
+                     lambda line, msg: self.rep.pending("intent", path, line, msg),
+                     ).run(path, axis_status(run.coverage.get(intent.AXIS)))
+
     def finish(self, findings, ids):
         if self.run is None:
             return ""
+        self.check_intent()
         rep, run = self.rep, self.run
         path = os.path.join(self.root, BRIEF)
         if not os.path.exists(path):
@@ -672,11 +731,25 @@ class ReviewLayout(pointers.Layout):
         return list(dict.fromkeys(os.path.normpath(r) for r in roots))
 
 
-# --- Placeholders for the steps not in this version -------------------------
+# --- Findings files at the start of a run ------------------------------------
+
+def findings_at_start(axis, found, changed):
+    """What `run.py` writes for each axis: a step not in this version, or
+    whose sources are not evaluable, gets a coverage saying why; the intent
+    step on evaluable sources gets its worksheet."""
+    if axis not in STEPS_IN_VERSION:
+        return coverage_not_run(axis)
+    dim = intent.dimension(found)
+    if dim != "evaluable":
+        m = re.match(r"not-evaluable \((.*)\)$", dim, re.S)
+        return coverage_not_run(axis, m.group(1) if m else dim)
+    return intent.worksheet(found, changed, VERSION)
+
 
 def coverage_not_run(axis, why="step not in this version"):
     """A findings file for a step that did not run: its coverage says so."""
-    rows = ["| %s | not-evaluable | %s. |" % (area, why[0].upper() + why[1:]) for area in AREAS[axis]]
+    note = (why[0].upper() + why[1:]).replace("|", "\\|")
+    rows = ["| %s | not-evaluable | %s. |" % (area, note) for area in AREAS[axis]]
     return "\n".join([
         "# %s" % TITLES[axis], "",
         "## Coverage", "",

@@ -100,3 +100,37 @@ The spec, the tickets and the Pocock contract
   checked (`mattpocock/skills@abeeaf9`).
   [ADR 0007](../../docs/adr/0007-pocock-artifact-contract.md) records the
   decision. `review-setup` checks the tracker doc with the same code.
+
+The intent step ([#41](https://github.com/Birdiz/skills/issues/41)):
+
+- The first judgment step, [`steps/intent.md`](skills/review-pr/steps/intent.md),
+  a reference file of `review-pr`. It reads files in the run directory and
+  writes `findings/intent.md` only, with no question. `review-pr` runs it
+  in a sub-agent with fresh context when there is one, in order otherwise.
+- Each run writes `diff.patch`, the diff the judgment steps read, and the
+  `hunks` of each changed file (new-side line ranges) in the git changes.
+- When the intent sources are evaluable, `run.py` writes the intent
+  worksheet (one row per acceptance criterion of the in-scope tickets, one
+  row per changed file, `?` where the step judges) and prints a
+  `STEP: intent <step file>` line. The step maps each criterion to the
+  hunks that implement it (`found`, `partial`, `not found`), justifies each
+  changed file by a criterion, a ticket or the spec, or flags it `out of
+  scope`, and flags each change against the spec's Implementation
+  Decisions or Out of Scope. Each `partial` or `not found` criterion, file
+  out of scope and decision broken is an `INT` finding, and every `INT`
+  finding is cited by a row.
+- The validator checks the tables against `sources.json`, the changed files
+  and their hunks: every criterion and every file has one row, hunks meet a
+  change, a sibling ticket never justifies a file, a decision row points
+  into the spec's Implementation Decisions or Out of Scope. A worksheet the
+  step has not filled is `PENDING intent`, an error with
+  `--require intent`.
+- The verdict proposes `close-and-reprompt` for misread intent: more than
+  half of the criteria not found, a file out of scope, or a change against
+  a stated decision. A reason line counts the tables. When intent can't be
+  evaluated (no spec, contract drift), the verdict starts with "intent not
+  checked: <why>" and misread intent is not offered. The stop rule (a third
+  distinct head with a `blocks_merge` finding) is unchanged.
+- The brief lists the `must-read` and `glance` findings that point at no
+  changed file, such as a criterion not found, after the files of their
+  section.
