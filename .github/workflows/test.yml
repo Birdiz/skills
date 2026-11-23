@@ -1,0 +1,35 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.11 is the first Python whose -I leaves the script's directory off
+        # the import path, which the entry points must handle themselves.
+        python: ["3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Core copies in sync
+        run: python3 -I tools/sync_core.py --check
+      - name: Every test suite
+        run: |
+          status=0
+          for dir in $(git ls-files '*test_*.py' | xargs -n1 dirname | sort -u); do
+            echo "::group::$dir"
+            python3 -I -m unittest discover -s "$dir" -p 'test_*.py' -v || status=1
+            echo "::endgroup::"
+          done
+          exit $status

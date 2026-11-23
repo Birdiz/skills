@@ -1,7 +1,37 @@
-# Context
+# Glossary
 
 Shared vocabulary for these skills. Use these terms as defined, in skills,
 findings and reports.
+
+## Core
+
+Shared by every plugin: a finding means the same thing in a review as in an
+audit.
+
+- **Plugin**: one installable set of skills with its own directory,
+  version and changelog (`birdiz-audit`, later `birdiz-review`). Each
+  carries its own copy of the finding core, synced from `core/`.
+- **Finding**: an observed, evidenced problem in the common schema.
+- **Lead**: a suspicion without evidence. Not reportable as a finding. The
+  owning axis closes each one: promoted, closed, or open.
+- **Finding core**: the part of that schema every plugin shares (evidence,
+  finding and lead, status owned by a verifier, severity and confidence,
+  coverage, `sensitive`, `promptable`, ID shapes, the pointer and quote
+  check), with its own version. A plugin's **extension** adds its axes,
+  keys, prose sections, section order and workspace layout.
+- **Axis**: one dimension a plugin evaluates, with its own code in IDs;
+  each plugin's extension lists its axes. In an audit: app security,
+  accessibility, ...; one axis, one findings file.
+- **Coverage**: what an axis evaluated, partially evaluated, could not
+  evaluate, or was not asked to evaluate.
+- **Sensitive**: a finding that would help an outside attacker or expose
+  personal data if leaked. Confidential report only.
+- **Promptable**: a finding whose remediation a coding agent could apply.
+- **Invariant**: a rule no setting can turn off.
+
+## Audit
+
+The `birdiz-audit` plugin's own vocabulary.
 
 - **Auditor profile**: what is stable for one auditor across audits (agent,
   tools, severity scale, language). Written by `audit-setup`.
@@ -11,8 +41,6 @@ findings and reports.
   the audited repository, never inside this one.
 - **Capability**: a kind of access available for an engagement: repository,
   running URL, cloud read access, client answers.
-- **Axis**: one dimension of the audit (app security, accessibility, ...).
-  One axis, one findings file.
 - **Evidence regime**: how an axis can prove something. *Static* (the
   repository is enough), *dynamic* (needs a running target), *declarative*
   (needs answers from the client).
@@ -27,16 +55,6 @@ findings and reports.
   has none.
 - **Codebase map**: the shared description of the audited code, written once
   by `recon` and read by every axis.
-- **Finding**: an observed, evidenced problem in the common schema.
-- **Finding core**: the part of that schema every plugin shares (evidence,
-  finding and lead, status owned by a verifier, severity and confidence,
-  coverage, `sensitive`, `promptable`, ID shapes, the pointer and quote
-  check), with its own version. A plugin's **extension** adds its axes,
-  keys, prose sections, section order and workspace layout.
-- **Lead**: a suspicion without evidence. Not reportable as a finding. The
-  owning axis closes each one: promoted, closed, or open.
-- **Coverage**: what an axis evaluated, partially evaluated, could not
-  evaluate, or was not asked to evaluate.
 - **Fix**: one piece of work (a pull request, a session in a console, a
   decision) resolving one or more confirmed findings, `R-<NNN>`; its
   findings share one change, or the same files and executor.
@@ -50,10 +68,6 @@ findings and reports.
   waiting for nothing. Derived, not stored.
 - **Resolution**: what the owner did about a finding: open, accepted (kept by
   decision), or fixed (verified at a later commit). Independent of status.
-- **Sensitive**: a finding that would help an outside attacker or expose
-  personal data if leaked. Confidential report only.
-- **Promptable**: a finding whose remediation a coding agent could apply.
-- **Invariant**: a rule no setting can turn off.
 - **Rules of engagement**: what an audit step may touch and run: read-only
   repository, no execution of the project unless its owner allows it on their
   own target, passive by default, active only on authorized hosts.
