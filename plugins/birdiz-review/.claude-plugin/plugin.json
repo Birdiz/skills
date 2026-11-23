@@ -10,6 +10,7 @@
   "license": "MIT",
   "keywords": ["review", "pull-request", "code-review", "agents", "attention-map", "skills"],
   "skills": [
+    "./skills/review-setup",
     "./skills/review-pr"
   ]
 }

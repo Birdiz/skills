@@ -13,7 +13,9 @@ verdict the reviewer takes or leaves. The run directory, the review finding
 and the brief are described in [run-directory.md](run-directory.md).
 
 This version is the bare run: the git file-change signals, a bucket for
-every changed file, the coverage gaps, the brief and the verdict. No content
+every changed file, the coverage gaps, the brief and the verdict. The risk
+map `review-setup` writes is read at the base: a changed file in a risk zone
+names its zone and is never `skim`. No content
 detector and no judgment step (`intent`, `contracts`, `structure`) exists
 yet, so every changed file is `unproven` and the brief says which
 dimensions did not run.

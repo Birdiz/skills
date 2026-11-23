@@ -36,6 +36,13 @@ found or not, with the version of each one found:
 Tools are detected on every run and stored nowhere else: they depend on the
 machine, not the repository.
 
+`risk_map` is the repository's `docs/agents/review.md`, written by
+`review-setup`, as committed at the base (read from git objects, so a
+branch can't narrow its own): `path`, `sha` (the base's), `found`,
+`stacks`, `rows` (`{glob, zone}`, gitignore-like globs) and `problems`
+(`{line, message}`, rows left out). A header without it is a run that did
+not read one.
+
 ## Detector outputs
 
 Each detector writes one JSON file with its own coverage: `detector`,
@@ -110,6 +117,9 @@ Every changed file lands in exactly one bucket, by these rules in order:
    detector outputs.
 
 A judgment step moves a file up by raising a finding, never down to `skim`.
+A file matching a glob of the risk map names its zone and glob, as in
+"risk zone auth (`src/Security/**`)", in whichever bucket it lands; the
+validator rejects it in `skim`.
 
 ## Brief
 

@@ -117,9 +117,16 @@ The `birdiz-review` plugin's own vocabulary.
   **glance** (a signal, a finding or a risk zone, with the reason),
   **skim** (every applicable content detector covered it and found
   nothing; the proof names them).
-- **Risk map**: the repository's path globs mapped to risk zones (auth,
-  personal data, payments, concurrency, irreversible actions, public API).
-  A file in a zone is at least `glance`. Not read by this version.
+- **Repo facts**: what `review-setup` records about a repository in
+  `docs/agents/review.md`, committed: its stacks and its risk map. Never a
+  tool version or the run root, which belong to the machine.
+- **Risk map**: the repository's path globs (gitignore-like) mapped to risk
+  zones. `review-pr` reads the copy committed at the base, so a branch
+  can't narrow its own.
+- **Risk zone**: a kind of change the reviewer wants to see whatever the
+  detectors say: `auth`, `personal-data`, `payments`, `concurrency`,
+  `irreversible`, `public-api`, or one the repository names. A changed file
+  in a zone is never `skim`, and its bucket names the zone.
 - **Attention**: a review finding's claim on the reviewer, `must-read` or
   `glance`. A finding can move a file up; nothing but detector evidence
   makes it `skim`.

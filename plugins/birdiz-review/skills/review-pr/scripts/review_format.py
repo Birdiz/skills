@@ -8,7 +8,8 @@
   detector outputs), `findings/<axis>.md`, `brief.md` (the brief, a
   projection of the other three).
 - The file buckets, the proposed verdict and its round count, and the brief
-  drawn from them: `brief.py` writes it, the validator checks it.
+  drawn from them: `brief.py` writes it, the validator checks it. A file in
+  a risk zone of the risk map the header records is never `skim`.
 - Where pointers open: the head tree, extracted from git objects into
   `repo-<head short sha>/` in the run directory.
 """
@@ -20,6 +21,7 @@ import re
 from finding_core import pointers
 from finding_core.markdown import blocks, bullets, label_of, paragraphs, parse_yaml, read
 from finding_core.validator import CORE_KEYS, Extension
+import risk_map
 
 VERSION = "review-pr@0.1.0"
 
@@ -193,36 +195,60 @@ def not_covered_reason(output, path):
     return "not in its covered files"
 
 
+def zone_reasons(zones):
+    return ["risk zone %s (`%s`)" % (z, g) for z, g in zones]
+
+
 def bucket_of(path, outputs, findings, zones=()):
     """(bucket, reasons, proof) of one changed file, by the rules in order:
-    must-read, unproven, glance, skim. `proof` lists the detector outputs a
-    skim rests on."""
+    must-read, unproven, glance, skim. `zones` are the (zone, glob) pairs of
+    the risk map it matches: they name a reason in every bucket and keep it
+    out of `skim`. `proof` lists the detector outputs a skim rests on."""
+    zoned = zone_reasons(zones)
     pointing = [f for f in findings if path in f.files()]
     must = [f for f in pointing if f.data.get("attention") == "must-read"]
     if must:
-        return "must-read", [f.fid for f in must], []
+        return "must-read", [f.fid for f in must] + zoned, []
     content = [(rel, o) for rel, o in sorted(outputs.items()) if o.get("content") is True and applies(o, path)]
     if not content:
-        return "unproven", [NO_CONTENT], []
+        return "unproven", [NO_CONTENT] + zoned, []
     missed = [(rel, o) for rel, o in content if path not in (o.get("covered") or [])]
     if missed:
         return "unproven", ["%s applies but did not cover it: %s" % (rel, not_covered_reason(o, path))
-                            for rel, o in missed], []
+                            for rel, o in missed] + zoned, []
     reasons = []
     for rel, o in sorted(outputs.items()):
         for s in o.get("signals") or []:
             if isinstance(s, dict) and s.get("path") == path:
                 reasons.append("%s (%s)" % (s.get("reason") or s.get("kind") or "signal", rel))
     reasons += ["%s %s" % (f.fid, f.title) for f in pointing]
-    reasons += ["risk zone %s" % z for z in zones]
+    reasons += zoned
     if reasons:
         return "glance", reasons, []
     return "skim", [], [rel for rel, _ in content]
 
 
+def risk_rows(run):
+    """The (glob, zone) rows of the risk map recorded in the run header."""
+    rm = run.header.get("risk_map")
+    rows = rm.get("rows") if isinstance(rm, dict) else None
+    out = []
+    for r in rows or []:
+        if isinstance(r, dict) and not risk_map.glob_problem(str(r.get("glob", ""))):
+            out.append((r["glob"], str(r.get("zone"))))
+    return out
+
+
+def risk_zones(run):
+    """Changed file -> [(zone, glob)] by the risk map in the run header."""
+    rows = risk_rows(run)
+    return {p: risk_map.zones_for(p, rows) for p in run.changed()} if rows else {}
+
+
 def buckets(run, zones=None):
-    """Changed file -> (bucket, reasons, proof)."""
-    zones = zones or {}
+    """Changed file -> (bucket, reasons, proof). `zones` defaults to the
+    risk map the run header records."""
+    zones = risk_zones(run) if zones is None else zones
     return {p: bucket_of(p, run.outputs, run.findings, zones.get(p, ())) for p in run.changed()}
 
 
@@ -291,7 +317,8 @@ def render_brief(run, zones=None):
         for path in files:
             _, reasons_, proof = placed[path]
             if bucket == "must-read":
-                out.append("- `%s`" % path)
+                zoned = [r for r in reasons_ if r.startswith("risk zone ")]
+                out.append("- `%s`%s" % (path, ": %s." % "; ".join(zoned) if zoned else ""))
                 for f in run.findings:
                     if f.fid in reasons_ and path in f.files():
                         q = " **Question:** %s" % f.question if f.question else ""
@@ -320,8 +347,7 @@ def render_brief(run, zones=None):
         for item in o.get("not_covered") or []:
             if isinstance(item, dict):
                 out.append("- %s did not cover `%s`: %s." % (rel, item.get("path"), item.get("reason")))
-    if not h.get("risk_map"):
-        out.append("- Risk map: not read, so no file is placed by risk zone.")
+    out.append("- %s" % risk_map_line(h.get("risk_map")))
     tools = h.get("tools") or []
     found = ["%s %s" % (t.get("name"), t.get("version")) for t in tools if t.get("found")]
     absent = [t.get("name") for t in tools if not t.get("found")]
@@ -335,6 +361,25 @@ def render_brief(run, zones=None):
     for r in reasons + ["Files: %s." % ", ".join("%s %d" % (b, counts[b]) for b in BUCKETS)]:
         out.append("- %s" % r)
     return "\n".join(out) + "\n"
+
+
+def risk_map_line(rm):
+    """The brief's line on the risk map the run header records."""
+    if not isinstance(rm, dict):
+        return "Risk map: not read, so no file is placed by risk zone."
+    where = "`%s` at the base (%s)" % (rm.get("path"), str(rm.get("sha", ""))[:12])
+    if not rm.get("found"):
+        return ("Risk map: no %s, so no file is placed by risk zone; run `review-setup` and merge"
+                " its `review.md` into the base." % where)
+    rows = rm.get("rows") or []
+    line = "Risk map: %s, %d glob(s) in %d zone(s)" % (
+        where, len(rows), len({r.get("zone") for r in rows if isinstance(r, dict)}))
+    problems = rm.get("problems") or []
+    if problems:
+        line += "; left out: %s" % "; ".join(
+            ("line %s: %s" % (p.get("line"), p.get("message"))) if p.get("line") else str(p.get("message"))
+            for p in problems if isinstance(p, dict))
+    return line + "."
 
 
 def parse_brief(path):
@@ -504,6 +549,8 @@ class ReviewExtension(Extension):
         for f in run.findings:
             if p in f.files():
                 rep.error(path, line, "`%s` is skim, but %s points at it" % (p, f.fid))
+        for zone, glob in risk_map.zones_for(p, risk_rows(run)):
+            rep.error(path, line, "`%s` is skim, but it is in risk zone %s (`%s`)" % (p, zone, glob))
 
 
 # --- Pointers ---------------------------------------------------------------

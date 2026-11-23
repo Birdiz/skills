@@ -17,6 +17,7 @@ import threading
 from urllib.parse import quote
 
 import review_format as fmt
+import risk_map
 from finding_core import NAME as CORE
 
 # The run root: a fixed default under the user's state directory, not a setting.
@@ -124,6 +125,20 @@ def branch_runs(repo, branch):
     (`<run root>/<repo>/<branch>/`); it may not exist. A branch has been
     reviewed when one of its subdirectories holds a `run.json`."""
     return os.path.join(state_root(), key(repo_name(repo)), key(branch))
+
+
+def read_risk_map(repo, sha):
+    """The risk map of `docs/agents/review.md` as committed at `sha`, read
+    from git objects. The base's copy, so a branch can't narrow its own."""
+    rm = {"path": risk_map.PATH, "sha": sha, "found": False, "stacks": [], "rows": [], "problems": []}
+    blob = git(repo, "cat-file", "blob", "%s:%s" % (sha, risk_map.PATH), check=False, binary=True)
+    if not blob:
+        return rm
+    stacks, rows, problems = risk_map.parse(blob.decode("utf-8", "replace"))
+    rm.update({"found": True, "stacks": stacks,
+               "rows": [{"glob": g, "zone": z} for g, z, _ in rows],
+               "problems": [{"line": n, "message": m} for n, m in problems]})
+    return rm
 
 
 def resolve(repo, target):
@@ -335,6 +350,7 @@ def start(repo_arg, target_arg, now=None):
             "tools": tools, "detectors": [rel],
             "trees": {"head": fmt.TREE + head12, "skipped": skipped},
             "steps_in_version": list(fmt.STEPS_IN_VERSION),
+            "risk_map": read_risk_map(repo, target["base"]["sha"]),
         }
         write_json(os.path.join(tmp, fmt.HEADER), header)
         os.makedirs(os.path.join(tmp, fmt.FINDINGS))

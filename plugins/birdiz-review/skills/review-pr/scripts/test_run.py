@@ -262,6 +262,35 @@ class TestRun(unittest.TestCase):
             self.assertIn("- `%s`: no content detector reads this file type" % path, unproven)
         self.assertIn("## Skim\n\nNone.", brief)
 
+    def test_the_base_risk_map_names_the_zone_of_each_file_in_it(self):
+        git(self.fx.repo, "checkout", "-q", "main")
+        write(self.fx.repo, "docs/agents/review.md", "# Review\n\n## Stacks\n\n- python\n\n## Risk map\n\n"
+              "| Glob | Zone |\n|---|---|\n| `lib/billing/**` | payments |\n| `!x` | auth |\n")
+        git(self.fx.repo, "add", "-A")
+        base = git(self.fx.repo, "commit", "-qm", "risk map")
+        # the branch tries to empty its own risk map: the base's copy is the one read
+        self.fx.commit_on_branch("docs/agents/review.md", "# Review\n\n## Stacks\n\n## Risk map\n\n"
+                                 "| Glob | Zone |\n|---|---|\n")
+        code, root, out = self.fx.run("feature/x")
+        self.assertEqual(code, 0, out)
+        header = json.loads(read(os.path.join(root, "run.json")))
+        rm = header["risk_map"]
+        self.assertEqual((rm["found"], rm["sha"], rm["rows"]), (True, base, [{"glob": "lib/billing/**", "zone": "payments"}]))
+        self.assertEqual([p["line"] for p in rm["problems"]], [12])
+        brief = read(os.path.join(root, "brief.md"))
+        self.assertIn("- `lib/billing/invoice.py`: no content detector reads this file type in this version;"
+                      " risk zone payments (`lib/billing/**`).", brief)
+        self.assertIn("- Risk map: `docs/agents/review.md` at the base (%s), 1 glob(s) in 1 zone(s); left out: line 12:"
+                      % base[:12], brief)
+        self.assertEqual(check(root, "--require", "brief")[0], 0)
+
+    def test_without_a_risk_map_at_the_base_the_brief_says_so(self):
+        code, root, out = self.fx.run("feature/x")
+        self.assertEqual(code, 0, out)
+        self.assertFalse(json.loads(read(os.path.join(root, "run.json")))["risk_map"]["found"])
+        self.assertIn("- Risk map: no `docs/agents/review.md` at the base (%s)" % self.fx.base[:12],
+                      read(os.path.join(root, "brief.md")))
+
     def test_the_brief_states_the_dimensions_not_run(self):
         code, root, out = self.fx.run("feature/x")
         self.assertEqual(code, 0, out)

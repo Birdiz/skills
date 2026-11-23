@@ -182,6 +182,56 @@ class TestValidate(unittest.TestCase):
                 write(self.path("brief.md"), text)
                 self.assertError(message)
 
+    # --- the risk map ----------------------------------------------------------------
+
+    def set_risk_map(self, rows, found=True, problems=()):
+        self.header["risk_map"] = {"path": "docs/agents/review.md", "sha": BASE, "found": found, "stacks": ["python"],
+                                   "rows": [{"glob": g, "zone": z} for g, z in rows],
+                                   "problems": [{"line": n, "message": m} for n, m in problems]}
+        write(self.path("run.json"), self.header)
+        self.regenerate()
+
+    def test_a_file_in_a_risk_zone_is_never_skim_and_names_its_zone(self):
+        self.set_risk_map([("src/**", "auth"), ("*.md", "public-api"), ("src/app.py", "payments")])
+        code, report = self.check("--require", "brief")
+        self.assertEqual(code, 0, report)
+        self.assertIn("5 changed files (must-read 0, glance 3, skim 0, unproven 2)", report)
+        text = read(self.path("brief.md"))
+        self.assertIn("- `src/app.py`: risk zone auth (`src/**`); risk zone payments (`src/app.py`).", text)
+        self.assertIn("- `src/util.py`: public function changed (signals/python-api.json); risk zone auth (`src/**`).", text)
+        self.assertIn("- `README.md`: no content detector reads this file type in this version;"
+                      " risk zone public-api (`*.md`).", text)
+        self.assertIn("## Skim\n\nNone.", text)
+        self.assertIn("- Risk map: `docs/agents/review.md` at the base (%s), 3 glob(s) in 3 zone(s)." % BASE[:12], text)
+
+    def test_a_must_read_file_in_a_risk_zone_names_its_zone(self):
+        self.set_risk_map([("lib/**", "concurrency")])
+        self.edit("findings/structure.md", "attention: glance", "attention: must-read")
+        self.regenerate()
+        self.assertEqual(self.check("--require", "brief")[0], 0)
+        self.assertIn("## Must read\n\n- `lib/http.py`: risk zone concurrency (`lib/**`).\n  - F-STR-001",
+                      read(self.path("brief.md")))
+
+    def test_skim_in_a_risk_zone_is_an_error(self):
+        self.set_risk_map([("src/app.py", "auth")])
+        text = read(self.path("brief.md"))
+        line = next(l for l in text.split("\n") if l.startswith("- `src/app.py`"))
+        text = text.replace(line + "\n", "").replace(
+            "## Skim\n\nNone.", "## Skim\n\n- `src/app.py`: covered by signals/python-api.json, with no signal.")
+        write(self.path("brief.md"), text)
+        self.assertError("`src/app.py` is skim, but it is in risk zone auth (`src/app.py`)")
+
+    def test_the_brief_says_how_the_risk_map_was_read(self):
+        text = read(self.path("brief.md"))
+        self.assertIn("- Risk map: not read, so no file is placed by risk zone.", text)
+        self.set_risk_map([], found=False)
+        self.assertIn("- Risk map: no `docs/agents/review.md` at the base (%s), so no file is placed by risk zone;"
+                      " run `review-setup`" % BASE[:12], read(self.path("brief.md")))
+        self.set_risk_map([("src/**", "auth")], problems=[(14, "glob '!x': negation (!) is not supported")])
+        self.assertIn("1 glob(s) in 1 zone(s); left out: line 14: glob '!x': negation (!) is not supported.",
+                      read(self.path("brief.md")))
+        self.assertEqual(self.check("--require", "brief")[0], 0)
+
     def test_skim_without_proof_is_an_error(self):
         self.edit("brief.md", "covered by signals/python-api.json, with no signal;", "looks fine;")
         self.assertError("`src/app.py` is skim without the detector outputs that prove it")
