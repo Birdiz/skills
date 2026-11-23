@@ -3,8 +3,11 @@ tools, run the detectors, write the run directory.
 
 Read-only on the reviewed repository: every git command reads objects or
 refs (`rev-parse`, `merge-base`, `diff` between two commits, `ls-tree`,
-`cat-file`, `config --get`), with optional locks off, and nothing is checked
-out. Trees are written from git objects into the run directory, which lives
+`cat-file`, `log`, `config --get`), with optional locks off, and nothing is
+checked out. The one write is for a PR whose head or base commit is not in
+the repository yet: its objects are fetched from `origin` by ref
+(`refs/pull/<n>/head`), with no ref, branch or working-copy file written.
+Trees are written from git objects into the run directory, which lives
 under the user's state directory, never inside the repository.
 """
 import datetime
@@ -18,6 +21,7 @@ from urllib.parse import quote
 
 import review_format as fmt
 import risk_map
+import sources
 from finding_core import NAME as CORE
 
 # The run root: a fixed default under the user's state directory, not a setting.
@@ -139,6 +143,60 @@ def read_risk_map(repo, sha):
                "rows": [{"glob": g, "zone": z} for g, z, _ in rows],
                "problems": [{"line": n, "message": m} for n, m in problems]})
     return rm
+
+
+def has_commit(repo, sha):
+    return bool(git(repo, "cat-file", "-e", sha + "^{commit}", check=False) is not None)
+
+
+def ensure_commit(repo, sha, ref):
+    """Fetch `ref` from origin when `sha` is not in the repository: objects
+    only, no ref written (`--no-write-fetch-head` where git has it).
+    Returns the ref fetched, or None when nothing was needed."""
+    if has_commit(repo, sha):
+        return None
+    for flags in (["--no-write-fetch-head"], []):
+        git(repo, "fetch", "--quiet", "--no-tags", *flags, "origin", ref, check=False)
+        if has_commit(repo, sha):
+            return ref
+    raise Refused("%s (%s) is not in this repository and could not be fetched from origin" % (sha[:12], ref))
+
+
+def resolve_pr(repo, number, forge):
+    """The run's target for a pull request, read with the forge, and the PR."""
+    if not forge.available():
+        raise Refused("a PR number is read with gh, which is not found on this machine: give a branch or a range")
+    try:
+        data = forge.pr(number) or {}
+    except sources.ForgeError as e:
+        raise Refused("PR #%s: %s" % (number, e))
+    head_sha, base_ref = data.get("headRefOid"), data.get("baseRefName")
+    if not head_sha or not base_ref:
+        raise Refused("PR #%s: gh gave no head or base" % number)
+    fetched = [ensure_commit(repo, head_sha, "refs/pull/%s/head" % number)]
+    base_sha = data.get("baseRefOid")
+    if base_sha:
+        fetched.append(ensure_commit(repo, base_sha, "refs/heads/%s" % base_ref))
+    else:
+        base_sha = commit_of(repo, "origin/%s" % base_ref)
+    mb = git(repo, "merge-base", base_sha, head_sha, check=False)
+    if not mb:
+        raise Refused("PR #%s: its base and head share no history" % number)
+    head_ref = data.get("headRefName") or "pr-%s" % number
+    target = {
+        "target": "%s..%s" % (base_ref, head_ref),
+        "base": {"ref": base_ref, "sha": base_sha},
+        "head": {"ref": head_ref, "sha": head_sha},
+        "merge_base": mb.strip(),
+        "branch": head_ref,
+    }
+    pr = {"number": data.get("number", number), "url": data.get("url"), "title": data.get("title"),
+          "state": data.get("state"), "base": base_ref, "head": head_ref,
+          "fetched": [f for f in fetched if f]}
+    body = {"body": data.get("body") or "", "repo": repo_name(repo),
+            "closing": [i["number"] for i in data.get("closingIssuesReferences") or []
+                        if isinstance(i, dict) and i.get("number")]}
+    return target, pr, body
 
 
 def resolve(repo, target):
@@ -307,14 +365,21 @@ def write_json(path, data):
         fh.write("\n")
 
 
-def start(repo_arg, target_arg, now=None):
-    """Write a run directory for the target; returns (run directory, run)."""
+def start(repo_arg, target_arg, now=None, pr=None, spec=None, no_spec=False, forge=None):
+    """Write a run directory for the target, a branch or a range, or for the
+    pull request numbered `pr`; returns (run directory, run). `spec` and
+    `no_spec` are the user's answer when the spec could not be found."""
     top = git(repo_arg, "rev-parse", "--show-toplevel", check=False)
     if not top:
         raise Refused("%s is not inside a git repository" % repo_arg)
     repo = top.strip()
     common = os.path.abspath(os.path.join(repo, git(repo, "rev-parse", "--git-common-dir").strip()))
-    target = resolve(repo, target_arg)
+    forge = forge or sources.GitHub(repo)
+    pr_header, pr_body = None, None
+    if pr is not None:
+        target, pr_header, pr_body = resolve_pr(repo, pr, forge)
+    else:
+        target = resolve(repo, target_arg)
     files = changes(repo, target["merge_base"], target["head"]["sha"])
     if not files:
         raise Refused("empty diff: %s changes nothing against %s (merge base %s), nothing to review"
@@ -342,6 +407,8 @@ def start(repo_arg, target_arg, now=None):
         rel = "%s/%s.json" % (fmt.SIGNALS, GIT_DETECTOR)
         write_json(os.path.join(tmp, rel), git_changes(repo, target, git_version))
         skipped = extract_tree(repo, target["head"]["sha"], os.path.join(tmp, fmt.TREE + head12))
+        sources.gather(repo, tmp, target, dict(pr_header, **pr_body) if pr_header else None,
+                       spec, no_spec, forge)
         header = {
             "schema": fmt.VERSION, "core": CORE, "repo": name, "branch": target["branch"],
             "target": target["target"], "base": target["base"], "head": target["head"],
@@ -351,7 +418,10 @@ def start(repo_arg, target_arg, now=None):
             "trees": {"head": fmt.TREE + head12, "skipped": skipped},
             "steps_in_version": list(fmt.STEPS_IN_VERSION),
             "risk_map": read_risk_map(repo, target["base"]["sha"]),
+            "sources": sources.SOURCES,
         }
+        if pr_header:
+            header["pr"] = pr_header
         write_json(os.path.join(tmp, fmt.HEADER), header)
         os.makedirs(os.path.join(tmp, fmt.FINDINGS))
         for axis in fmt.AXES:

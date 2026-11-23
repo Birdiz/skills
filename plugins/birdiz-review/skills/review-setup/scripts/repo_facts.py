@@ -11,7 +11,7 @@ Writing installs `docs/agents/review.md` and the `### Review` subsection of
 the `## Agent skills` block, and nothing else.
 
 Standard library only, Python 3.8 or later; external tools only when present.
-`risk_map` and `review_run` are review-pr's: the entry points put its
+`pocock`, `risk_map` and `review_run` are review-pr's: the entry points put its
 scripts and the plugin's copy of the finding core on the path.
 """
 import json
@@ -20,11 +20,12 @@ import re
 import shutil
 import subprocess
 
+import pocock  # review-pr's Pocock artifact contract
 import review_run  # review-pr's run layout
 import risk_map  # the format of review.md, which review-pr reads
 
 AGENT_FILES = ("CLAUDE.md", "AGENTS.md")       # Pocock's setup edits CLAUDE.md first
-TRACKER_DOC = "docs/agents/issue-tracker.md"
+TRACKER_DOC = pocock.TRACKER_DOC
 DOMAIN_DOC = "docs/agents/domain.md"
 SUBSECTION = "### Review"
 SUBSECTION_BODY = "Stacks and risk map for the review skills. See `docs/agents/review.md`."
@@ -142,23 +143,7 @@ def detect_tools(repo):
 
 # ---------------------------------------------------------------- Pocock artifacts
 
-def _headings(text):
-    """[(level, title, line number)] outside fenced code blocks."""
-    out, fence = [], None
-    for no, line in enumerate(text.splitlines(), 1):
-        m = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
-        if m:
-            mark = m.group(1)[0] * 3
-            if fence is None:
-                fence = mark
-            elif mark == fence:
-                fence = None
-            continue
-        if fence is None:
-            m = re.match(r"^(#{1,6})\s+(.*?)\s*#*\s*$", line)
-            if m:
-                out.append((len(m.group(1)), m.group(2).strip(), no))
-    return out
+_headings = pocock.headings
 
 
 def agent_skills_file(repo):
@@ -202,24 +187,11 @@ def check_pocock(repo):
         else:
             add("agent skills block", name, "ok", "`## Agent skills` with Issue tracker and Domain docs")
 
-    text = _read(repo, TRACKER_DOC)
-    if text is None:
-        add("tracker doc", TRACKER_DOC, "missing", "the review can't read the spec and tickets without it")
-    else:
-        hs = _headings(text)
-        title = next((t for lv, t, _ in hs if lv == 1), "")
-        m = re.match(r"(?i)^issue tracker:\s*(.+)$", title)
-        kind = m.group(1).strip() if m else None
-        if kind and kind.lower() in ("github", "gitlab", "local markdown"):
-            if any(lv == 2 and re.search(r"(?i)fetch the relevant ticket", t) for lv, t, _ in hs):
-                add("tracker doc", TRACKER_DOC, "ok", "%s tracker with a \"fetch the relevant ticket\" section" % kind)
-            else:
-                add("tracker doc", TRACKER_DOC, "drift",
-                    "%s tracker without a `## When a skill says \"fetch the relevant ticket\"` section" % kind)
-        else:
-            add("tracker doc", TRACKER_DOC, "unchecked",
-                "freeform tracker (%s): its shape has no template to check" % (
-                    "`# Issue tracker: %s`" % kind if kind else "no `# Issue tracker: <kind>` title"))
+    tracker = pocock.tracker_doc(_read(repo, TRACKER_DOC))
+    detail = tracker["detail"]
+    if tracker["status"] == "missing":
+        detail = "the review can't read the spec and tickets without it"
+    add("tracker doc", TRACKER_DOC, tracker["status"], detail)
 
     text = _read(repo, DOMAIN_DOC)
     if text is None:

@@ -12,6 +12,8 @@
   a risk zone of the risk map the header records is never `skim`.
 - Where pointers open: the head tree, extracted from git objects into
   `repo-<head short sha>/` in the run directory.
+- The sources: `sources.json` and `sources/`, the PR body, spec and tickets
+  the run read and how each one fared against the Pocock contract.
 """
 import fnmatch
 import json
@@ -134,6 +136,9 @@ class Run:
         self.outputs = {}
         for rel in self.header.get("detectors") or []:
             self.outputs[rel] = load_json(os.path.join(root, rel))
+        self.sources = None
+        if self.header.get("sources"):
+            self.sources = load_json(os.path.join(root, str(self.header["sources"])))
         self.findings, self.coverage = [], {}
         for axis in AXES:
             path = os.path.join(root, FINDINGS, axis + ".md")
@@ -297,15 +302,7 @@ def render_brief(run, zones=None):
            ""]
 
     out += ["## Declared vs detected", ""]
-    disagreements = [f for f in run.findings if "declared" in f.data or "detected" in f.data]
-    if disagreements:
-        for f in disagreements:
-            out.append("- %s declared `%s`, detected `%s`: %s (%s)" % (
-                f.fid, f.data.get("declared"), f.data.get("detected"), f.title, f.first_location()))
-    elif not h.get("pr"):
-        out.append("Risk not declared: no PR body was read (the target is a branch or a range).")
-    else:
-        out.append("No disagreement between the declared risk and what was detected.")
+    out += declared_lines(run)
     out.append("")
 
     for bucket in BUCKETS:
@@ -347,6 +344,8 @@ def render_brief(run, zones=None):
         for item in o.get("not_covered") or []:
             if isinstance(item, dict):
                 out.append("- %s did not cover `%s`: %s." % (rel, item.get("path"), item.get("reason")))
+    for line in sources_lines(run.sources):
+        out.append("- %s" % line)
     out.append("- %s" % risk_map_line(h.get("risk_map")))
     tools = h.get("tools") or []
     found = ["%s %s" % (t.get("name"), t.get("version")) for t in tools if t.get("found")]
@@ -361,6 +360,79 @@ def render_brief(run, zones=None):
     for r in reasons + ["Files: %s." % ", ".join("%s %d" % (b, counts[b]) for b in BUCKETS)]:
         out.append("- %s" % r)
     return "\n".join(out) + "\n"
+
+
+def declared_lines(run):
+    """The Declared vs detected section: the PR's `Merge Danger`, then each
+    disagreement finding."""
+    pr = (run.sources or {}).get("pr") if isinstance(run.sources, dict) else None
+    disagreements = [f for f in run.findings if "declared" in f.data or "detected" in f.data]
+    out = []
+    if not isinstance(pr, dict):
+        if not disagreements:
+            out.append("Risk not declared: no PR body was read (the target is a branch or a range).")
+    elif pr.get("status") == "not declared":
+        out.append("Risk not declared: the body of PR #%s has no `Merge Danger` section." % pr.get("number"))
+    elif pr.get("status") == "declared":
+        out.append("Declared in PR #%s: Door `%s`, Blast Radius `%s`." % (
+            pr.get("number"), pr.get("door"), pr.get("blast_radius")))
+    else:
+        out.append("Declared risk not read: PR #%s body, contract drift: %s." % (
+            pr.get("number"), "; ".join(pr.get("drift") or [])))
+    for f in disagreements:
+        out.append("- %s declared `%s`, detected `%s`: %s (%s)" % (
+            f.fid, f.data.get("declared"), f.data.get("detected"), f.title, f.first_location()))
+    if isinstance(pr, dict) and pr.get("status") == "declared" and not disagreements:
+        status, _ = axis_status(run.coverage.get("contracts"))
+        if status in ("evaluated", "partial"):
+            out.append("No disagreement between the declared risk and what was detected.")
+        else:
+            out.append("Not compared: the contracts step, which detects it, did not run.")
+    return out
+
+
+def sources_lines(found):
+    """The lines on the spec, the tickets and the Pocock contract, for the
+    brief's coverage gaps and the run's summary."""
+    if not isinstance(found, dict):
+        return ["Spec and tickets: not looked for in this run."]
+    arts = [a for a in found.get("artifacts") or [] if isinstance(a, dict)]
+
+    def label(a):
+        state = {"ok": "", "drift": ", contract drift", "unreadable": ", not read"}.get(a.get("status"), "")
+        return "%s%s" % (a.get("ref"), state)
+
+    out = []
+    spec = [a for a in arts if a.get("scope") == "spec"]
+    scope = [a for a in arts if a.get("scope") == "in scope"]
+    siblings = [a for a in arts if a.get("scope") == "sibling"]
+    if found.get("found_by") is None:
+        line = "Spec and tickets: none found (PR closing references, commit references, spec files named after the branch)"
+    else:
+        parts = []
+        if spec:
+            parts.append("spec %s" % label(spec[0]))
+            if spec[0].get("tickets_by"):
+                parts[-1] += " (tickets by %s)" % spec[0]["tickets_by"]
+        if scope:
+            parts.append("in scope %s" % ", ".join(label(a) for a in scope))
+        if siblings:
+            parts.append("%d sibling ticket(s)" % len(siblings))
+        line = "Spec and tickets: %s%s" % (found["found_by"], ": %s" % "; ".join(parts) if parts else "")
+    out.append(line + ".")
+    out.append("Intent sources: %s." % ((found.get("dimensions") or {}).get("intent") or "unknown"))
+    for a in arts:
+        if a.get("status") == "drift" and a.get("scope") == "sibling":
+            out.append("%s (sibling ticket): contract drift: %s." % (a.get("ref"), ", ".join(a.get("drift") or [])))
+        elif a.get("status") == "unreadable":
+            out.append("%s: not read: %s." % (a.get("ref"), a.get("why")))
+    t = found.get("tracker") or {}
+    if t.get("status") != "ok":
+        out.append("Tracker doc `%s` at the base: %s, %s." % (t.get("path"), t.get("status"), t.get("detail")))
+    for note in found.get("notes") or []:
+        out.append("Sources: %s." % note)
+    out.append("Pocock artifacts checked against %s." % found.get("contract"))
+    return out
 
 
 def risk_map_line(rm):
@@ -453,6 +525,25 @@ class ReviewExtension(Extension):
                     rep.error(opath, None, "key `%s` missing" % k)
             if not isinstance(o.get("content"), bool):
                 rep.error(opath, None, "content must be true or false")
+        found = self.run.sources
+        if h.get("sources") is not None:
+            spath = os.path.join(self.root, str(h["sources"]))
+            if not isinstance(found, dict):
+                rep.error(spath, None, "not a JSON object")
+            else:
+                for k in ("contract", "found_by", "tracker", "artifacts", "dimensions"):
+                    if k not in found:
+                        rep.error(spath, None, "key `%s` missing" % k)
+                for a in found.get("artifacts") or []:
+                    if not isinstance(a, dict) or a.get("status") not in ("ok", "drift", "unreadable"):
+                        rep.error(spath, None, "artifact %r: status must be ok, drift or unreadable" % (a,))
+                    elif a.get("status") != "unreadable" and not os.path.isfile(os.path.join(self.root, str(a.get("file")))):
+                        rep.error(spath, None, "artifact %s: its copy %s is missing" % (a.get("ref"), a.get("file")))
+                    elif a.get("status") == "drift" and not a.get("drift"):
+                        rep.error(spath, None, "artifact %s: drift without saying what" % a.get("ref"))
+                intent = str((found.get("dimensions") or {}).get("intent"))
+                if not (intent == "evaluable" or intent.startswith("not-evaluable (")):
+                    rep.error(spath, None, "intent dimension `%s` is not `evaluable` or `not-evaluable (<why>)`" % intent)
         if not self.run.changed():
             rep.error(path, None, "no detector output lists the changed files: an empty diff is refused, never reviewed")
 
