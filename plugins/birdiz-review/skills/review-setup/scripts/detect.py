@@ -18,9 +18,28 @@ import os
 import sys
 
 sys.dont_write_bytecode = True  # read-only: leave no __pycache__ in the plugin
-_here = os.path.dirname(os.path.abspath(__file__))
-if _here not in sys.path:
-    sys.path.insert(0, _here)  # python3 -I leaves it off from 3.11 on
+
+
+def _paths():
+    """This directory, review-pr's scripts (the risk map format and the run
+    layout) and the plugin's copy of the finding core, the nearest
+    `core/finding_core/` above it, never past the plugin's root
+    (`.claude-plugin/plugin.json`): `python3 -I` puts none of them on the
+    path from Python 3.11 on."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    d = here
+    while not os.path.isfile(os.path.join(d, "core", "finding_core", "__init__.py")):
+        if (os.path.isfile(os.path.join(d, ".claude-plugin", "plugin.json"))
+                or os.path.dirname(d) == d):
+            sys.exit("finding core not found above %s" % here)
+        d = os.path.dirname(d)
+    review_pr = os.path.join(os.path.dirname(os.path.dirname(here)), "review-pr", "scripts")
+    return [here, review_pr, os.path.join(d, "core")]
+
+
+for _p in reversed(_paths()):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 import repo_facts  # noqa: E402
 import risk_map  # noqa: E402
@@ -80,7 +99,8 @@ def render(r):
 
 
 def main(argv):
-    ap = argparse.ArgumentParser(prog="detect.py", description=__doc__.splitlines()[0])
+    ap = argparse.ArgumentParser(prog="detect.py", description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("repo")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--no-gh", action="store_true")

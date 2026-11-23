@@ -16,7 +16,7 @@ sys.dont_write_bytecode = True
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 NAMESPACE = re.compile(r"/(birdiz-[a-z]+):")
-ENTRY_POINTS = ("validate.py", "check-pointers.py", "run.py", "brief.py")
+ENTRY_POINTS = ("validate.py", "check-pointers.py", "run.py", "brief.py", "detect.py", "write.py")
 
 
 def load(path):

@@ -40,3 +40,26 @@ the brief says which dimensions did not run.
   the verdict line. `--require brief` fails on a brief that is not the
   projection of the files as they are. `check-pointers.py` opens the
   findings' pointers in the head tree.
+
+The repo facts and the risk map
+([#39](https://github.com/Birdiz/skills/issues/39)):
+
+- `review-setup`, run once per repository. `detect.py` writes nothing and
+  reports the stacks, the detector tools this machine has (never stored),
+  the Pocock artifacts with their shape (`ok`, `missing`, `drift`,
+  `unchecked` for a freeform tracker, `absent` for a glossary or ADR
+  directory not created yet), and risk zones proposed each with a pointer
+  to what suggested it. `write.py` writes only what the user confirmed:
+  `docs/agents/review.md` (stacks and the risk map, nothing else) and a
+  `### Review` subsection inside the `## Agent skills` block, leaving the
+  other subsections as they are. It refuses on a detached HEAD, on the head
+  of an open PR (checked with `gh` when present), or on a branch
+  `review-pr` has a run for.
+- Risk map globs are gitignore-like: `*` within a directory, `**` across
+  them, a glob without `/` matches a name at any depth.
+- `review-pr` reads the risk map committed at the base, records it in the
+  run header (`risk_map`), and names the zone of every changed file in it.
+  Such a file lands in `must-read`, `unproven` or `glance`, never `skim`,
+  and the validator rejects a brief that puts one there. The brief's
+  coverage gaps say whether the risk map was found and which rows were
+  left out.

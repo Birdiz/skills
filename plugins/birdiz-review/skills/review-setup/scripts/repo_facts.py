@@ -11,15 +11,17 @@ Writing installs `docs/agents/review.md` and the `### Review` subsection of
 the `## Agent skills` block, and nothing else.
 
 Standard library only, Python 3.8 or later; external tools only when present.
+`risk_map` and `review_run` are review-pr's: the entry points put its
+scripts and the plugin's copy of the finding core on the path.
 """
 import json
 import os
 import re
 import shutil
 import subprocess
-from urllib.parse import quote
 
-import risk_map
+import review_run  # review-pr's run layout
+import risk_map  # the format of review.md, which review-pr reads
 
 AGENT_FILES = ("CLAUDE.md", "AGENTS.md")       # Pocock's setup edits CLAUDE.md first
 TRACKER_DOC = "docs/agents/issue-tracker.md"
@@ -362,38 +364,11 @@ def propose_zones(repo, files):
 
 # ---------------------------------------------------------------- write guard
 
-def run_root():
-    """review-pr's run root: under the user's state directory, never a setting.
-    Layout (review-pr/run-directory.md): <root>/<repo>/<branch>/<head12>/."""
-    base = os.environ.get("XDG_STATE_HOME") or os.path.join(os.path.expanduser("~"), ".local", "state")
-    return os.path.join(base, "birdiz-review", "runs")
-
-
-def _key(text):
-    """One folder name for a repo or branch name: `/` becomes %2F."""
-    return quote(text, safe="")
-
-
-def repo_name(repo):
-    """`owner/name` from the origin remote, else the main working tree's name."""
-    code, url, _ = _git(repo, "remote", "get-url", "origin")
-    url = url.strip()
-    if code == 0 and url:
-        path = re.sub(r"\.git$", "", url.rstrip("/"))
-        parts = re.split(r"[/:]", path)
-        if len(parts) >= 2 and parts[-1] and parts[-2]:
-            return parts[-2] + "/" + parts[-1]
-    code, common, _ = _git(repo, "rev-parse", "--git-common-dir")
-    if code == 0 and common.strip():
-        common = os.path.abspath(os.path.join(repo, common.strip()))
-        return os.path.basename(os.path.dirname(common))
-    return os.path.basename(os.path.abspath(repo))
-
-
 def run_dirs_for(repo, branch):
-    """review-pr run directories of `branch` in this repository: subfolders of
-    <root>/<repo>/<branch>/ that hold a run.json (hidden ones are unfinished)."""
-    d = os.path.join(run_root(), _key(repo_name(repo)), _key(branch))
+    """review-pr run directories of `branch` in this repository: the
+    subdirectories of review_run.branch_runs() that hold a run.json (hidden
+    ones are unfinished runs)."""
+    d = review_run.branch_runs(repo, branch)
     if not os.path.isdir(d):
         return []
     return [os.path.join(d, x) for x in sorted(os.listdir(d))
@@ -433,7 +408,7 @@ def write_guard(repo, use_gh=True):
     else:
         checks.append("open PRs: not checked (%s)" % ("gh not found" if use_gh else "--no-gh"))
     runs = run_dirs_for(repo, branch)
-    checks.append("review runs: %d for `%s` under %s" % (len(runs), branch, run_root()))
+    checks.append("review runs: %d for `%s` under %s" % (len(runs), branch, review_run.state_root()))
     if runs:
         reasons.append("review-pr has reviewed `%s` (%s)" % (branch, runs[-1]))
     return {"allowed": not reasons, "branch": branch, "checks": checks, "reasons": reasons}

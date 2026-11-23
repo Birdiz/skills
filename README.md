@@ -150,11 +150,17 @@ user-invoked one.
 
 **Review** (`birdiz-review`)
 
+- [review-setup](plugins/birdiz-review/skills/review-setup/SKILL.md): once
+  per repository, records its stacks and risk map (path globs mapped to risk
+  zones, each proposed with what suggested it, kept only once confirmed) in
+  `docs/agents/review.md`, after checking the Pocock tracker and domain
+  docs. Refuses to write while a branch under review is checked out.
 - [review-pr](plugins/birdiz-review/skills/review-pr/SKILL.md): one review
   run on a branch or a `base..head` range, written outside the repository:
   a bucket for every changed file (`must-read`, `glance`, `skim`,
   `unproven`), the coverage gaps and a proposed verdict (`merge`, `fix`,
-  `close-and-reprompt`) with its round. Never writes to the reviewed branch.
+  `close-and-reprompt`) with its round. A file in a risk zone is never
+  `skim`. Never writes to the reviewed branch.
 
 ## Design
 
@@ -202,6 +208,7 @@ python3 -I tools/sync_core.py
 python3 -I -m unittest discover -s tools -p 'test_*.py'
 python3 -I -m unittest discover -s plugins/birdiz-audit/skills/finding-format/scripts -p 'test_*.py'
 python3 -I -m unittest discover -s plugins/birdiz-review/skills/review-pr/scripts -p 'test_*.py'
+python3 -I -m unittest discover -s plugins/birdiz-review/skills/review-setup/scripts -p 'test_*.py'
 ```
 
 Changes are listed in each plugin's changelog:

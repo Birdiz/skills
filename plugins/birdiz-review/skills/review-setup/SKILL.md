@@ -17,8 +17,10 @@ Output, and nothing else:
 - a `### Review` subsection inside the `## Agent skills` block of `CLAUDE.md`
   or `AGENTS.md`, which Pocock's `setup-matt-pocock-skills` creates.
 
-Both are committed by the user, on a branch of their own. Tool versions and
-the run root are machine facts: they are never written here.
+Both are committed by the user, on a branch of their own, and take effect
+once merged into the default branch: `review-pr` reads the risk map at the
+base, so a branch under review can't narrow its own. Tool versions and the
+run root are machine facts: they are never written here.
 
 ## Process
 
@@ -55,7 +57,7 @@ the run root are machine facts: they are never written here.
    It replaces `review.md`, sets the `### Review` subsection in place
    without touching the other subsections, and refuses (writing nothing)
    under the same guard as step 1. Show what it wrote and remind the user to
-   commit it.
+   commit it and merge it into the default branch.
 
 ## Globs
 
