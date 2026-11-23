@@ -17,6 +17,7 @@ import os
 import re
 import shutil
 import subprocess
+from urllib.parse import quote
 
 import risk_map
 
@@ -362,32 +363,41 @@ def propose_zones(repo, files):
 # ---------------------------------------------------------------- write guard
 
 def run_root():
-    """review-pr's run root: under the user's state directory, never a setting."""
+    """review-pr's run root: under the user's state directory, never a setting.
+    Layout (review-pr/run-directory.md): <root>/<repo>/<branch>/<head12>/."""
     base = os.environ.get("XDG_STATE_HOME") or os.path.join(os.path.expanduser("~"), ".local", "state")
     return os.path.join(base, "birdiz-review", "runs")
 
 
-def _slug(text):
-    return re.sub(r"[^A-Za-z0-9._-]+", "-", text).strip("-")
+def _key(text):
+    """One folder name for a repo or branch name: `/` becomes %2F."""
+    return quote(text, safe="")
+
+
+def repo_name(repo):
+    """`owner/name` from the origin remote, else the main working tree's name."""
+    code, url, _ = _git(repo, "remote", "get-url", "origin")
+    url = url.strip()
+    if code == 0 and url:
+        path = re.sub(r"\.git$", "", url.rstrip("/"))
+        parts = re.split(r"[/:]", path)
+        if len(parts) >= 2 and parts[-1] and parts[-2]:
+            return parts[-2] + "/" + parts[-1]
+    code, common, _ = _git(repo, "rev-parse", "--git-common-dir")
+    if code == 0 and common.strip():
+        common = os.path.abspath(os.path.join(repo, common.strip()))
+        return os.path.basename(os.path.dirname(common))
+    return os.path.basename(os.path.abspath(repo))
 
 
 def run_dirs_for(repo, branch):
-    """review-pr run directories recorded for `branch` of this repository."""
-    root = run_root()
-    if not os.path.isdir(root):
+    """review-pr run directories of `branch` in this repository: subfolders of
+    <root>/<repo>/<branch>/ that hold a run.json (hidden ones are unfinished)."""
+    d = os.path.join(run_root(), _key(repo_name(repo)), _key(branch))
+    if not os.path.isdir(d):
         return []
-    code, top, _ = _git(repo, "rev-parse", "--show-toplevel")
-    name = os.path.basename(top.strip() if code == 0 else os.path.abspath(repo))
-    hits = []
-    want = _slug(branch)
-    for repo_dir in sorted(os.listdir(root)):
-        if not (repo_dir == name or repo_dir.endswith("-" + name)):
-            continue
-        for run in sorted(os.listdir(os.path.join(root, repo_dir))):
-            head = run.rsplit("-", 1)[0] if re.search(r"-[0-9a-f]{7,40}$", run) else run
-            if head == want:
-                hits.append(os.path.join(root, repo_dir, run))
-    return hits
+    return [os.path.join(d, x) for x in sorted(os.listdir(d))
+            if not x.startswith(".") and os.path.isfile(os.path.join(d, x, "run.json"))]
 
 
 def write_guard(repo, use_gh=True):

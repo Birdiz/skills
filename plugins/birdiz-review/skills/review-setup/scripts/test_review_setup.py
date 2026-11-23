@@ -331,16 +331,30 @@ class TestRefusal(Base):
         self.assertRefused("HEAD is detached", "--no-gh")
         self.assertFalse(self.detect()["guard"]["allowed"])
 
+    def add_run(self, repo_key, branch_key, head="3c03254330c2", finished=True):
+        d = os.path.join(self.state, "birdiz-review", "runs", repo_key, branch_key, head)
+        os.makedirs(d)
+        if finished:
+            open(os.path.join(d, "run.json"), "w").close()
+
     def test_refuses_on_a_branch_review_pr_has_a_run_for(self):
+        git(self.repo, "remote", "add", "origin", "git@github.com:acme/shop.git")
         git(self.repo, "checkout", "-q", "-b", "agent/issue-12")
-        os.makedirs(os.path.join(self.state, "birdiz-review", "runs", "acme-shop", "agent-issue-12-1a2b3c4"))
+        self.add_run("acme%2Fshop", "agent%2Fissue-12")
         self.assertRefused("review-pr has reviewed `agent/issue-12`", "--no-gh")
 
-    def test_a_run_for_another_branch_or_repo_does_not_refuse(self):
+    def test_without_origin_the_repo_is_the_main_working_tree_name(self):
+        git(self.repo, "checkout", "-q", "-b", "agent/issue-12")
+        self.add_run("shop", "agent%2Fissue-12")
+        self.assertRefused("review-pr has reviewed", "--no-gh")
+
+    def test_unfinished_runs_and_other_branches_or_repos_do_not_refuse(self):
+        git(self.repo, "remote", "add", "origin", "https://github.com/acme/shop.git")
         git(self.repo, "checkout", "-q", "-b", "setup-review")
-        runs = os.path.join(self.state, "birdiz-review", "runs")
-        os.makedirs(os.path.join(runs, "acme-shop", "agent-issue-12-1a2b3c4"))
-        os.makedirs(os.path.join(runs, "acme-other", "setup-review-1a2b3c4"))
+        self.add_run("acme%2Fshop", "agent%2Fissue-12")
+        self.add_run("acme%2Fother", "setup-review")
+        self.add_run("acme%2Fshop", "setup-review", finished=False)
+        self.add_run("acme%2Fshop", "setup-review", head=".3c03254330c2.tmp-42")
         code, out = run(write, self.repo, "--stack", "php", "--no-gh")
         self.assertEqual(code, 0, out)
 
