@@ -134,3 +134,44 @@ The intent step ([#41](https://github.com/Birdiz/skills/issues/41)):
 - The brief lists the `must-read` and `glance` findings that point at no
   changed file, such as a criterion not found, after the files of their
   section.
+
+The contracts step ([#42](https://github.com/Birdiz/skills/issues/42)):
+
+- Six stack-agnostic content detectors, standard-library Python, each
+  writing `signals/<detector>.json` with its own coverage: `migrations`
+  (by framework convention: raw SQL, Prisma, Laravel, Doctrine, Alembic,
+  Django, Rails), `config` (environment templates and configuration
+  files), `routes` (route files and file-based routes by convention),
+  `api-contracts` (OpenAPI and GraphQL), `dependencies` (manifests and
+  lockfiles) and `assertions` (test files). Each applies to the changed
+  files of its type, so a file it covered with no signal can now be
+  `skim`; a file it could not read is `unproven` with the reason. Source
+  code stays `unproven` until the stack adapters.
+- Raw SQL migrations go through `squawk` and OpenAPI diffs through
+  `oasdiff breaking` when the machine has them. Without them, the
+  heuristic path runs and the detector's `gaps`, shown in the brief's
+  coverage gaps, say so. Framework migrations always get a signal: their
+  SQL is not generated (that means running the project), so the step
+  reads them as code.
+- `fan-in`, not a content detector: the public symbols the diff removes or
+  changes, and a word search for their references outside the diff,
+  labelled heuristic. A removed symbol or a changed signature with
+  references outside the diff is a signal.
+- The second judgment step, [`steps/contracts.md`](skills/review-pr/steps/contracts.md).
+  `run.py` writes its worksheet on every run (one row per detector signal,
+  the declared row) and prints `STEP: contracts <step file>`. The step
+  judges each signal `one-way`, `breaking` or `minor`, reads the code for
+  API breaks no detector saw, and raises `BRK` findings with
+  `blocks_merge`. It writes the Door it detected beside the one the PR
+  declares, and a disagreement finding with `declared` and `detected` when
+  they differ.
+- The validator checks the tables against the detector outputs and
+  `sources.json`: every signal has one row, `one-way` and `breaking` cite a
+  finding, the detected Door is one-way when a row is, a disagreement
+  finding exists exactly when a declared Door differs. An unfilled
+  worksheet is `PENDING contracts`, an error with `--require contracts`.
+- The brief's Declared vs detected section lists each disagreement first,
+  then a table: the declared Door beside the detected one, and the Blast
+  Radius beside the risk zones the change touches and the most referenced
+  changed public symbols. A `blocks_merge` finding with sound intent
+  proposes `fix`, and a reason line counts the contracts judgments.

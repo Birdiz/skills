@@ -6,7 +6,8 @@ One run is one directory, written by `scripts/run.py` and checked by
 ```
 $XDG_STATE_HOME/birdiz-review/runs/<repo>/<branch>/<head short sha>/
 ├── run.json                  the run header
-├── signals/<detector>.json   one output per detector
+├── signals/<detector>.json   one output per detector (git-changes, migrations, config,
+│                             routes, api-contracts, dependencies, assertions, fan-in)
 ├── findings/<axis>.md        intent.md, contracts.md, structure.md
 ├── brief.md                  the brief, a projection of the files above
 ├── sources.json              the spec, tickets and PR body read, and their contract status
@@ -82,9 +83,10 @@ drifted. A sibling ticket's drift is reported and does not count.
 Each detector writes one JSON file with its own coverage: `detector`,
 `version`, `content` (whether it reads what a file's content means),
 `applies_to` (file patterns), `tool` (`<name>@<version>`, or none for a
-heuristic), `covered` (the files it could judge), `not_covered`
-(`{path, reason}`), `signals` (`{path, kind, reason}`, a `line` when it
-has one).
+heuristic), `heuristic`, `covered` (the files it could judge),
+`not_covered` (`{path, reason}`), `gaps` (a tool missing or failed, said
+in the brief's coverage gaps), `signals` (`{path, kind, reason}`, a `line`
+in the head when it has one, an `excerpt` of the code).
 
 `git-changes` is not a content detector: it lists every changed file
 (`files`: `path`, `change`, `from` for a rename or a copy, and `hunks`, the
@@ -92,6 +94,72 @@ has one).
 file, a rename with no change or a binary file), the new directories, and
 signals each file added, deleted, renamed, copied or changed in type. A
 modified file gets no signal from it.
+
+The stack-agnostic content detectors, run on every run. Each applies to
+the changed files its classifier accepts: `applies_to` lists them, escaped
+so that each pattern matches its own path only. A file it can't read
+(binary, not UTF-8, not valid JSON for a manifest) is `not_covered` with
+the reason, which makes the file `unproven`. Nothing runs the reviewed
+project: the head is the tree written from git objects, the base side is
+read from the merge base's objects.
+
+- `migrations`: migration files by framework convention (raw SQL under a
+  `migrations/`, `migrate/` or `db/migration/` directory or named
+  `*.up.sql`, Prisma, Laravel, Doctrine, Alembic, Django, Rails). Signals
+  on added lines: `drop`, `rename`, `type-change`, `not-null` (with an
+  added `NOT NULL` column without a default), `data-rewrite`; on an added
+  migration with no way back, `no-down`; `migration-edited`,
+  `migration-deleted`; `schema-changed` for a Prisma schema. A framework
+  migration always gets `framework-migration`: its SQL is not generated in
+  this version, so the contracts step reads it as code. Raw SQL also goes
+  through `squawk` when it is on the machine (`squawk:<rule>`); without
+  it, a gap says the heuristic read it alone.
+- `config`: environment templates (`.env*`, `*.env.example`, ...) and
+  configuration files (`config/`, `settings.py`, `application*.yml`,
+  `appsettings*.json`, compose files). `env-added` (with no default value
+  when empty), `env-removed`, `env-default-changed`, `config-changed`,
+  `config-added` (lines added to an existing file), `config-deleted`, and
+  `env-required`: a variable an added line reads
+  with no default, mentioned nowhere at the base. `env-required` is also
+  raised on any changed code file, which the detector scans without
+  covering it.
+- `routes`: route files by convention (`routes/`, `config/routes*`,
+  `urls.py`, `routes.*`, `*.routes.ts`) and file-based routes
+  (`app/**/route.ts`, `pages/api/**`). `route-removed`, `route-changed`,
+  `route-added` (new surface, so a route file that gains a route is never
+  `skim`), `route-file-deleted`, `route-file-renamed`; route decorators and
+  attributes removed from any changed code file, scanned without covering
+  it.
+- `api-contracts`: OpenAPI files by name or by an `openapi:` or
+  `swagger:` key, and GraphQL schemas. With `oasdiff` on the machine,
+  `oasdiff breaking` on the base and head (`oasdiff:<id>`); without it, a
+  gap, and the heuristic: `path-removed`, `operation-removed`,
+  `contract-changed`, `required-added`. GraphQL: `field-removed`,
+  `field-changed`. A deleted contract: `contract-removed`.
+- `dependencies`: manifests (`package.json`, `composer.json`,
+  `pyproject.toml`, `requirements*.txt`, `Pipfile`, `Gemfile`, `go.mod`,
+  `Cargo.toml`) and their lockfiles. `dependency-added`,
+  `dependency-removed`, `dependency-changed` (saying when the major
+  version moved), `runtime-changed` (engines, `php`, `requires-python`,
+  `go`, ...), `manifest-deleted`, `manifest-changed` (changed outside its
+  dependencies: scripts, entry points), and `lockfile-changed`, with or
+  without its manifest.
+- `assertions`: test files by convention (`tests/`, `test_*.py`,
+  `*.test.ts`, `*Test.php`, `*_spec.rb`, ...). Per edit, between context
+  lines: `assertion-modified`, `assertion-removed`; `skip-added`,
+  `focus-added`; `test-code-changed` once per file for existing test lines
+  changed outside assertions; `test-deleted`. A test file that only gains
+  lines gets no signal, so it can be `skim`.
+
+`fan-in` is not a content detector. It lists the public symbols the diff
+removes or changes in code files, test files left out (`symbols`: `path`,
+`symbol`, `change` `removed`, `signature` or `body`, `line`, `fan_in`, the
+references outside the diff, and the first `refs` as `path:line`), and
+`scanned`, the files searched. The count is a word search over the head
+tree, comment lines skipped, labelled heuristic: a name of three letters or
+fewer, or a common one, is `unknown`. A removed symbol or a changed
+signature with references outside the diff is a signal
+(`symbol-removed`, `symbol-signature`).
 
 ## Review finding
 
@@ -191,6 +259,48 @@ their hunks: a criterion or a file missing, a row left `?`, a hunk no
 change meets, a finding not cited or cited and absent are errors. An intent
 file `evaluated` on sources that are not evaluable is an error too.
 
+## Contracts findings file
+
+`findings/contracts.md` is written by `run.py` as a worksheet on every run
+and filled by the contracts step ([steps/contracts.md](steps/contracts.md)).
+Between `## Coverage` and `## Findings` it holds two tables, which only
+this file may have:
+
+```markdown
+## Signals
+
+| Signal | Judgment | Finding |
+|---|---|---|
+| S1 `db/migrations/002_drop_email.sql:1` migrations `drop`: drops a table, a column or another object, or empties a table | one-way | F-BRK-001 |
+| S2 `tests/test_app.py:6` assertions `assertion-modified`: 1 assertion line(s) changed | minor | |
+
+## Declared
+
+| Declared | Detected | Finding |
+|---|---|---|
+| PR #7: Door `two-way`, Blast Radius `local` | one-way | F-BRK-002 |
+```
+
+- **Signals**: one row per signal of every detector but `git-changes`,
+  `S<n>` in the order of the header's `detectors`, naming the signal's
+  file. Judgment `one-way` (reverting the merge does not undo it),
+  `breaking` (a consumer outside the diff breaks, a revert undoes it) or
+  `minor`. `one-way` and `breaking` cite a finding.
+- **Declared**: one row. The PR's declared Door and Blast Radius, `not
+  declared` or `not read`; the Door the step detected, `one-way` or
+  `two-way`. `one-way` when a row is judged `one-way` (or the row cites the
+  finding that says why), `two-way` otherwise. When the PR declares a Door
+  that differs, the row cites the disagreement finding, whose `declared`
+  and `detected` are the two Doors. With no Door declared, a disagreement
+  finding is an error.
+- A contracts finding no row cites is allowed: a break in the code no
+  detector signalled.
+
+The worksheet has every row, with `?` where the step judges, and `Axis:
+not-evaluable (step not run yet)`: `PENDING contracts`, an error with
+`--require contracts`. Once the axis is `evaluated` or `partial`, the
+validator checks the rows against the detector outputs and `sources.json`.
+
 ## Buckets
 
 Every changed file lands in exactly one bucket, by these rules in order:
@@ -215,7 +325,10 @@ validator rejects it in `skim`.
 `brief.md`, regenerated by `scripts/brief.py` from the run header, the
 detector outputs and the findings files, never edited by hand. Sections, in
 order: Declared vs detected (the PR's Door and Blast Radius, or "Risk not
-declared" when no PR body was read or it has no `Merge Danger`), Must read (each file,
+declared" when no PR body was read or it has no `Merge Danger`; then each
+disagreement finding; then a table with the declared Door beside the
+detected one and the Blast Radius beside the risk zones the changed files
+touch and the most referenced changed public symbols), Must read (each file,
 then each finding: `file:line`, reason, reviewer question; then the
 `must-read` findings that point at no changed file, such as a criterion
 not found), Glance (with the reason, then the `glance` findings that point
@@ -228,7 +341,7 @@ spec and tickets found and any contract drift), Verdict.
 One line, then its reasons:
 
 ```
-Proposed verdict: merge, round 1 (intent not checked: step not in this version; contracts, structure, gates, test integrity, adversarial not run).
+Proposed verdict: fix, round 1 (attention map only: structure, gates, test integrity, adversarial not run).
 ```
 
 - `close-and-reprompt`: intent misread, when the intent step ran on
@@ -239,7 +352,9 @@ Proposed verdict: merge, round 1 (intent not checked: step not in this version; 
 - `fix`: at least one `blocks_merge` finding;
 - `merge`: none.
 
-When the intent step ran, a reason line counts its tables. When the intent
+When the intent step ran, a reason line counts its tables; when the
+contracts step ran, another counts its judgments and gives the detected
+Door. A `blocks_merge` contracts finding with sound intent is a `fix`. When the intent
 sources are not evaluable (no spec, the user said there is none, contract
 drift), the parenthesis starts with it, as in `merge, round 1 (intent not
 checked: no spec found; contracts, structure, gates, test integrity,

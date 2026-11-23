@@ -107,7 +107,11 @@ The `birdiz-review` plugin's own vocabulary.
   could not and why) and its signals. A **content detector** reads what a
   file's content means, for the file types it declares; a stack-agnostic
   signal, such as the git file changes, only says a file changed in a
-  notable way.
+  notable way. The stack-agnostic content detectors read migrations,
+  configuration and environment templates, routes, OpenAPI and GraphQL
+  contracts, dependency manifests and lockfiles, and test assertions. Each
+  uses its tool (`squawk`, `oasdiff`) when the machine has it, and its
+  heuristic otherwise, saying so in its coverage.
 - **Signal**: a detector's note that a file changed in a way worth a look
   (added, renamed, a changed public symbol). Not a finding: a judgment step
   decides whether it is one.
@@ -162,7 +166,19 @@ The `birdiz-review` plugin's own vocabulary.
   proposes `close-and-reprompt`.
 - **Worksheet**: the findings file `run.py` writes for a judgment step,
   with every row the step must fill and `?` where it judges, so that no
-  criterion or file can be left out.
+  criterion, file or signal can be left out.
+- **Contracts**: what a change breaks outside the diff, judged by the
+  contracts step from the detectors' signals and the code: each signal is
+  **one-way** (reverting the merge does not undo it: data dropped, a
+  contract external consumers rely on), **breaking** (a consumer outside
+  the diff breaks, and a revert undoes it) or **minor**.
+- **Door**: the risk a PR body declares under `Merge Danger`, one-way or
+  two-way, compared mechanically with the Door the contracts step
+  detects. A difference is a **disagreement** finding, at the top of the
+  brief. The **Blast Radius** word is never compared: the brief shows it
+  beside the detected risk zones and fan-in.
+- **Fan-in**: the references to a changed public symbol outside the diff,
+  counted by a word search and labelled heuristic.
 - **Dimension**: one part of a full review: the judgment steps (intent,
   contracts, structure) and the later gates, test integrity and
   adversarial review. One not run is a coverage gap, stated in the verdict.

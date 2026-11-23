@@ -18,13 +18,20 @@ file, the coverage gaps, the brief and the verdict. The risk map
 names its zone and is never `skim`. The run finds what the change was
 supposed to do: the PR body, the spec and the tickets, each checked against
 the Pocock contract ([pocock-contract.md](pocock-contract.md)) when it is
-read. One judgment step exists, `intent` ([steps/intent.md](steps/intent.md)):
-each acceptance criterion mapped to the hunks that implement it, each
-changed file justified by a ticket or flagged out of scope, each change
-against the spec's decisions flagged. No content detector and no
-`contracts` or `structure` step exists yet, so every changed file is
-`unproven` unless a finding marks it `must-read`, and the brief says which
-dimensions did not run.
+read. The stack-agnostic content detectors read migrations, configuration
+and environment templates, routes, OpenAPI and GraphQL contracts,
+dependency manifests and lockfiles, and test assertions, with `squawk` and
+`oasdiff` when the machine has them; a file no content detector reads, such
+as source code until the stack adapters land, stays `unproven`. Two
+judgment steps exist. `intent` ([steps/intent.md](steps/intent.md)) maps
+each acceptance criterion to the hunks that implement it, justifies each
+changed file by a ticket or flags it out of scope, and flags each change
+against the spec's decisions. `contracts`
+([steps/contracts.md](steps/contracts.md)) judges each detector signal
+(`one-way`, `breaking`, `minor`), reads the code for API breaks with the
+fan-in of each changed public symbol, and compares the Door the PR body
+declares with the one it detects. No `structure` step exists yet, and the
+brief says which dimensions did not run.
 
 ## Invariants
 
@@ -70,21 +77,25 @@ Scripts are in `scripts/`, run with `python3 -I`, standard library only.
 3. **Run the judgment steps.** For each `STEP:` line, start a sub-agent
    with fresh context, and give it only the step file's path and the run
    directory: "Follow `<step file>` on the run directory `<run>`." It reads
-   files and writes its findings file, and asks nothing. Without
-   sub-agents, follow the step file yourself, in order, after the run, one
+   files and writes its findings file, and asks nothing. The steps write
+   different files, so their sub-agents can run at the same time. Without
+   sub-agents, follow the step files yourself, in order, after the run, one
    step at a time. No `STEP:` line for `intent` means its sources are not
    evaluable (no spec, contract drift): `run.py` already wrote its
    coverage with the reason, and the verdict says intent was not checked.
-   Then `python3 -I scripts/brief.py <run>`.
-4. **Check the run.** `python3 -I scripts/validate.py <run> --require brief --require intent`,
-   then `python3 -I scripts/check-pointers.py <run>`. An `ERROR`,
+   `contracts` always has its line. Then `python3 -I scripts/brief.py <run>`.
+4. **Check the run.** `python3 -I scripts/validate.py <run> --require brief --require contracts`,
+   adding `--require intent` when there was a `STEP: intent` line, then
+   `python3 -I scripts/check-pointers.py <run>`. An `ERROR`,
    `MISMATCH` or `MISSING` line is a defect of the run: report it, never
    edit the brief to hide it. The brief is a projection: when a findings
    file changes, run `python3 -I scripts/brief.py <run>`, never edit
    `brief.md` by hand.
 5. **Present the brief.** Give the run directory, then the brief's sections
-   in order, the coverage gaps in full (the spec and tickets found, any
-   contract drift) and the verdict line as written, with its round. Do not
+   in order: a disagreement between the declared and detected Door first,
+   as written. Then the coverage gaps in full (the spec and tickets found,
+   any contract drift, a detector tool missing) and the verdict line as
+   written, with its round. Do not
    soften `unproven`: it means read the file, since nothing proved it safe.
    A `close-and-reprompt` for misread intent names the criteria not found,
    the files out of scope or the decisions broken: give them as written.
