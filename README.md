@@ -156,7 +156,9 @@ user-invoked one.
   `docs/agents/review.md`, after checking the Pocock tracker and domain
   docs. Refuses to write while a branch under review is checked out.
 - [review-pr](plugins/birdiz-review/skills/review-pr/SKILL.md): one review
-  run on a branch or a `base..head` range, written outside the repository:
+  run on a pull request, a branch or a `base..head` range, written outside
+  the repository: the spec and tickets it was meant to implement, each
+  checked against the [Pocock contract](plugins/birdiz-review/skills/review-pr/pocock-contract.md),
   a bucket for every changed file (`must-read`, `glance`, `skim`,
   `unproven`), the coverage gaps and a proposed verdict (`merge`, `fix`,
   `close-and-reprompt`) with its round. A file in a risk zone is never
@@ -189,6 +191,11 @@ user-invoked one.
 - **A review never touches what it reviews.** No write to the reviewed
   branch, every coverage gap reported, and "safe to skim" only on detector
   evidence. See [ADR 0006](docs/adr/0006-review-invariants.md).
+- **Pocock's artifacts are read under a written contract.** The review
+  reads the spec, tickets and PR body, never writes them, and checks each
+  one when it reads it: a section that moved upstream makes its dimension
+  `not-evaluable (contract drift: ...)` instead of a guess. See
+  [ADR 0007](docs/adr/0007-pocock-artifact-contract.md).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/projections-dark.svg">
