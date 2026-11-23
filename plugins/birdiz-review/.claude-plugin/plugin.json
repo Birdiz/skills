@@ -1,0 +1,15 @@
+{
+  "name": "birdiz-review",
+  "version": "0.1.0",
+  "description": "Agent skills for reviewing agent-written pull requests: an attention map of where to read and why, what was not covered, and a proposed verdict. Never writes to the reviewed branch.",
+  "author": {
+    "name": "Thomas Bouzy",
+    "url": "https://github.com/Birdiz"
+  },
+  "repository": "https://github.com/Birdiz/skills",
+  "license": "MIT",
+  "keywords": ["review", "pull-request", "code-review", "agents", "attention-map", "skills"],
+  "skills": [
+    "./skills/review-pr"
+  ]
+}

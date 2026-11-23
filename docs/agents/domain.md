@@ -21,10 +21,12 @@ When a term gets resolved, add it to `GLOSSARY.md`. The `/domain-modeling` skill
 │   ├── 0002-two-level-setup.md
 │   ├── 0003-invariants-are-not-configurable.md
 │   ├── 0004-execution-is-a-recorded-choice.md
-│   └── 0005-two-plugins-share-a-copied-core.md
+│   ├── 0005-two-plugins-share-a-copied-core.md
+│   └── 0006-review-invariants.md
 ├── core/                  # the finding core, edited here only
 ├── plugins/
-│   └── birdiz-audit/      # one plugin: manifest, skills, changelog, copy of core/
+│   ├── birdiz-audit/      # one plugin: manifest, skills, changelog, copy of core/
+│   └── birdiz-review/     # the other, laid out the same way
 └── tools/                 # sync_core.py and the repository's own tests
 ```
 
