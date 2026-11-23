@@ -17,6 +17,10 @@
 - The intent step's tables in `findings/intent.md` (see `intent.py`): what
   the validator checks against the sources and the hunks, and what misread
   intent adds to the verdict.
+- The contracts step's tables in `findings/contracts.md` (see
+  `contracts.py`): each detector signal judged, the detected Door against
+  the declared one, shown at the top of the brief beside the risk zones and
+  the fan-in.
 """
 import fnmatch
 import json
@@ -26,6 +30,7 @@ import re
 from finding_core import pointers
 from finding_core.markdown import blocks, bullets, label_of, paragraphs, parse_yaml, read
 from finding_core.validator import CORE_KEYS, Extension
+import contracts
 import intent
 import risk_map
 
@@ -35,12 +40,11 @@ AXES = {"intent": "INT", "contracts": "BRK", "structure": "STR"}
 TITLES = {"intent": "Intent", "contracts": "Contracts", "structure": "Structure"}
 AREAS = {
     "intent": ["Criteria to hunks", "Files to tickets or criteria", "Out of scope and decisions"],
-    "contracts": ["Code API", "Routes and wire contracts", "Persistence", "Configuration",
-                  "Behaviour (assertions)", "Fan-in", "Declared vs detected"],
+    "contracts": contracts.AREAS,
     "structure": ["New files", "Import graph", "Dependencies", "Pattern divergence", "ADRs", "Glossary"],
 }
 # The steps this version runs; the others get a coverage saying so.
-STEPS_IN_VERSION = ["intent"]
+STEPS_IN_VERSION = ["intent", "contracts"]
 # Review dimensions no version has yet: always printed with the verdict.
 LATER = ["gates", "test integrity", "adversarial"]
 
@@ -145,7 +149,7 @@ class Run:
         if self.header.get("sources"):
             self.sources = load_json(os.path.join(root, str(self.header["sources"])))
         self.findings, self.coverage = [], {}
-        self.intent = None
+        self.intent = self.contracts = None
         for axis in AXES:
             path = os.path.join(root, FINDINGS, axis + ".md")
             if os.path.exists(path):
@@ -154,6 +158,8 @@ class Run:
                 self.coverage[axis] = line
                 if axis == intent.AXIS:
                     self.intent = intent.read_file(path)
+                elif axis == contracts.AXIS:
+                    self.contracts = contracts.read_file(path)
 
     def changed(self):
         """Every changed file, as the git detector lists them, in order."""
@@ -183,6 +189,11 @@ class Run:
         if status in ("evaluated", "partial") and intent.dimension(self.sources) == "evaluable":
             return self.intent
         return None
+
+    def contracts_checked(self):
+        """The contracts tables when the contracts step ran."""
+        status, _ = axis_status(self.coverage.get(contracts.AXIS))
+        return self.contracts if status in ("evaluated", "partial") else None
 
 
 def axis_status(line):
@@ -313,6 +324,8 @@ def verdict(run, round_no):
         reasons = ["No finding blocks the merge."]
     if checked is not None:
         reasons.append(intent.summary_line(checked))
+    if run.contracts_checked() is not None:
+        reasons.append(contracts.summary_line(run.contracts_checked()))
     parts = []
     others = [a for a, _ in not_run if a != "intent"] + LATER
     if unchecked is not None:
@@ -336,7 +349,7 @@ def render_brief(run, zones=None):
            ""]
 
     out += ["## Declared vs detected", ""]
-    out += declared_lines(run)
+    out += declared_lines(run, zones)
     out.append("")
 
     changed = set(run.changed())
@@ -376,12 +389,23 @@ def render_brief(run, zones=None):
                                               " (%s)" % why if why else ""))
     out.append("- %s: not in this version." % ", ".join(LATER))
     content = sorted(rel for rel, o in run.outputs.items() if o.get("content") is True)
+
+    def label(rel):
+        o = run.outputs[rel]
+        how = o.get("tool") if o.get("tool") else "heuristic" if o.get("heuristic") else None
+        return "%s (%s)" % (rel, how) if how else rel
+
     if content:
-        out.append("- Content detectors run: %s." % ", ".join(content))
+        out.append("- Content detectors run: %s." % ", ".join(label(rel) for rel in content))
     else:
         out.append("- No content detector in this version: every changed file is unproven,"
                    " unless a finding marks it must-read.")
+    other = sorted(rel for rel, o in run.outputs.items() if o.get("content") is not True and o.get("heuristic"))
+    if other:
+        out.append("- Other detectors run: %s." % ", ".join(label(rel) for rel in other))
     for rel, o in sorted(run.outputs.items()):
+        for gap in o.get("gaps") or []:
+            out.append("- %s: %s." % (rel, str(gap).rstrip(".")))
         for item in o.get("not_covered") or []:
             if isinstance(item, dict):
                 out.append("- %s did not cover `%s`: %s." % (rel, item.get("path"), item.get("reason")))
@@ -403,13 +427,15 @@ def render_brief(run, zones=None):
     return "\n".join(out) + "\n"
 
 
-def declared_lines(run):
-    """The Declared vs detected section: the PR's `Merge Danger`, then each
-    disagreement finding."""
-    pr = (run.sources or {}).get("pr") if isinstance(run.sources, dict) else None
+def declared_lines(run, zones=None):
+    """The Declared vs detected section: the PR's `Merge Danger`, each
+    disagreement finding, then the declared Door and Blast Radius beside the
+    detected Door, risk zones and fan-in."""
+    pr = contracts.pr_body(run.sources)
     disagreements = [f for f in run.findings if "declared" in f.data or "detected" in f.data]
+    checked = run.contracts_checked()
     out = []
-    if not isinstance(pr, dict):
+    if pr is None:
         if not disagreements:
             out.append("Risk not declared: no PR body was read (the target is a branch or a range).")
     elif pr.get("status") == "not declared":
@@ -423,13 +449,61 @@ def declared_lines(run):
     for f in disagreements:
         out.append("- %s declared `%s`, detected `%s`: %s (%s)" % (
             f.fid, f.data.get("declared"), f.data.get("detected"), f.title, f.first_location()))
-    if isinstance(pr, dict) and pr.get("status") == "declared" and not disagreements:
-        status, _ = axis_status(run.coverage.get("contracts"))
-        if status in ("evaluated", "partial"):
+    if pr is not None and pr.get("status") == "declared" and not disagreements:
+        if checked is not None:
             out.append("No disagreement between the declared risk and what was detected.")
         else:
             out.append("Not compared: the contracts step, which detects it, did not run.")
+    if pr is None or pr.get("status") != "declared":
+        declared = {None: "no PR body read", "not declared": "not declared"}.get(
+            pr.get("status") if pr else None, "not read (contract drift)")
+        door, blast = declared, declared
+    else:
+        door, blast = "`%s`" % pr.get("door"), "`%s`" % pr.get("blast_radius")
+    if checked is None:
+        detected = "not compared: the contracts step did not run"
+    else:
+        found = contracts.detected_door(checked)
+        why = [r["sid"] for r in contracts.one_way_rows(checked)] + (checked["declared"][0]["findings"]
+                                                                       if checked["declared"] else [])
+        detected = "`%s`%s" % (found, " (%s)" % ", ".join(why) if why else "") if found else "not given"
+    out += ["", "| | Declared | Detected |", "|---|---|---|", "| Door | %s | %s |" % (door, detected),
+            "| Blast Radius | %s | %s |" % (blast, "; ".join([zones_line(run, zones), fan_in_line(run)]))]
     return out
+
+
+def zones_line(run, zones=None):
+    """The risk zones the changed files touch, for the brief's Blast Radius row."""
+    rm = run.header.get("risk_map")
+    if not isinstance(rm, dict) or not rm.get("found"):
+        return "risk zones: no risk map at the base"
+    zones = risk_zones(run) if zones is None else zones
+    touched = {}
+    for path in run.changed():
+        for zone, _ in zones.get(path, ()):
+            touched.setdefault(zone, []).append(path)
+    if not touched:
+        return "risk zones: none touched"
+    parts = []
+    for zone in sorted(touched):
+        files = touched[zone]
+        parts.append("%s (%s)" % (zone, ", ".join("`%s`" % p for p in files) if len(files) <= 2
+                                  else "%d files" % len(files)))
+    return "risk zones: %s" % ", ".join(parts)
+
+
+def fan_in_line(run):
+    """The changed public symbols most referenced outside the diff."""
+    symbols = [s for o in run.outputs.values() if o.get("detector") == "fan-in"
+               for s in o.get("symbols") or [] if isinstance(s, dict)]
+    if not any(o.get("detector") == "fan-in" for o in run.outputs.values()):
+        return "fan-in: not computed"
+    counted = sorted((s for s in symbols if isinstance(s.get("fan_in"), int) and s["fan_in"] > 0),
+                     key=lambda s: (s.get("change") == "body", -s["fan_in"], s.get("path", ""), s.get("symbol", "")))
+    if not counted:
+        return "fan-in: no changed public symbol referenced outside the diff (heuristic)"
+    return "fan-in (heuristic): %s" % ", ".join(
+        "`%s` in `%s` %d (%s)" % (s.get("symbol"), s.get("path"), s["fan_in"], s.get("change")) for s in counted[:3])
 
 
 def sources_lines(found):
@@ -523,13 +597,15 @@ class ReviewExtension(Extension):
     optional = ["declared", "detected"]
     enums = {"attention": ["must-read", "glance"]}
     prose = ["Evidence", "Reviewer question"]
-    sections = ["Coverage"] + intent.SECTIONS + ["Findings", "Leads"]
+    sections = ["Coverage"] + intent.SECTIONS + contracts.SECTIONS + ["Findings", "Leads"]
     verify_step = "verification"
-    requirable = {"brief": "brief", "intent": "intent"}
+    requirable = {"brief": "brief", "intent": "intent", "contracts": "contracts"}
 
     def check_section(self, name, path, axis, start, items, sections, lines, ids, refs):
         if name in intent.SECTIONS and axis != intent.AXIS:
             self.rep.error(path, start + 1, "`## %s` belongs to the intent findings file" % name)
+        if name in contracts.SECTIONS and axis != contracts.AXIS:
+            self.rep.error(path, start + 1, "`## %s` belongs to the contracts findings file" % name)
 
     def __init__(self, rep, root):
         super().__init__(rep, root)
@@ -622,10 +698,21 @@ class ReviewExtension(Extension):
                      lambda line, msg: self.rep.pending("intent", path, line, msg),
                      ).run(path, axis_status(run.coverage.get(intent.AXIS)))
 
+    def check_contracts(self):
+        run, path = self.run, os.path.join(self.root, FINDINGS, contracts.AXIS + ".md")
+        if not os.path.exists(path):
+            return
+        own = {f.fid: f for f in run.findings if f.axis == contracts.AXIS}
+        contracts.Check(list(run.outputs.items()), run.sources, own,
+                        lambda line, msg: self.rep.error(path, line, msg),
+                        lambda line, msg: self.rep.pending("contracts", path, line, msg),
+                        ).run(path, axis_status(run.coverage.get(contracts.AXIS)))
+
     def finish(self, findings, ids):
         if self.run is None:
             return ""
         self.check_intent()
+        self.check_contracts()
         rep, run = self.rep, self.run
         path = os.path.join(self.root, BRIEF)
         if not os.path.exists(path):
@@ -733,12 +820,16 @@ class ReviewLayout(pointers.Layout):
 
 # --- Findings files at the start of a run ------------------------------------
 
-def findings_at_start(axis, found, changed):
+def findings_at_start(axis, found, changed, outputs=()):
     """What `run.py` writes for each axis: a step not in this version, or
     whose sources are not evaluable, gets a coverage saying why; the intent
-    step on evaluable sources gets its worksheet."""
+    step on evaluable sources gets its worksheet, and the contracts step
+    always does, with a row per signal of the detector `outputs`
+    [(rel, output)]."""
     if axis not in STEPS_IN_VERSION:
         return coverage_not_run(axis)
+    if axis == contracts.AXIS:
+        return contracts.worksheet(outputs, found, VERSION)
     dim = intent.dimension(found)
     if dim != "evaluable":
         m = re.match(r"not-evaluable \((.*)\)$", dim, re.S)

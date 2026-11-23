@@ -161,7 +161,11 @@ user-invoked one.
   checked against the [Pocock contract](plugins/birdiz-review/skills/review-pr/pocock-contract.md),
   the intent step (each acceptance criterion mapped to the hunks that
   implement it, each changed file justified or flagged out of scope, each
-  change against the spec's decisions flagged), a bucket for every changed
+  change against the spec's decisions flagged), the contracts step (what
+  the change breaks outside the diff: destructive migrations, new required
+  configuration, changed routes and API contracts, edited or skipped test
+  assertions, dependency changes, the fan-in of changed public symbols, and
+  the PR's declared Door against the detected one), a bucket for every changed
   file (`must-read`, `glance`, `skim`,
   `unproven`), the coverage gaps and a proposed verdict (`merge`, `fix`,
   `close-and-reprompt`) with its round. A file in a risk zone is never

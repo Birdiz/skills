@@ -249,7 +249,7 @@ class TestIntent(unittest.TestCase):
 
     def test_without_a_spec_intent_is_not_checked_and_misread_intent_is_not_offered(self):
         root, out = self.start("--no-spec")
-        self.assertNotIn("STEP:", out)
+        self.assertNotIn("STEP: intent", out)
         self.assertIn("Proposed verdict: merge, round 1 (intent not checked: no spec: the user said there is none;"
                       " contracts, structure, gates, test integrity, adversarial not run).", out)
         text = read(os.path.join(root, "findings", "intent.md"))
@@ -266,7 +266,7 @@ class TestIntent(unittest.TestCase):
         self.fx.gh_data["issues"]["40"] = issue(40, fixture("ticket-renamed.md"), parent=35)
         self.fx.save()
         root, out = self.start()
-        self.assertNotIn("STEP:", out)
+        self.assertNotIn("STEP: intent", out)
         self.assertIn("(intent not checked: contract drift: ticket #40, no `## Acceptance criteria` section;", out)
         self.assertRunOK(root)
 

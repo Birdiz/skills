@@ -3,14 +3,13 @@ tools, run the detectors, write the run directory.
 
 Read-only on the reviewed repository: every git command reads objects or
 refs (`rev-parse`, `merge-base`, `diff` between two commits, `ls-tree`,
-`cat-file`, `log`, `config --get`), with optional locks off, and nothing is
-checked out. The one write is for a PR whose head or base commit is not in
+`cat-file`, `grep` on a commit, `log`, `config --get`), with optional locks
+off, and nothing is checked out. The one write is for a PR whose head or base commit is not in
 the repository yet: its objects are fetched from `origin` by ref
 (`refs/pull/<n>/head`), with no ref, branch or working-copy file written.
 Trees are written from git objects into the run directory, which lives
 under the user's state directory, never inside the repository.
 """
-import codecs
 import datetime
 import json
 import os
@@ -20,6 +19,7 @@ import subprocess
 import threading
 from urllib.parse import quote
 
+import detectors
 import review_format as fmt
 import risk_map
 import sources
@@ -29,7 +29,8 @@ from finding_core import NAME as CORE
 STATE_SUBDIR = os.path.join("birdiz-review", "runs")
 
 # Detector tools looked for on every run: (name, command). Found ones are
-# recorded with their version; the adapters that use them come later.
+# recorded with their version. detectors.py uses squawk and oasdiff; the
+# adapters for the others come with the stack adapters.
 TOOLS = [
     ("git", "git"),
     ("roave-backward-compatibility-check", "roave-backward-compatibility-check"),
@@ -276,16 +277,6 @@ def patch(repo, base, head):
                "-M", base, head, binary=True)
 
 
-def _patch_path(text, side):
-    """The path of a `--- a/x` / `+++ b/x` header line, None for /dev/null."""
-    text = text.rstrip("\n").split("\t", 1)[0]
-    if text == "/dev/null":
-        return None
-    if len(text) >= 2 and text[0] == text[-1] == '"':
-        text = codecs.escape_decode(text[1:-1].encode("utf-8"))[0].decode("utf-8", "replace")
-    return text[2:] if text.startswith(side + "/") else text
-
-
 def hunks(patch_bytes):
     """{path: [[start, count]]}: the new-side line range of each hunk of the
     patch, per file (the old path for a deleted file, whose ranges are
@@ -295,9 +286,9 @@ def hunks(patch_bytes):
         if raw.startswith("diff --git "):
             path, old, in_header = None, None, True
         elif in_header and raw.startswith("--- "):
-            old = _patch_path(raw[4:], "a")
+            old = detectors.patch_path(raw[4:], "a")
         elif in_header and raw.startswith("+++ "):
-            path = _patch_path(raw[4:], "b") or old
+            path = detectors.patch_path(raw[4:], "b") or old
             out.setdefault(path, [])
         elif raw.startswith("@@"):
             in_header = False
@@ -345,6 +336,27 @@ def git_changes(repo, target, git_version, ranges=None):
         "files": entries, "new_directories": sorted(new_dirs),
         "covered": [e["path"] for e in entries], "not_covered": [], "signals": signals,
     }
+
+
+def run_detectors(repo, run_dir, target, tools, entries, patch_bytes, head_dir):
+    """The stack-agnostic detectors (detectors.py), on the changed files:
+    head content from the tree written from git objects, base content and
+    the word search read from the merge base's objects. A tool needing the
+    base side of a file gets it in a scratch directory of the run
+    directory, removed afterwards."""
+    base = target["merge_base"]
+
+    def read_base(path):
+        if git(repo, "cat-file", "-e", "%s:%s" % (base, path), check=False) is None:
+            return None
+        return git(repo, "cat-file", "blob", "%s:%s" % (base, path), binary=True)
+
+    def mentions(word):
+        return git(repo, "grep", "-q", "-I", "-F", "-w", "-e", word, base, "--", check=False) is not None
+
+    ctx = detectors.Context(entries, patch_bytes, head_dir, read_base, mentions, tools,
+                            os.path.join(run_dir, ".tool-trees"))
+    return detectors.run_all(ctx, fmt.VERSION)
 
 
 def diff_of(target):
@@ -455,8 +467,15 @@ def start(repo_arg, target_arg, now=None, pr=None, spec=None, no_spec=False, for
         diff_bytes = patch(repo, target["merge_base"], target["head"]["sha"])
         with open(os.path.join(tmp, fmt.PATCH), "wb") as fh:
             fh.write(diff_bytes)
-        write_json(os.path.join(tmp, rel), git_changes(repo, target, git_version, hunks(diff_bytes)))
+        changed_files = git_changes(repo, target, git_version, hunks(diff_bytes))
+        write_json(os.path.join(tmp, rel), changed_files)
         skipped = extract_tree(repo, target["head"]["sha"], os.path.join(tmp, fmt.TREE + head12))
+        outputs = run_detectors(repo, tmp, target, tools, changed_files["files"], diff_bytes,
+                                os.path.join(tmp, fmt.TREE + head12))
+        rels = [rel]
+        for detector, out in outputs:
+            rels.append("%s/%s.json" % (fmt.SIGNALS, detector))
+            write_json(os.path.join(tmp, rels[-1]), out)
         found = sources.gather(repo, tmp, target, dict(pr_header, **pr_body) if pr_header else None,
                                spec, no_spec, forge)
         header = {
@@ -464,7 +483,7 @@ def start(repo_arg, target_arg, now=None, pr=None, spec=None, no_spec=False, for
             "target": target["target"], "base": target["base"], "head": target["head"],
             "merge_base": target["merge_base"], "diff": diff_of(target),
             "started": (now or datetime.datetime.now(datetime.timezone.utc)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "tools": tools, "detectors": [rel],
+            "tools": tools, "detectors": rels,
             "trees": {"head": fmt.TREE + head12, "skipped": skipped},
             "steps_in_version": list(fmt.STEPS_IN_VERSION),
             "risk_map": read_risk_map(repo, target["base"]["sha"]),
@@ -478,7 +497,7 @@ def start(repo_arg, target_arg, now=None, pr=None, spec=None, no_spec=False, for
         changed = [path for _, path, _, _ in files]
         for axis in fmt.AXES:
             with open(os.path.join(tmp, fmt.FINDINGS, axis + ".md"), "w", encoding="utf-8") as fh:
-                fh.write(fmt.findings_at_start(axis, found, changed))
+                fh.write(fmt.findings_at_start(axis, found, changed, list(zip(rels[1:], [o for _, o in outputs]))))
         if os.path.exists(final):
             shutil.rmtree(final)
         os.rename(tmp, final)
