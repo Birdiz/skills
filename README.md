@@ -140,6 +140,10 @@ user-invoked one.
   [ADR 0004](docs/adr/0004-execution-is-a-recorded-choice.md).
 - **One set of findings, several reports.** Peer report, plain-language
   summary and remediation prompts are projections of the same findings.
+- **One finding core.** The rules every finding follows, and the checks that
+  read them, live once in [`core/`](core/finding_core/); the audit's
+  validator and pointer checker extend it with the audit's axes, keys,
+  sections and workspace layout.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/projections-dark.svg">
