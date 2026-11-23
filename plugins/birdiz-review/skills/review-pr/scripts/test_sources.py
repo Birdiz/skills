@@ -167,7 +167,7 @@ class TestPullRequest(unittest.TestCase):
         git(fx.tmp, "init", "-q", "--bare", self.origin)
         git(fx.repo, "push", "-q", self.origin, "main", "feature/x:refs/pull/7/head")
         self.clone = os.path.join(fx.tmp, "clone")
-        git(fx.tmp, "clone", "-q", "--no-local", self.origin, self.clone)
+        git(fx.tmp, "clone", "-q", "--no-local", "-b", "main", self.origin, self.clone)
         fx.repo = self.clone
         fx.magic_link()
         self.pr(fixture("pr-merge-danger.md"))
