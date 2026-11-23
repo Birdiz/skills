@@ -84,8 +84,15 @@ STACKS = (
 )
 
 
+TEST_FILE = re.compile(r"^(test_.*\.py|.*_test\.(py|go)|.*\.(test|spec)\.[jt]sx?|.*Test\.php|.*_spec\.rb)$")
+
+
 def _skipped(path):
     return any(part in SKIP_DIRS for part in path.split("/")[:-1])
+
+
+def _is_test(path):
+    return bool(TEST_FILE.match(path.split("/")[-1]))
 
 
 def detect_stacks(files):
@@ -308,7 +315,7 @@ def propose_zones(repo, files):
     same zone already covers it."""
     by_zone = {z: {} for z in risk_map.ZONES}
     for path in files:
-        if _skipped(path):
+        if _skipped(path) or _is_test(path):
             continue
         parts = path.split("/")
         for zone, rx in DIR_SIGNALS:

@@ -73,6 +73,9 @@ FILES = {
     "migrations/Version1.php": "<?php\n$this->addSql('DROP TABLE legacy');\n",
     "src/Controller/HomeController.php": "<?php\n#[Route('/')]\n",
     "tests/Security/LoginTest.php": "<?php\n",
+    "src/Billing/RefundTest.php": "<?php\n$this->addSql('DROP TABLE x');\n",
+    "lib/test_pay.py": "import stripe\n",
+    "web/pay.spec.ts": "import Stripe from 'stripe';\n",
 }
 
 
@@ -145,7 +148,10 @@ class TestDetect(Base):
 
     def test_stacks_come_with_a_pointer(self):
         r = self.detect()
-        self.assertEqual(r["stacks"], [{"name": "php", "pointer": "composer.json"}])
+        stacks = {s["name"]: s["pointer"] for s in r["stacks"]}
+        self.assertEqual(stacks["php"], "composer.json")
+        self.assertEqual(stacks["python"], "1 .py file(s), e.g. lib/test_pay.py")
+        self.assertEqual(sorted(stacks), ["php", "python", "typescript"])
 
     def test_each_proposed_zone_has_a_pointer_to_what_suggested_it(self):
         props = {(p["zone"], p["glob"]): p for p in self.detect()["proposals"]}
@@ -158,8 +164,9 @@ class TestDetect(Base):
         # a content hit inside a proposed directory of the same zone is not repeated
         self.assertNotIn(("auth", "src/Security/Hasher.php"), props)
         self.assertNotIn(("payments", "src/Billing/Charge.php"), props)
-        # tests are not proposed
-        self.assertFalse(any(g and g.startswith("tests/") for _, g in props))
+        # tests are not proposed, in a test directory or by their file name
+        self.assertFalse(any(g and (g.startswith("tests/") or "Test." in g or "test_" in g or ".spec." in g)
+                             for _, g in props), sorted(props))
         for p in props.values():
             self.assertTrue(p["pointer"])
 
