@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.27.0 (unreleased)
+## 0.27.0 (2026-11-23)
 
 The plugin is renamed `birdiz-audit` and moves to its own directory, so that
 a second plugin can sit beside it in the same marketplace. The finding rules
