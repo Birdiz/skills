@@ -611,7 +611,8 @@ def worksheet(outputs, version):
 def area_note(area, so):
     dom = so.get("domain") or {}
     if area == "Import graph":
-        return "no adapter in this version; the PHP, TypeScript and Python adapters will supply it"
+        return ("no stack adapter graphs this diff's code: PHP, TypeScript and JavaScript have one, Python's comes"
+                " next")
     part = dom.get("glossary" if area == "Glossary" else "adrs") or {}
     return intent.cell(part.get("detail") or "")
 

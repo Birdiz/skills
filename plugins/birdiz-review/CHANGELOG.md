@@ -259,3 +259,58 @@ The PHP adapter ([#44](https://github.com/Birdiz/skills/issues/44)):
   off.
 - A tool that needs the whole base tree gets it written from git objects
   into a temporary directory of the run directory, removed afterwards.
+
+The TypeScript adapter ([#45](https://github.com/Birdiz/skills/issues/45)):
+
+- The TypeScript parser, a standard-library lexer and parser for `.ts`,
+  `.tsx`, `.mts`, `.cts`, `.js`, `.jsx`, `.mjs` and `.cjs` files: comments,
+  strings, template literals, regular expressions and JSX can't fool it
+  (`<` is a type assertion in `.ts`, JSX elsewhere). A file it can't
+  finish, or a minified one (a line over 5000 characters, or 500 on
+  average), is not covered, so `unproven`. Code without semicolons is
+  read by its line ends. Checked on 47,000 files of applications and of
+  `node_modules`: no parse error outside two minified bundles. A regular
+  expression right after `if (...)` is read as a division, and its file
+  may end `unproven`.
+- `public-api` now reads TypeScript and JavaScript files too: the
+  signature-level diff of each file's exports, labelled heuristic
+  (`languages` names them). Signals: an export removed (a rename names
+  what appears in its place; a deleted file gets one signal listing its
+  exports), an export that became another kind, a function, method or
+  constructor signature changed (a parameter removed, retyped or made
+  required, a new required one, the return type, type parameters, an
+  overload), a class made abstract or no longer extending a type, a
+  public or protected member removed, changed or made private, an
+  abstract member added, an interface member removed, changed, made
+  required or added as required, a type alias changed, an enum member
+  removed or renumbered, an `export * from` removed. Types are compared
+  as written; a renamed parameter is no change. `@internal` is left out.
+  A file that exports only through CommonJS is not covered. API Extractor
+  needs a build, so it is never run and a gap says so.
+- `import-graph-typescript`, a content detector for the same files: the
+  import graph from `import`, `export ... from`, `require()` and
+  `import()`, type-only imports included, resolved through relative paths,
+  the `paths` and `baseUrl` of `tsconfig.json` or `jsconfig.json`, and
+  workspace packages (a package's `main` in `dist/` maps to its `src/`).
+  A module is the first directory under a source root (`src/`, `lib/`,
+  `app/`, `source/`) of each package. With `dependency-cruiser` on the
+  machine, run with `--no-config` on the head and base trees, its
+  resolved dependencies are the edges when it read every changed file;
+  otherwise a gap says why and the parser's edges stand. The structure
+  step now gets its `Imports` rows on TypeScript and JavaScript.
+- `fan-in` reads TypeScript and JavaScript symbols with the parser
+  (`total`, `Invoice.amount`, `Invoice.constructor`) and searches them in
+  those files once lexed: a word in a string or a comment is no
+  reference, a JSX tag name and the code inside JSX are. It counts; the break is the
+  `public-api` signal.
+- `api-contracts` runs `graphql-inspector diff` on a changed GraphQL
+  schema when the machine has it: its breaking and dangerous changes are
+  signals (`graphql-inspector:breaking`, `graphql-inspector:dangerous`).
+  Without it, or when it fails, a gap, and the heuristic.
+- Tool adapters for `dependency-cruiser` (needs the TypeScript compiler
+  installed beside it, installs nothing; with `--no-config` it loads no
+  JavaScript config of the project), `graphql-inspector` (needs nothing:
+  given `.graphql` files it loads no code) and `api-extractor` (needs a
+  build: never run), checked against their sources (dependency-cruiser
+  18.9, graphql-inspector 7.0). The run header looks for `api-extractor`.
+- `.mts` and `.cts` files count as code for every detector.

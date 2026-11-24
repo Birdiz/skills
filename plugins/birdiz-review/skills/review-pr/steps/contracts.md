@@ -44,9 +44,13 @@ In `<run>`:
   name, or a word in a string. A PHP symbol is `Class::method`,
   `Class::CONST`, `Class::$property` or a bare class or function name, and
   its references are the calls that match it (`->method(`, `::method(`)
-  in PHP files, whatever the receiver.
-- `signals/import-graph-php.json` is the import graph, for the structure
-  step: its signals are not rows of your worksheet.
+  in PHP files, whatever the receiver. A TypeScript or JavaScript symbol
+  is an export's name, `Class.member` or `Class.constructor`; its
+  references are the name as a word, `.member`, or `new Class(`, in
+  TypeScript and JavaScript files with strings and comments left out.
+- `signals/import-graph-php.json` and `signals/import-graph-typescript.json`
+  are the import graphs, for the structure step: their signals are not
+  rows of your worksheet.
 - `repo-<head short sha>/`: the head tree. Read around a hunk, and read the
   callers `refs` names, when the diff alone does not say what a change
   does.
@@ -121,15 +125,26 @@ How to read each kind of signal:
   `interface-method-added`, `abstract-method-added`, `constant-removed`,
   `property-removed`, `property-changed`: a signature-level diff of the
   public API (public, or protected in a class that is not final; nothing
-  marked `@internal`). A reason ending in "a rename" names what appears in
-  the old one's place. Take the symbol's `fan_in` and `refs` from
+  marked `@internal`). For TypeScript and JavaScript, the exports:
+  `export-removed`, `export-changed`, `member-removed`, `member-changed`,
+  `interface-member-added` (a new required member breaks every object
+  literal and implementation outside the diff), `type-changed` (a type
+  compared as written: read both to tell a widening from a narrowing),
+  `enum-member-removed`, `enum-member-changed` (a stored or sent value
+  changes meaning), `reexport-removed`, `abstract-member-added`. A reason
+  ending in "a rename" names what appears in the old one's place. Take the symbol's `fan_in` and `refs` from
   `signals/fan-in.json`: callers outside the diff that still use the old
   form make it `breaking`; with none, or all updated in the diff, `minor`,
   unless the symbol is part of a package others install. A new
   interface method breaks every implementation outside the diff.
 - **Fan-in.** `symbol-removed`, `symbol-signature`: open the `refs`. Real
   callers outside the diff that the change breaks make it `breaking`. A
-  PHP symbol gets no fan-in signal: its break is the public API's row.
+  PHP, TypeScript or JavaScript symbol gets no fan-in signal: its break is
+  the public API's row.
+- **GraphQL.** `graphql-inspector:breaking`, `graphql-inspector:dangerous`:
+  graphql-inspector's own judgment of a schema change. A breaking one is
+  `breaking` unless no client uses the field; a dangerous one (a default
+  value, a new enum value) is `minor` unless a client relies on it.
 
 ### Code API
 
@@ -235,10 +250,13 @@ words what you judged (`3 migration signals`, `12 code files read`) or
 why not.
 
 - **Code API**: `evaluated` when you read every code hunk. In Notes, say
-  how the public API was read: "PHP by the signature diff (heuristic)" for
-  the files `signals/public-api.json` covered, "read from the diff, no
-  stack adapter" for the others. A PHP file the public API diff did not
-  cover makes it `partial (<file> not parsed)`.
+  how the public API was read: "PHP by the signature diff (heuristic)" or
+  "TypeScript exports by the signature diff (heuristic)" for the files
+  `signals/public-api.json` covered, "read from the diff, no stack
+  adapter" for the others. A PHP, TypeScript or JavaScript file the public
+  API diff did not cover makes it `partial (<file> not parsed)`, or
+  `partial (<file> exports through CommonJS)`, or `partial (<file>
+  minified)`.
 - **Routes and wire contracts**, **Persistence**, **Configuration**,
   **Behaviour (assertions)**: `evaluated` when you judged every row of
   that kind, and the files its detector applies to were covered. A file a

@@ -110,10 +110,11 @@ The `birdiz-review` plugin's own vocabulary.
   notable way. The stack-agnostic content detectors read migrations,
   configuration and environment templates, routes, OpenAPI and GraphQL
   contracts, dependency manifests and lockfiles, and test assertions. Each
-  uses its tool (`squawk`, `oasdiff`) when the machine has it, and its
-  heuristic otherwise, saying so in its coverage. A **stack adapter**
-  reads a language's code: the PHP adapter's content detectors are the
-  public API diff and the import graph. A **tool adapter** records what its
+  uses its tool (`squawk`, `oasdiff`, `graphql-inspector`) when the machine
+  has it, and its heuristic otherwise, saying so in its coverage. A
+  **stack adapter** reads a language's code: the PHP and TypeScript
+  adapters' content detectors are the public API diff and the import graph
+  (the TypeScript adapter also reads JavaScript). A **tool adapter** records what its
   tool needs (installed dependencies, a build) and whether it installs
   them itself; the review never builds or installs, so a tool that would
   is not used and its detector's heuristic runs instead.
