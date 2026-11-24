@@ -26,14 +26,24 @@ Each one reads the changed files of its type and writes one output under
   with or without its manifest.
 - `assertions`: test files. Assertions changed or removed, skip and focus
   markers added, existing test code changed, a test file deleted.
+- `public-api` (PHP in this version): the signature-level diff of the
+  public API of each changed PHP file, labelled heuristic. Roave's BC
+  check is never run: it installs dependencies (see `ADAPTERS`).
+- `import-graph-php`: the PHP import graph from `use` and `namespace`
+  parsing, written through `structure.graph_output`, which computes the new
+  edges and cycles between modules; and new `deptrac` layer violations when
+  the repository has a YAML config and the machine has deptrac. It feeds
+  the structure step, so its signals are not contracts rows.
 - `fan-in`: not a content detector. The public symbols the diff removes or
   changes in code files, and the references to each outside the diff, a
-  word search labelled heuristic.
+  search labelled heuristic: PHP symbols by how they are called
+  (`->total(`), the others as a word.
 
 A content detector applies to the changed files its classifier accepts
 (`applies_to` lists them, escaped), covers the ones it could read, and says
 why it could not read the others. Nothing here runs the reviewed project:
-tools read the files the run wrote from git objects.
+tools read the files the run wrote from git objects, and a tool is used
+only as its adapter allows (`ADAPTERS`).
 """
 import codecs
 import json
@@ -42,12 +52,45 @@ import re
 import shutil
 import subprocess
 
+import php
+
 CODE_EXT = re.compile(r"\.(py|js|jsx|ts|tsx|mjs|cjs|php|rb|go|java|kt|kts|cs|rs|swift|scala|ex|exs)$")
 SKIP_DIRS = {".git", "node_modules", "vendor", "dist", "build", "target", "__pycache__", ".venv", "venv",
              "coverage", ".next", ".nuxt", ".tox", ".mypy_cache", ".pytest_cache"}
 MAX_BYTES = 1 << 20
 EXCERPT = 100
 TOOL_TIMEOUT = 120
+
+# What each tool adapter needs to run on the trees the run writes: `needs` is
+# `nothing`, `dependencies` (installed packages) or `build` (generated
+# output); `installs` says the tool installs them itself. A tool needing a
+# build is never used in this version; one needing dependencies runs only on
+# what is already installed; one that installs is never used, since an
+# install runs the project's scripts and waits for `execution` (ADR 0004).
+ADAPTERS = {
+    "squawk": {"needs": "nothing", "installs": False, "note": "lints the SQL files it is given"},
+    "oasdiff": {"needs": "nothing", "installs": False, "note": "compares the two OpenAPI files it is given"},
+    "roave-backward-compatibility-check": {
+        "needs": "dependencies", "installs": True,
+        "note": "runs `composer install` (scripts off, plugins on) in its own clones of the repository, and has"
+                " no option to skip it"},
+    "deptrac": {
+        "needs": "nothing", "installs": False,
+        "note": "parses the PHP files its config points at and reads `composer.lock`; it installs nothing, but a"
+                " PHP config, or YAML that registers services or imports files, runs the project's code"},
+}
+
+
+def allowed(name):
+    """(True, None), or (False, why) when the adapter's rules forbid the tool."""
+    a = ADAPTERS.get(name)
+    if a is None:
+        return False, "no adapter in this version"
+    if a["needs"] == "build":
+        return False, "it needs a build, which this version never runs"
+    if a["installs"]:
+        return False, "it %s, and this version never installs dependencies" % a["note"]
+    return True, None
 
 
 def excerpt(text):
@@ -126,6 +169,7 @@ class Change:
         self.hunks = hunks
         self.ctx = ctx
         self._head = self._base = False
+        self._php = {}
 
     @property
     def deleted(self):
@@ -178,6 +222,20 @@ class Change:
             return self.ctx.head_problem(self.path)
         return None
 
+    def php(self, side):
+        """The PHP Unit of the `base` or `head` side, None when that side has
+        no text; raises php.ParseError."""
+        if side not in self._php:
+            text = self.head() if side == "head" else self.base()
+            try:
+                self._php[side] = (php.parse(text) if text is not None else None, None)
+            except php.ParseError as e:
+                self._php[side] = (None, str(e))
+        unit, problem = self._php[side]
+        if problem:
+            raise php.ParseError(problem)
+        return unit
+
     def head_line(self, n):
         """A line number that opens in the head file, clamped."""
         text = self.head()
@@ -191,9 +249,11 @@ class Context:
     """What the detectors read: the changed files, the head tree, the base
     blobs, the tools found, a word search at the base."""
 
-    def __init__(self, entries, patch_bytes, head_dir, read_base, mentions_base, tools, work_dir):
+    def __init__(self, entries, patch_bytes, head_dir, read_base, mentions_base, tools, work_dir,
+                 extract_base=None):
         diffs = parse_patch(patch_bytes)
         self.head_dir, self.read_base, self.mentions_base = head_dir, read_base, mentions_base
+        self.extract_base, self._base_tree = extract_base, None
         self.tools = {t["name"]: t for t in tools}
         self.work_dir = work_dir
         self._base_cache, self._mentions = {}, {}
@@ -231,6 +291,17 @@ class Context:
     def tool(self, name):
         t = self.tools.get(name)
         return t if t and t.get("found") else None
+
+    def base_tree(self):
+        """The merge base's tree, written from git objects into a temporary
+        directory of the run directory (removed with the work directory)
+        the first time a tool needs it; None when the run can't write it."""
+        if self._base_tree is None and self.extract_base is not None:
+            path = os.path.join(self.work_dir, "base-tree")
+            os.makedirs(path, exist_ok=True)
+            self.extract_base(path)
+            self._base_tree = path
+        return self._base_tree
 
 
 def decode(data):
@@ -1074,6 +1145,225 @@ def assertions(ctx, version):
     return output("assertions", version, True, applies, covered, not_covered, signals)
 
 
+# --- The PHP adapter: public API and import graph --------------------------------------------
+
+DEPTRAC_CONFIGS = ("deptrac.yaml", "deptrac.yml", "depfile.yaml", "depfile.yml", "deptrac.php")
+
+
+def php_files(ctx):
+    """The changed PHP code files the PHP adapter reads: test files left out."""
+    return [c for c in ctx.changes if (php.is_code(c.path) or php.is_code(c.old)) and not is_test(c.path)]
+
+
+def php_units(c):
+    """(base Unit, head Unit, None), or (None, None, why it can't be read)."""
+    why = c.unreadable()
+    if why:
+        return None, None, why
+    for side in ("base", "head"):
+        try:
+            c.php(side)
+        except php.ParseError as e:
+            return None, None, "not readable as PHP at the %s: %s" % (side, e)
+    return c.php("base"), c.php("head"), None
+
+
+def public_api(ctx, version):
+    applies, covered, not_covered, signals, gaps = [], [], [], [], []
+    for c in php_files(ctx):
+        applies.append(c.path)
+        base, head, why = php_units(c)
+        if why:
+            not_covered.append({"path": c.path, "reason": why})
+            continue
+        covered.append(c.path)
+        for ch in php.api_changes(base, head):
+            signals.append(signal(c.path, ch["kind"], ch["reason"], c.head_line(ch["line"]), ch["text"]))
+    if applies:
+        name = "roave-backward-compatibility-check"
+        ok, why = allowed(name)
+        if not ok:
+            gaps.append("%s not run (%s on this machine): %s; PHP public API read by the heuristic signature diff"
+                        % (name, "found" if ctx.tool(name) else "not found", why))
+    return output("public-api", version, True, applies, covered, not_covered, signals, heuristic=True, gaps=gaps,
+                  languages=["php"] if applies else [])
+
+
+def php_tree(root, skip=()):
+    """(path, text) of each PHP code file of a tree, test files and the
+    paths in `skip` left out."""
+    for d, dirs, files in os.walk(root):
+        dirs[:] = sorted(x for x in dirs if x not in SKIP_DIRS)
+        for name in sorted(files):
+            full = os.path.join(d, name)
+            rel = os.path.relpath(full, root).replace(os.sep, "/")
+            if rel in skip or not php.is_code(name) or is_test(rel) or os.path.islink(full):
+                continue
+            try:
+                if os.path.getsize(full) > MAX_BYTES:
+                    continue
+                with open(full, "rb") as fh:
+                    text = decode(fh.read())
+            except OSError:
+                continue
+            if text is not None:
+                yield rel, text
+
+
+def deptrac_config_problem(tree, config):
+    """Why deptrac can't run on this config without running the project's
+    code, or None."""
+    if config.endswith(".php"):
+        return "`%s` is PHP, and loading it runs the project's code" % config
+    try:
+        with open(os.path.join(tree, config), encoding="utf-8") as fh:
+            text = fh.read()
+    except (OSError, UnicodeDecodeError) as e:
+        return "`%s` can't be read: %s" % (config, e)
+    if re.search(r"^(services|imports)\s*:", text, re.M):
+        return "`%s` registers services or imports other files, which can load the project's PHP" % config
+    return None
+
+
+def deptrac_violations(ctx, tool, tree, config, side):
+    """({message: (path, line)} of deptrac's violations on a tree, None), or
+    (None, why it failed). Run in the tree, its cache off, its report
+    written to the work directory."""
+    report = os.path.join(ctx.work_dir, "deptrac-%s.json" % side)
+    code, out, err = run_tool(tool.get("command", "deptrac"), [
+        "analyse", "--config-file=" + os.path.join(tree, config), "--no-cache", "--no-progress",
+        "--formatter=json", "--output=" + report], tree)
+    if code is None:
+        return None, err
+    try:
+        with open(report, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return None, first_line(err or out)
+    found, top = {}, os.path.realpath(tree)
+    files = data.get("files") if isinstance(data, dict) else None
+    for path, item in (files or {}).items() if isinstance(files, dict) else ():
+        full = os.path.realpath(path if os.path.isabs(path) else os.path.join(tree, path))
+        rel = os.path.relpath(full, top).replace(os.sep, "/")
+        for msg in (item or {}).get("messages") or []:
+            if isinstance(msg, dict) and msg.get("type") == "error" and msg.get("message"):
+                found.setdefault(msg["message"], (rel, msg.get("line")))
+    return found, None
+
+
+def layer_signals(ctx, gaps):
+    """(signals, layers, tool): deptrac's violations at the head that the
+    base does not have, on the changed files, when the head has a deptrac
+    config and the machine has deptrac."""
+    config = next((n for n in DEPTRAC_CONFIGS if os.path.isfile(os.path.join(ctx.head_dir, n))), None)
+    if config is None:
+        return [], None, None
+    layers = {"config": config, "checked": False}
+    tool = ctx.tool("deptrac")
+    ok, why = allowed("deptrac")
+    problem = deptrac_config_problem(ctx.head_dir, config)
+    if not tool:
+        gaps.append("deptrac not found on this machine: the layers of `%s` not checked" % config)
+        return [], layers, None
+    if not ok or problem:
+        gaps.append("deptrac not run: %s; the layers of `%s` not checked" % (why or problem, config))
+        return [], layers, None
+    head, err = deptrac_violations(ctx, tool, ctx.head_dir, config, "head")
+    base_tree = ctx.base_tree()
+    base = {}
+    if head is not None and base_tree and os.path.isfile(os.path.join(base_tree, config)):
+        if deptrac_config_problem(base_tree, config):
+            base = None
+            err = "the base's `%s` can't be run: %s" % (config, deptrac_config_problem(base_tree, config))
+        else:
+            base, err = deptrac_violations(ctx, tool, base_tree, config, "base")
+    if head is None or base is None:
+        gaps.append("deptrac failed (%s): the layers of `%s` not checked" % (first_line(err), config))
+        return [], layers, None
+    signals = []
+    for message, (path, line) in sorted(head.items(), key=lambda kv: (kv[1][0], kv[1][1] or 0, kv[0])):
+        if message in base or path not in ctx.paths:
+            continue
+        c = next(x for x in ctx.changes if x.path == path)
+        signals.append(signal(path, "layer-violation", "new deptrac violation: %s" % message,
+                              c.head_line(line if isinstance(line, int) else None)))
+    layers.update({"checked": True, "violations": len(head), "new": len(signals)})
+    return signals, layers, "deptrac@%s" % tool.get("version")
+
+
+def import_graph_php(ctx, version):
+    """The PHP import graph, in the structure step's stack-neutral format
+    (`structure.graph_output`): `use` imports of a class between files of
+    two modules, at the base and at the head. The changed files are parsed
+    at both sides; every other PHP file of the head tree is read up to its
+    first declaration, and stands for both sides. An imported class maps to
+    the file that declares it, or whose name and namespace it has (PSR-4);
+    one that maps to no file of the repository has no edge. None when the
+    diff has no PHP file and the head no `composer.json`: no PHP to graph."""
+    import structure  # structure.py imports this module, so not at the top
+    applies, covered, not_covered, gaps = [], [], [], []
+    units = {}
+    for c in php_files(ctx):
+        applies.append(c.path)
+        base, head, why = php_units(c)
+        if why:
+            not_covered.append({"path": c.path, "reason": why})
+            continue
+        covered.append(c.path)
+        units[c.path] = (c, base, head)
+    composer = ctx.head_text("composer.json")
+    if not applies and composer is None:
+        return None
+    others = {}
+    if units:
+        skip = ctx.paths | {c.old for c in ctx.changes}
+        others = {rel: php.quick_imports(text) for rel, text in php_tree(ctx.head_dir, skip)}
+    declared = [ns for nss, _ in others.values() for ns in nss]
+    for _, base, head in units.values():
+        declared += (base.namespaces if base else []) + (head.namespaces if head else [])
+    modules = php.Modules(composer, declared)
+
+    def stem(rel, namespaces):
+        name = os.path.basename(rel)[:-len(".php")]
+        return "%s\\%s" % (namespaces[0], name) if namespaces else name
+
+    index = {stem(rel, nss): rel for rel, (nss, _) in others.items()}
+    sides = {"base": ([], dict(index)), "head": ([], dict(index))}
+    for rel, (nss, imps) in sorted(others.items()):
+        for side in sides.values():
+            side[0].append((rel, nss, imps))
+    for path, (c, base, head) in sorted(units.items()):
+        for name, unit, where in (("base", base, c.old), ("head", head, path)):
+            if unit is None:
+                continue
+            files, idx = sides[name]
+            files.append((where, unit.namespaces, unit.imports))
+            idx.setdefault(stem(where, unit.namespaces), where)
+            for fqcn in unit.classes:
+                idx[fqcn] = where
+
+    def graph_side(files, idx):
+        mods, edges = {}, []
+        for path, nss, imps in files:
+            src = modules.of_namespace(nss[0]) if nss else None
+            for kind, name, line in imps if src else ():
+                to, dst = idx.get(name), modules.of(name)
+                if kind != "class" or not to or to == path or not dst or dst == src:
+                    continue
+                mods[path], mods[to] = src, dst
+                edges.append({"from": path, "to": to, "line": line})
+        return {"modules": mods, "edges": edges}
+
+    graph = {name: graph_side(*side) for name, side in sides.items()}
+    layers_found, layers, tool = layer_signals(ctx, gaps) if units else ([], None, None)
+    out = structure.graph_output("import-graph-php", version, graph, "php", tool=tool, heuristic=True,
+                                 content=True, applies=applies, covered=covered, not_covered=not_covered,
+                                 gaps=gaps)
+    out["signals"] += layers_found
+    out.update(languages=["php"], modules=modules.rule, layers=layers, scanned=len(others) + len(units))
+    return out
+
+
 # --- Fan-in -----------------------------------------------------------------------------
 
 DEFS = {
@@ -1125,6 +1415,8 @@ def enclosing(lang, head_lines, n):
     return None, None
 
 
+
+
 def fan_in(ctx, version):
     covered, symbols = [], []
     for c in ctx.changes:
@@ -1135,6 +1427,14 @@ def fan_in(ctx, version):
         head = c.head()
         if head is None and not c.deleted:
             continue
+        if lang == "php" and php.is_code(c.path):
+            base_unit, head_unit, why = php_units(c)
+            if why is None:
+                covered.append(c.path)
+                touched = [n for n, _ in c.added()] + [n for _, _, n in c.removed()]
+                for s in php.symbols(base_unit, head_unit, touched):
+                    symbols.append(dict(s, path=c.path, _php=True))
+                continue
         covered.append(c.path)
         head_lines = (head or "").split("\n")
         found = {}
@@ -1165,17 +1465,26 @@ def fan_in(ctx, version):
                     found[name] = ("body", line)
         for name, (change, line) in found.items():
             symbols.append({"path": c.path, "symbol": name, "change": change, "line": line})
-    countable = sorted({s["symbol"] for s in symbols if len(s["symbol"]) > 3 and s["symbol"] not in COMMON})
-    refs = count_refs(ctx, countable) if countable else {"": (0,)}
-    scanned = refs.pop("")[0]
+    specs = {}
+    for s in symbols:
+        if s.get("_php"):
+            word, rx = php.reference(s["symbol"])
+            name, key = php.member_name(s["symbol"]), "php " + s["symbol"]
+        else:
+            word, rx, name, key = s["symbol"], None, s["symbol"], s["symbol"]
+        s["_key"] = key
+        if len(name) > 3 and name not in COMMON:
+            specs[key] = (word, rx, bool(s.get("_php")))
+    refs, scanned = count_refs(ctx, specs)
     signals = []
     for s in symbols:
-        if s["symbol"] in refs:
-            s["fan_in"], s["refs"] = refs[s["symbol"]][0], refs[s["symbol"]][1]
+        key, from_php = s.pop("_key"), s.pop("_php", False)
+        if key in refs:
+            s["fan_in"], s["refs"] = refs[key]
         else:
             s["fan_in"], s["refs"] = "unknown", []
             s["why"] = "too short or too common a name to count"
-        if s["change"] in ("removed", "signature") and s["fan_in"] not in ("unknown", 0):
+        if not from_php and s["change"] in ("removed", "signature") and s["fan_in"] not in ("unknown", 0):
             what = "removed" if s["change"] == "removed" else "changed its signature"
             signals.append(signal(s["path"], "symbol-removed" if s["change"] == "removed" else "symbol-signature",
                                   "public `%s` %s, %d reference(s) outside the diff" % (s["symbol"], what, s["fan_in"]),
@@ -1186,12 +1495,17 @@ def fan_in(ctx, version):
                   symbols=symbols, scanned=scanned)
 
 
-def count_refs(ctx, names):
-    """{name: (references outside the diff, [path:line, ...])}, and "" ->
-    (files scanned,)."""
-    rx = re.compile(r"(?<![\w$])(%s)(?![\w$])" % "|".join(re.escape(n) for n in names))
-    counts = {n: [0, []] for n in names}
+def count_refs(ctx, specs):
+    """({key: (references outside the diff, [path:line, ...])}, files
+    scanned) for specs {key: (word, pattern, PHP only)}: a line is searched
+    when it holds the word; a spec with no pattern matches the word alone.
+    A PHP symbol's references are only searched in PHP files: the public
+    API diff signals its break, so fan-in only counts."""
+    specs = {k: (w, rx or re.compile(r"(?<![\w$])%s(?![\w$])" % re.escape(w)), p) for k, (w, rx, p) in specs.items()}
+    counts = {k: [0, []] for k in specs}
     scanned = 0
+    if not specs:
+        return {}, scanned
     for d, dirs, files in os.walk(ctx.head_dir):
         dirs[:] = sorted(x for x in dirs if x not in SKIP_DIRS)
         for name in sorted(files):
@@ -1209,30 +1523,36 @@ def count_refs(ctx, names):
             if text is None:
                 continue
             scanned += 1
+            here = [(k, w, rx) for k, (w, rx, only_php) in specs.items()
+                    if w in text and (not only_php or php.is_code(name))]
+            if not here:
+                continue
             for n, line in enumerate(text.split("\n"), 1):
                 if comment(line):
                     continue
-                for m in rx.finditer(line):
-                    entry = counts[m.group(1)]
-                    entry[0] += 1
-                    if len(entry[1]) < MAX_REFS:
-                        entry[1].append("%s:%d" % (rel, n))
-    out = {n: (v[0], v[1]) for n, v in counts.items()}
-    out[""] = (scanned,)
-    return out
+                for k, w, rx in here:
+                    if w not in line:
+                        continue
+                    for _ in rx.finditer(line):
+                        entry = counts[k]
+                        entry[0] += 1
+                        if len(entry[1]) < MAX_REFS:
+                            entry[1].append("%s:%d" % (rel, n))
+    return {k: (v[0], v[1]) for k, v in counts.items()}, scanned
 
 
 # --- All of them ------------------------------------------------------------------------
 
 DETECTORS = [("migrations", migrations), ("config", config), ("routes", routes),
              ("api-contracts", api_contracts), ("dependencies", dependencies), ("assertions", assertions),
-             ("fan-in", fan_in)]
+             ("public-api", public_api), ("import-graph-php", import_graph_php), ("fan-in", fan_in)]
 
 
 def run_all(ctx, version):
-    """[(name, output)] of every detector, in a fixed order."""
+    """[(name, output)] of every detector, in a fixed order; a stack
+    adapter with nothing of its stack to read writes no output."""
     os.makedirs(ctx.work_dir, exist_ok=True)
     try:
-        return [(name, fn(ctx, version)) for name, fn in DETECTORS]
+        return [(name, out) for name, out in ((n, fn(ctx, version)) for n, fn in DETECTORS) if out is not None]
     finally:
         shutil.rmtree(ctx.work_dir, ignore_errors=True)

@@ -31,8 +31,10 @@ from finding_core import NAME as CORE
 STATE_SUBDIR = os.path.join("birdiz-review", "runs")
 
 # Detector tools looked for on every run: (name, command). Found ones are
-# recorded with their version. detectors.py uses squawk and oasdiff; the
-# adapters for the others come with the stack adapters.
+# recorded with their version, and a tool with an adapter with what it needs
+# (detectors.ADAPTERS). detectors.py has adapters for squawk, oasdiff,
+# deptrac and Roave's BC check (never run: it installs dependencies); the
+# others come with the TypeScript and Python adapters.
 TOOLS = [
     ("git", "git"),
     ("roave-backward-compatibility-check", "roave-backward-compatibility-check"),
@@ -241,14 +243,22 @@ def tool_version(path, cwd):
 
 
 def detect_tools(cwd):
-    """Every detector tool looked for, found or not, with its version."""
+    """Every detector tool looked for, found or not, with its version, and
+    for a tool with an adapter what it needs and whether the run may use it."""
     out = []
     for name, command in TOOLS:
         path = shutil.which(command)
         if path:
-            out.append({"name": name, "command": command, "found": True, "version": tool_version(path, cwd)})
+            entry = {"name": name, "command": command, "found": True, "version": tool_version(path, cwd)}
         else:
-            out.append({"name": name, "command": command, "found": False})
+            entry = {"name": name, "command": command, "found": False}
+        adapter = detectors.ADAPTERS.get(name)
+        if adapter:
+            ok, why = detectors.allowed(name)
+            entry.update({"needs": adapter["needs"], "installs": adapter["installs"], "allowed": ok})
+            if why:
+                entry["why"] = why
+        out.append(entry)
     return out
 
 
@@ -346,8 +356,9 @@ def run_detectors(repo, run_dir, target, tools, entries, patch_bytes, head_dir):
     doc committed at the base and the directories of the merge base:
     head content from the tree written from git objects, base content and
     the word search read from the merge base's objects. A tool needing the
-    base side of a file gets it in a scratch directory of the run
-    directory, removed afterwards."""
+    base side of a file, or the whole base tree, gets it written from git
+    objects in a scratch directory of the run directory, removed
+    afterwards: nothing is checked out in the repository."""
     base = target["merge_base"]
 
     def read_base(path):
@@ -359,7 +370,7 @@ def run_detectors(repo, run_dir, target, tools, entries, patch_bytes, head_dir):
         return git(repo, "grep", "-q", "-I", "-F", "-w", "-e", word, base, "--", check=False) is not None
 
     ctx = detectors.Context(entries, patch_bytes, head_dir, read_base, mentions, tools,
-                            os.path.join(run_dir, ".tool-trees"))
+                            os.path.join(run_dir, ".tool-trees"), lambda dest: extract_tree(repo, base, dest))
     outputs = detectors.run_all(ctx, fmt.VERSION)
     base_dirs = {d for d in git(repo, "ls-tree", "-r", "-d", "-z", "--name-only", base).split("\0") if d}
     doc = git(repo, "cat-file", "blob", "%s:%s" % (target["base"]["sha"], pocock.DOMAIN_DOC), check=False, binary=True)

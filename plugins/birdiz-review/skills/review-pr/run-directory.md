@@ -7,8 +7,9 @@ One run is one directory, written by `scripts/run.py` and checked by
 $XDG_STATE_HOME/birdiz-review/runs/<repo>/<branch>/<head short sha>/
 ├── run.json                  the run header
 ├── signals/<detector>.json   one output per detector (git-changes, migrations, config,
-│                             routes, api-contracts, dependencies, assertions, fan-in,
-│                             structure; import-graph-<stack> from a stack adapter)
+│                             routes, api-contracts, dependencies, assertions, public-api,
+│                             fan-in, structure; import-graph-<stack> from a stack adapter:
+│                             import-graph-php)
 ├── findings/<axis>.md        intent.md, contracts.md, structure.md
 ├── brief.md                  the brief, a projection of the files above
 ├── sources.json              the spec, tickets and PR body read, and their contract status
@@ -39,8 +40,19 @@ detected, what the judgment steps read), and for a pull request `pr`
 found or not, with the version of each one found:
 
 ```json
-{"name": "squawk", "command": "squawk", "found": true, "version": "1.4.2"}
+{"name": "squawk", "command": "squawk", "found": true, "version": "1.4.2",
+ "needs": "nothing", "installs": false, "allowed": true}
 ```
+
+A tool with an adapter also records what it needs to run on the trees the
+run writes: `needs` (`nothing`, `dependencies` or `build`), `installs`
+(whether it installs them itself), `allowed`, and `why` when it is not. A
+tool needing a build is never used in this version; one needing
+dependencies runs only on what is already installed; one that installs
+them is never used, since an install runs the project's scripts and waits
+for `execution` (ADR 0004). `roave-backward-compatibility-check` runs
+`composer install` in its own clones of the repository, with no option to
+skip it, so it is never run. `deptrac` installs nothing and runs.
 
 Tools are detected on every run and stored nowhere else: they depend on the
 machine, not the repository.
@@ -152,15 +164,66 @@ read from the merge base's objects.
   changed outside assertions; `test-deleted`. A test file that only gains
   lines gets no signal, so it can be `skim`.
 
+The PHP adapter's content detectors apply to changed `.php` files, test
+files and templates (`*.blade.php`, ...) left out. A file without a
+`<?php` tag, or one whose comments, strings or braces never close, is
+`not_covered` (`not readable as PHP at the head: ...`), which makes it
+`unproven`. A tool needing the whole base tree gets it written from git
+objects into a temporary directory of the run directory, removed after the
+detectors ran; nothing is checked out in the repository.
+
+- `public-api`: the signature-level diff of each file's public API between
+  the base and the head, labelled heuristic (`languages`: `["php"]`).
+  Public means public, or protected in a class that is not final; a class
+  or member marked `@internal` is left out. `class-removed` (naming the
+  class that appears in its place, a rename), `class-changed` (became
+  final, abstract or another kind; no longer extends or implements a
+  type), `method-removed` (naming the method in its place), `function-removed`,
+  `signature-changed` (a parameter removed, renamed, retyped, made
+  required, a new required one, the return type, static or final),
+  `visibility-reduced`, `interface-method-added`, `abstract-method-added`,
+  `constant-removed` (enum cases included), `property-removed`,
+  `property-changed`. Types are compared fully qualified, so importing a
+  class under an alias is no change. Roave's BC check is never run (see the
+  run header's tools), and a gap says so.
+- `import-graph-php`: the PHP import graph, written in the stack-neutral
+  format below ("An import graph comes from a stack adapter"), from which
+  `structure.py` computes its new edges and cycles (`import-edge-added`,
+  `import-cycle-added`). Written only when the diff has a PHP file or the
+  head a `composer.json`. A module is the namespace segment under a PSR-4
+  prefix of the head's `composer.json` (`App\Billing` under `App\`; a
+  class right under the prefix belongs to the prefix's module), else the
+  first two segments of a namespace the repository declares; `modules`
+  says which rule held. An edge is a `use` of a class from a file of one
+  module to the file of another that declares it, or whose name and
+  namespace it has (PSR-4); a class of no file in the repository has none.
+  The changed files are parsed at both sides; every other PHP file of the
+  head tree is read up to its first declaration and stands for both sides.
+  With a deptrac config at the head (`deptrac.yaml`, `deptrac.yml`,
+  `depfile.yaml`, `depfile.yml`) and deptrac on the machine, `deptrac
+  analyse` runs on the head tree and, when it has the config, the base
+  tree, cache off, and each violation the base does not have is a
+  `layer-violation` on its changed file. A PHP config, or YAML with
+  `services:` or `imports:`, can load the project's code: deptrac is not
+  run on it, and a gap says so. The output also holds `layers` (`config`,
+  `checked`, `violations`, `new`) and `scanned`. Its signals feed the
+  structure step: they are not rows of the contracts worksheet.
+
 `fan-in` is not a content detector. It lists the public symbols the diff
 removes or changes in code files, test files left out (`symbols`: `path`,
 `symbol`, `change` `removed`, `signature` or `body`, `line`, `fan_in`, the
 references outside the diff, and the first `refs` as `path:line`), and
-`scanned`, the files searched. The count is a word search over the head
-tree, comment lines skipped, labelled heuristic: a name of three letters or
-fewer, or a common one, is `unknown`. A removed symbol or a changed
-signature with references outside the diff is a signal
-(`symbol-removed`, `symbol-signature`).
+`scanned`, the files searched. The count is a search over the head tree,
+comment lines skipped, labelled heuristic: a name of three letters or
+fewer, or a common one, is `unknown`. A PHP symbol comes from the PHP
+parser: `Class::method`, `Class::CONST`, `Class::$property`, or a class or
+function name, a `body` change being a public method the base already had
+whose lines a hunk touches. Its references are searched in PHP files by how
+it is used (`->method(`, `::method(`, `::CONST`, `new Class(` for a
+constructor, the class name as a word), whatever the receiver. Other symbols are searched as a word in every code file. A
+removed symbol or a changed signature with references outside the diff is
+a signal (`symbol-removed`, `symbol-signature`), except for PHP, whose break
+is the `public-api` signal.
 
 `structure` is not a content detector and has no signals: a new file
 already has its `git-changes` signal. It records what the structure step
@@ -343,7 +406,8 @@ this file may have:
 | PR #7: Door `two-way`, Blast Radius `local` | one-way | F-BRK-002 |
 ```
 
-- **Signals**: one row per signal of every detector but `git-changes`,
+- **Signals**: one row per signal of every detector but `git-changes` and
+  the import graphs (`import-graph-<stack>`),
   `S<n>` in the order of the header's `detectors`, naming the signal's
   file. Judgment `one-way` (reverting the merge does not undo it),
   `breaking` (a consumer outside the diff breaks, a revert undoes it) or

@@ -220,3 +220,42 @@ The structure step ([#43](https://github.com/Birdiz/skills/issues/43)):
   new modules, the new files by class, each new dependency with the
   step's judgment, the import graph, the glossary and the ADRs. A reason
   line of the verdict counts the structure judgments.
+
+The PHP adapter ([#44](https://github.com/Birdiz/skills/issues/44)):
+
+- `public-api`, a content detector for changed PHP files: the
+  signature-level diff of the public API between the base and the head,
+  labelled heuristic. Public means public, or protected in a class that is
+  not final; `@internal` is left out. Signals: a class, method, function,
+  constant, enum case or property removed (a rename names what appears in
+  the old one's place), a signature changed (parameter removed, renamed,
+  retyped or made required, a new required parameter, the return type), a
+  visibility reduced, a class made final or abstract, a method added to an
+  interface or as abstract. The PHP parser is a standard-library lexer:
+  comments, strings, heredocs and attributes can't fool it, and a file
+  without a `<?php` tag (a template) or one it can't finish is not covered,
+  so `unproven`.
+- `import-graph-php`, a content detector for the same files: the import
+  graph from `use` and `namespace` parsing, file to file, with modules
+  taken from the PSR-4 prefixes of `composer.json`, written through the
+  structure step's `graph_output`. The structure step now gets its
+  `Imports` rows on PHP: new edges between modules and new cycles. With a
+  YAML deptrac config and deptrac on the machine, `layer-violation` for
+  each violation the base did not have.
+- A PHP file covered by both with no signal, no finding and outside the
+  risk map is now `skim`.
+- `fan-in` reads PHP symbols with the parser (`Invoice::total`) and
+  searches how each is called (`->total(`) in PHP files. It counts and
+  fills `fan_in`; the break itself is the `public-api` signal.
+- Tool adapters record what each tool needs (`nothing`, installed
+  `dependencies`, a `build`) and whether it installs them itself, in
+  `detectors.ADAPTERS` and in the run header's `tools`. A tool needing a
+  build is never used, and neither is one that installs. Checked against
+  the sources: `roave/backward-compatibility-check` 8.27 runs `composer
+  install` (scripts off, plugins on) in its own clones with no option to
+  skip it, so it is never run and a gap says so. `deptrac` 4.7 installs
+  nothing, but a PHP config, or YAML with `services:` or `imports:`, loads
+  the project's code, so it runs only on plain YAML configs, with its cache
+  off.
+- A tool that needs the whole base tree gets it written from git objects
+  into a temporary directory of the run directory, removed afterwards.
