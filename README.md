@@ -38,7 +38,9 @@ Tickets, one per fix, have run to local files, then to a GitHub tracker
 been checked at the later commit, through to the plan, the report and the
 tickets. A validator checks the form of findings files and plans; it has
 run inside verification, the plan, the report and tickets. A full audit has
-also run on a second codebase, end to end, in one day. See
+also run on a second codebase, end to end, in one day. `birdiz-review`
+0.1.0 has run only on this repository's own pull requests, one step at a
+time as each was written. It has not yet run on an evaluation corpus. See
 [Roadmap](#roadmap).
 
 ## Install

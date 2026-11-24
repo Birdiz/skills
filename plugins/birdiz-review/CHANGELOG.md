@@ -1,16 +1,29 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-11-24)
 
 The first review plugin, beside `birdiz-audit` in the `birdiz` marketplace
 and installable without it: `/plugin install birdiz-review@birdiz`. It
 carries its own copy of the finding core
 ([ADR 0005](../../docs/adr/0005-two-plugins-share-a-copied-core.md)).
 
-This release is the bare review run, end to end
-([#38](https://github.com/Birdiz/skills/issues/38)). No content detector
-and no judgment step exists yet, so every changed file is `unproven` and
-the brief says which dimensions did not run.
+The first slice of the review, the attention map
+([#35](https://github.com/Birdiz/skills/issues/35)). `review-setup`
+records a repository's stacks and risk map, once. `review-pr` reviews a
+PR, a branch or a range. It runs deterministic detectors, then three
+judgment steps (intent, contracts, structure), and writes a brief: where
+to read and why, what is safe to skim with the proof, what the review did
+not cover, and a proposed verdict (`merge`, `fix`, `close-and-reprompt`).
+It never writes to the reviewed branch
+([ADR 0006](../../docs/adr/0006-review-invariants.md)). The detectors
+cover migrations, configuration, routes, API contracts, dependencies and
+test assertions in any stack, plus PHP, TypeScript, JavaScript and Python
+code. Gates, test integrity and adversarial review are not in this
+version, and every brief says so. The sections below follow the tickets
+in order.
+
+The bare review run, end to end
+([#38](https://github.com/Birdiz/skills/issues/38)):
 
 - `review-pr` takes a branch, compared with the remote's default branch, or
   a `base..head` range, and refuses an empty diff or an unknown ref without
