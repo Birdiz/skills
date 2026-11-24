@@ -7,8 +7,9 @@ names, with or without a glossary and ADRs. A run writes the structure
 detector's output and the worksheet; the tests fill the worksheet as the
 step would, regenerate the brief, and check the run with validate.py and
 check-pointers.py. The step's judgment itself is not tested here: only
-what the files must say. The import graph is the stack-neutral format a
-stack adapter will write, injected into the run directory.
+what the files must say. The TypeScript adapter graphs these repositories,
+with no edge between modules; a graph with edges is injected into the run
+directory in the stack-neutral format.
 """
 import json
 import os
@@ -272,8 +273,8 @@ class TestStructure(unittest.TestCase):
         self.start()
         self.assertIn("STEP: structure %s" % os.path.join(os.path.dirname(HERE), "steps", "structure.md"), self.out)
         self.assertLess(self.out.index("STEP: contracts"), self.out.index("STEP: structure"))
-        self.assertIn("| Import graph | not-evaluable (no stack adapter supplies an import graph) | Fixed by the run:",
-                      self.blank)
+        self.assertIn("| Import graph | not-evaluable | Step not run yet", self.blank,
+                      "the TypeScript adapter supplies the graph: the step judges the area")
         self.assertIn("## Imports\n\nNone.\n", self.blank)
         code, report = check(self.root, "--require", "brief")
         self.assertEqual(code, 0, report)
@@ -287,11 +288,12 @@ class TestStructure(unittest.TestCase):
         self.assertIn("- Entry point: `src/ordering/OrderController.ts`.", top)
         self.assertIn("- New dependency `package.json:4` `got` ^14.0.0 (dependencies), http-client, beside `axios`:"
                       " not judged: the structure step did not run.", top)
-        self.assertIn("- Import graph: not-evaluable (no stack adapter supplies an import graph).", top)
+        self.assertIn("- Import graph (signals/import-graph-typescript.json, heuristic): 0 new cross-module edge(s),"
+                      " 0 new cycle(s).", top)
         self.assertIn("- Glossary: 2 term(s) in GLOSSARY.md; 3 new type name(s) no term names.", top)
         self.assertIn("- ADRs: 1 ADR(s) in docs/adr/.", top)
         gaps = self.brief().split("## Coverage gaps")[1]
-        self.assertIn("- structure, Import graph: not-evaluable (no stack adapter supplies an import graph).", gaps)
+        self.assertNotIn("structure, Import graph", gaps)
 
     def test_a_filled_worksheet_passes_and_shows_in_the_brief(self):
         self.start()
@@ -303,7 +305,8 @@ class TestStructure(unittest.TestCase):
         self.assertIn("http-client, beside `axios`: not needed: axios already calls HTTP (F-STR-001).", brief)
         self.assertIn("3 new type name(s) no term names, 2 judged a domain term (F-STR-002).", brief)
         self.assertIn("- Structure: 3 new file(s), 1 new module(s); 1 new dependency(ies), 1 not needed; 3 new type"
-                      " name(s) outside the glossary, 2 judged a domain term; import graph not evaluable.",
+                      " name(s) outside the glossary, 2 judged a domain term; 0 import change(s), 0 across a"
+                      " boundary.",
                       brief.split("## Verdict")[1])
         self.assertIn("F-STR-001 A second HTTP client", brief.split("## Glance")[1].split("## ")[0])
 
@@ -325,14 +328,13 @@ class TestStructure(unittest.TestCase):
             self.assertIn(message, report)
 
     def test_the_areas_fixed_by_the_run_stay_fixed(self):
-        self.start()
-        text = self.good().replace("| Import graph | not-evaluable (no stack adapter supplies an import graph) |",
-                                   "| Import graph | evaluated |")
-        text = text.replace("| Glossary | evaluated |", "| Glossary | not-evaluable (no glossary) |")
+        self.start(base={})
+        text = self.good().replace("| Glossary | not-evaluable (no glossary) |", "| Glossary | evaluated |")
+        text = text.replace("| Import graph | evaluated |", "| Import graph | not-evaluable (no glossary) |")
         report = self.errors(text)
-        self.assertIn("area `Import graph` is `not-evaluable (no stack adapter supplies an import graph)` in this run,"
-                      " fixed by what exists: not `evaluated`", report)
-        self.assertIn("area `Glossary` is evaluable in this run: judge it, or say `partial (<what>)`", report)
+        self.assertIn("area `Glossary` is `not-evaluable (no glossary)` in this run, fixed by what exists: not"
+                      " `evaluated`", report)
+        self.assertIn("area `Import graph` is evaluable in this run: judge it, or say `partial (<what>)`", report)
 
     def test_the_tables_belong_to_the_structure_file(self):
         self.start()
@@ -345,8 +347,7 @@ class TestStructure(unittest.TestCase):
 
     def test_no_glossary_and_no_adrs_are_not_evaluable_not_drift(self):
         self.start(base={})
-        self.assertEqual(self.so["areas"], {"Import graph": "not-evaluable (no stack adapter supplies an import graph)",
-                                            "Glossary": "not-evaluable (no glossary)",
+        self.assertEqual(self.so["areas"], {"Glossary": "not-evaluable (no glossary)",
                                             "ADRs": "not-evaluable (no ADRs)"})
         self.assertEqual(self.so["domain"]["doc"]["status"], "missing")
         self.assertIn("## Terms\n\nNone.\n", self.blank)

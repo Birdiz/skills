@@ -9,7 +9,7 @@ $XDG_STATE_HOME/birdiz-review/runs/<repo>/<branch>/<head short sha>/
 ├── signals/<detector>.json   one output per detector (git-changes, migrations, config,
 │                             routes, api-contracts, dependencies, assertions, public-api,
 │                             fan-in, structure; import-graph-<stack> from a stack adapter:
-│                             import-graph-php)
+│                             import-graph-php, import-graph-typescript)
 ├── findings/<axis>.md        intent.md, contracts.md, structure.md
 ├── brief.md                  the brief, a projection of the files above
 ├── sources.json              the spec, tickets and PR body read, and their contract status
@@ -52,7 +52,12 @@ dependencies runs only on what is already installed; one that installs
 them is never used, since an install runs the project's scripts and waits
 for `execution` (ADR 0004). `roave-backward-compatibility-check` runs
 `composer install` in its own clones of the repository, with no option to
-skip it, so it is never run. `deptrac` installs nothing and runs.
+skip it, so it is never run. `api-extractor` reads the `.d.ts` files a
+TypeScript build writes, so it is never run either. `deptrac`,
+`graphql-inspector` and `dependency-cruiser` install nothing and run;
+`dependency-cruiser` needs dependencies: it reads TypeScript through the
+TypeScript compiler installed beside it, and skips TypeScript files
+without one.
 
 Tools are detected on every run and stored nowhere else: they depend on the
 machine, not the repository.
@@ -147,8 +152,15 @@ read from the merge base's objects.
   `swagger:` key, and GraphQL schemas. With `oasdiff` on the machine,
   `oasdiff breaking` on the base and head (`oasdiff:<id>`); without it, a
   gap, and the heuristic: `path-removed`, `operation-removed`,
-  `contract-changed`, `required-added`. GraphQL: `field-removed`,
-  `field-changed`. A deleted contract: `contract-removed`.
+  `contract-changed`, `required-added`. GraphQL: with `graphql-inspector`
+  on the machine, `graphql-inspector diff` on the base and head schema
+  files, its breaking and dangerous changes
+  (`graphql-inspector:breaking`, `graphql-inspector:dangerous`, with no
+  line: it prints none); without it, or when it fails (a schema split
+  across files does not load alone), a gap, and the heuristic:
+  `field-removed`, `field-changed`. A deleted contract: `contract-removed`.
+  `tool` names each tool used, comma-separated, and `heuristic` is true
+  when a file was read by the heuristic.
 - `dependencies`: manifests (`package.json`, `composer.json`,
   `pyproject.toml`, `requirements*.txt`, `Pipfile`, `Gemfile`, `go.mod`,
   `Cargo.toml`) and their lockfiles. `dependency-added`,
@@ -173,7 +185,8 @@ objects into a temporary directory of the run directory, removed after the
 detectors ran; nothing is checked out in the repository.
 
 - `public-api`: the signature-level diff of each file's public API between
-  the base and the head, labelled heuristic (`languages`: `["php"]`).
+  the base and the head, labelled heuristic (`languages`: the languages of
+  the files it applies to, `php`, `typescript`, `javascript`).
   Public means public, or protected in a class that is not final; a class
   or member marked `@internal` is left out. `class-removed` (naming the
   class that appears in its place, a rename), `class-changed` (became
@@ -209,21 +222,90 @@ detectors ran; nothing is checked out in the repository.
   `checked`, `violations`, `new`) and `scanned`. Its signals feed the
   structure step: they are not rows of the contracts worksheet.
 
+The TypeScript adapter's content detectors apply to changed `.ts`, `.tsx`,
+`.mts`, `.cts`, `.js`, `.jsx`, `.mjs` and `.cjs` files, test files and
+minified files (`*.min.js`) left out; `.vue` and `.svelte` files are read
+by none. Its lexer blanks comments, strings, template literals, regular
+expressions and JSX (`<` opens JSX in an expression everywhere but `.ts`,
+where it is a type assertion). A file it can't finish is `not_covered`
+(`not readable as TypeScript at the head: ...`), and so is a file with a
+line over 5000 characters, or 500 on average (`minified or bundled at the
+head ...`): both are `unproven`.
+
+- `public-api`, for these files: the signature-level diff of each file's
+  exports, labelled heuristic. Exports are `export` declarations, `export
+  { a as b }`, `export default`, and the re-exports `export { a } from`
+  and `export * from`. A file that exports only through CommonJS
+  (`module.exports`, `exports.x`) is `not_covered`: its API is not read in
+  this version. Private and `#` members are not API, protected ones are;
+  a declaration or member marked `@internal` is left out. Types are
+  compared as written, spaces aside: `string | number` and `number |
+  string` differ, and adding an annotation is a change. A parameter
+  renamed is none (TypeScript has no named arguments). `export-removed`
+  (naming the export that appears in its place, a rename; a deleted file
+  gets one, listing its exports), `export-changed` (a function became a
+  class, a type, a value...), `signature-changed` (a parameter removed,
+  retyped or made required, a new required one, a rest parameter, the
+  return type, type parameters, an overload removed; for functions,
+  methods and constructors), `class-changed` (became abstract, no longer
+  extends or implements a type), `method-removed`, `property-removed`,
+  `property-changed` (type, readonly, static, a method became a property),
+  `visibility-reduced`, `abstract-member-added`, `member-removed`,
+  `member-changed` and `interface-member-added` (a required member, for
+  interfaces), `type-changed` (a type alias or an annotated variable),
+  `enum-member-removed`, `enum-member-changed` (its value, implicit
+  numbers counted), `reexport-removed` (`export * from`). API Extractor is
+  never run, and a gap says so.
+- `import-graph-typescript`: the import graph, in the same stack-neutral
+  format, from `import`, `export ... from`, `import x = require()`,
+  `require()` and `import()` with a string, type-only imports included.
+  Written only when the diff has such a file: a `package.json` beside code
+  of another stack does not make the Import graph area evaluated. A
+  specifier resolves to a file of the repository
+  through a relative path (an ESM `./x.js` names `./x.ts`, a directory its
+  `index`), the `paths` and `baseUrl` of the nearest `tsconfig.json` or
+  `jsconfig.json` (relative `extends` followed), or a workspace package's
+  name (a directory with a `package.json` and a `name`), its `exports`,
+  `types`, `module` or `main` mapped from `dist/` to `src/` when the build
+  output is not in the tree, else `src/index`. A package outside the
+  repository has no edge. A module is the first directory under a source
+  root (`src/`, `lib/`, `app/`, `source/`) of a package, else the
+  package's first directory; a file right under a source root, or a
+  package, belongs to it, and `/` is the root; `modules` says which
+  packages and aliases it found. With `dependency-cruiser` on the
+  machine, `depcruise --no-config --ts-pre-compilation-deps --output-type
+  json` runs on the head tree and the base tree (`--ts-config` when the
+  tree has a `tsconfig.json`), and its resolved dependencies are the edges
+  (`line` taken from the parser where it resolved the same pair, else
+  `null`), when it read every changed file at both sides; otherwise a gap
+  says why (not found, it failed, it skipped a file: no TypeScript
+  compiler beside it) and the parser's resolution stands. The output also
+  holds `languages` and `scanned`. Its signals feed the structure step.
+
 `fan-in` is not a content detector. It lists the public symbols the diff
 removes or changes in code files, test files left out (`symbols`: `path`,
 `symbol`, `change` `removed`, `signature` or `body`, `line`, `fan_in`, the
 references outside the diff, and the first `refs` as `path:line`), and
 `scanned`, the files searched. The count is a search over the head tree,
 comment lines skipped, labelled heuristic: a name of three letters or
-fewer, or a common one, is `unknown`. A PHP symbol comes from the PHP
+fewer, or a common one, is `unknown`. A TypeScript or JavaScript symbol
+comes from the TypeScript parser: an export's name, `Class.member` or
+`Interface.member`, `Class.constructor`, a `body` change being an exported
+function or a public method the base already had whose lines a hunk
+touches. Its references are searched in TypeScript and JavaScript files,
+lexed first so a word in a string or a comment is none (a JSX tag name, and
+the code inside JSX, are references): an export as a
+word that is not a property (`total`, not `.total`), a member as `.member`
+or `?.member` whatever the receiver, a constructor as `new Class(` or
+`extends Class`. A PHP symbol comes from the PHP
 parser: `Class::method`, `Class::CONST`, `Class::$property`, or a class or
 function name, a `body` change being a public method the base already had
 whose lines a hunk touches. Its references are searched in PHP files by how
 it is used (`->method(`, `::method(`, `::CONST`, `new Class(` for a
 constructor, the class name as a word), whatever the receiver. Other symbols are searched as a word in every code file. A
 removed symbol or a changed signature with references outside the diff is
-a signal (`symbol-removed`, `symbol-signature`), except for PHP, whose break
-is the `public-api` signal.
+a signal (`symbol-removed`, `symbol-signature`), except for PHP, TypeScript
+and JavaScript, whose break is the `public-api` signal.
 
 `structure` is not a content detector and has no signals: a new file
 already has its `git-changes` signal. It records what the structure step

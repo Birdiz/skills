@@ -21,8 +21,9 @@ content is specific to auditing.
 A second plugin, `birdiz-review`, reviews pull requests written by coding
 agents: where to read and why, what the review did not cover, and a
 proposed verdict. It is new: it reads migrations, configuration, routes,
-API contracts, dependencies and test assertions in any stack, and PHP code
-(public API, import graph, fan-in); TypeScript and Python code come next.
+API contracts, dependencies and test assertions in any stack, and PHP,
+TypeScript and JavaScript code (public API, import graph, fan-in); Python
+code comes next.
 
 ## Status
 
@@ -171,7 +172,10 @@ user-invoked one.
   second way of doing what the codebase already does, changes against an
   ADR or recorded by none, domain terms the glossary lacks, and new imports
   between modules from a stack adapter's graph), the PHP adapter (the
-  public API diff, the import graph, `deptrac` layers when configured), a
+  public API diff, the import graph, `deptrac` layers when configured), the
+  TypeScript adapter (the exports' signature diff, the import graph through
+  tsconfig paths and workspace packages, `dependency-cruiser` when
+  present, GraphQL schemas through `graphql-inspector` when present), a
   bucket for every changed
   file (`must-read`, `glance`, `skim`,
   `unproven`), the coverage gaps and a proposed verdict (`merge`, `fix`,

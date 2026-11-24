@@ -114,7 +114,14 @@ files of one module are not structure: they have no row, and need no
 finding. A `layer-violation` signal in `signals/import-graph-php.json` is
 a dependency the repository's own deptrac rules forbid, new in this diff:
 it is a `boundary` when its row exists, and a finding beyond the rows
-when the edge between the two modules already existed.
+when the edge between the two modules already existed. In
+`signals/import-graph-typescript.json`, a module is a directory
+(`src/billing`, `packages/web/src/pages`; `modules` says how they were
+cut): an edge between two directories of one feature can be ordinary, so
+read the codebase's own layout before calling it a `boundary`. An edge
+whose `line` is `null` came from dependency-cruiser through a resolution
+the parser did not make (a webpack or bundler alias): open the importing
+file to find it.
 
 ## Beyond the rows
 
@@ -232,8 +239,10 @@ fixed as they are. In **Notes**, say in a few words what you judged
   term row, unless the run fixed them `not-evaluable` (no ADRs, no
   glossary, contract drift).
 - **Import graph**: fixed `not-evaluable (no stack adapter supplies an
-  import graph)` until an adapter writes one; then `evaluated` when every
-  row is judged.
+  import graph)` when no adapter wrote one (PHP, TypeScript and JavaScript
+  have one in this version); then `evaluated` when every row is judged, or
+  `partial (<file> not read)` when the graph's `not_covered` lists a
+  changed file.
 - `partial (<what>)` when part of an area could not be judged, saying
   which part.
 - `Axis: evaluated` when every area is evaluated or fixed by the run, else

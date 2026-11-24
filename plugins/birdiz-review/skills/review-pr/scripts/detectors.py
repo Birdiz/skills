@@ -20,24 +20,34 @@ Each one reads the changed files of its type and writes one output under
   any changed file.
 - `api-contracts`: OpenAPI and GraphQL files. With `oasdiff` on the machine,
   its breaking changes; otherwise the paths and operations removed and the
-  contract lines changed. GraphQL types and fields removed or changed.
+  contract lines changed. With `graphql-inspector` on the machine, the
+  breaking and dangerous changes of a GraphQL schema; otherwise the types
+  and fields removed or changed.
 - `dependencies`: dependency manifests and lockfiles. Dependencies added,
   removed or changed, the runtime constraint changed, a lockfile changed
   with or without its manifest.
 - `assertions`: test files. Assertions changed or removed, skip and focus
   markers added, existing test code changed, a test file deleted.
-- `public-api` (PHP in this version): the signature-level diff of the
-  public API of each changed PHP file, labelled heuristic. Roave's BC
-  check is never run: it installs dependencies (see `ADAPTERS`).
+- `public-api` (PHP, TypeScript and JavaScript in this version): the
+  signature-level diff of the public API of each changed file, labelled
+  heuristic: PHP's public classes and members, TypeScript's exports. Roave's
+  BC check is never run: it installs dependencies; nor is API Extractor: it
+  needs a build (see `ADAPTERS`).
 - `import-graph-php`: the PHP import graph from `use` and `namespace`
   parsing, written through `structure.graph_output`, which computes the new
   edges and cycles between modules; and new `deptrac` layer violations when
   the repository has a YAML config and the machine has deptrac. It feeds
   the structure step, so its signals are not contracts rows.
+- `import-graph-typescript`: the TypeScript and JavaScript import graph
+  from import, export, `require` and `import()` parsing, specifiers
+  resolved through relative paths, `tsconfig.json` paths and workspace
+  packages; or from `dependency-cruiser` when the machine has it and it
+  read every changed file. Written the same way, for the structure step.
 - `fan-in`: not a content detector. The public symbols the diff removes or
   changes in code files, and the references to each outside the diff, a
   search labelled heuristic: PHP symbols by how they are called
-  (`->total(`), the others as a word.
+  (`->total(`), TypeScript exports as a word and members as `.total`, the
+  others as a word.
 
 A content detector applies to the changed files its classifier accepts
 (`applies_to` lists them, escaped), covers the ones it could read, and says
@@ -53,8 +63,9 @@ import shutil
 import subprocess
 
 import php
+import typescript
 
-CODE_EXT = re.compile(r"\.(py|js|jsx|ts|tsx|mjs|cjs|php|rb|go|java|kt|kts|cs|rs|swift|scala|ex|exs)$")
+CODE_EXT = re.compile(r"\.(py|js|jsx|ts|tsx|mjs|cjs|mts|cts|php|rb|go|java|kt|kts|cs|rs|swift|scala|ex|exs)$")
 SKIP_DIRS = {".git", "node_modules", "vendor", "dist", "build", "target", "__pycache__", ".venv", "venv",
              "coverage", ".next", ".nuxt", ".tox", ".mypy_cache", ".pytest_cache"}
 MAX_BYTES = 1 << 20
@@ -78,6 +89,16 @@ ADAPTERS = {
         "needs": "nothing", "installs": False,
         "note": "parses the PHP files its config points at and reads `composer.lock`; it installs nothing, but a"
                 " PHP config, or YAML that registers services or imports files, runs the project's code"},
+    "api-extractor": {
+        "needs": "build", "installs": False,
+        "note": "reads the `.d.ts` files a TypeScript build writes"},
+    "dependency-cruiser": {
+        "needs": "dependencies", "installs": False,
+        "note": "reads TypeScript through the TypeScript compiler installed beside it, and skips it without one; it"
+                " installs nothing, and run with `--no-config` it loads no JavaScript config of the project"},
+    "graphql-inspector": {
+        "needs": "nothing", "installs": False,
+        "note": "compares the two schema files it is given; given `.graphql` files, it loads no code"},
 }
 
 
@@ -169,7 +190,7 @@ class Change:
         self.hunks = hunks
         self.ctx = ctx
         self._head = self._base = False
-        self._php = {}
+        self._php, self._ts = {}, {}
 
     @property
     def deleted(self):
@@ -234,6 +255,21 @@ class Change:
         unit, problem = self._php[side]
         if problem:
             raise php.ParseError(problem)
+        return unit
+
+    def ts(self, side):
+        """The TypeScript Unit of the `base` or `head` side, None when that
+        side has no text; raises typescript.ParseError."""
+        if side not in self._ts:
+            text = self.head() if side == "head" else self.base()
+            try:
+                unit = typescript.parse(text, self.path if side == "head" else self.old) if text is not None else None
+                self._ts[side] = (unit, None)
+            except typescript.ParseError as e:
+                self._ts[side] = (None, str(e))
+        unit, problem = self._ts[side]
+        if problem:
+            raise typescript.ParseError(problem)
         return unit
 
     def head_line(self, n):
@@ -750,13 +786,48 @@ def openapi_operations(text, path):
     return ops
 
 
-def oasdiff_signals(c, ctx, tool):
-    """[signal] from `oasdiff breaking`, or None when it could not run."""
-    base_dir = os.path.join(ctx.work_dir, "base")
-    base_file = os.path.join(base_dir, c.old)
+def write_base(c, ctx):
+    """The path of the file's base side, written into the work directory."""
+    base_file = os.path.join(ctx.work_dir, "base", c.old)
     os.makedirs(os.path.dirname(base_file), exist_ok=True)
     with open(base_file, "w", encoding="utf-8") as fh:
         fh.write(c.base() or "")
+    return base_file
+
+
+# graphql-inspector prints `[log] ✖  message` when stdout is not a terminal;
+# the symbols fall back to `×`, `‼` and `√` on terminals without Unicode.
+INSPECTOR_LINE = re.compile(r"^(?:\[\w+\]\s+)?(✖|×|⚠|‼|✔|√)\s+(.*)$")
+INSPECTOR_LEVELS = {"✖": "breaking", "×": "breaking", "⚠": "dangerous", "‼": "dangerous"}
+ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def inspector_signals(c, ctx, tool):
+    """([signal], None) from `graphql-inspector diff`, the breaking and
+    dangerous changes; or (None, why) when it could not run. It exits 1 on a
+    breaking change, and on a failure with no change listed."""
+    base_file = write_base(c, ctx)
+    code, out, err = run_tool(tool.get("command", "graphql-inspector"),
+                              ["diff", base_file, os.path.join(ctx.head_dir, c.path)], ctx.work_dir)
+    if code is None:
+        return None, err
+    found = []
+    for line in out.split("\n"):
+        m = INSPECTOR_LINE.match(ANSI.sub("", line).strip())
+        if not m:
+            continue
+        level = INSPECTOR_LEVELS.get(m.group(1))
+        if level:
+            found.append(signal(c.path, "graphql-inspector:%s" % level, "graphql-inspector %s: %s" % (
+                level, m.group(2).strip())))
+    if code not in (0, 1) or (code == 1 and not any(s["kind"].endswith(":breaking") for s in found)):
+        return None, first_line(ANSI.sub("", err or out))
+    return found, None
+
+
+def oasdiff_signals(c, ctx, tool):
+    """[signal] from `oasdiff breaking`, or None when it could not run."""
+    base_file = write_base(c, ctx)
     code, out, err = run_tool(tool.get("command", "oasdiff"),
                               ["breaking", base_file, os.path.join(ctx.head_dir, c.path), "--format", "json"],
                               ctx.work_dir)
@@ -780,10 +851,22 @@ def oasdiff_signals(c, ctx, tool):
     return out_, None
 
 
+def graphql_heuristic(c):
+    out = []
+    for hunk in c.blocks():
+        gone = [(t, n) for op, t, _, n in hunk if op == "-" and not comment(t) and GRAPHQL_DEF.search(t)]
+        new = [(t, n) for op, t, _, n in hunk if op == "+" and not comment(t) and GRAPHQL_DEF.search(t)]
+        if gone:
+            out.append(signal(c.path, "field-changed" if new else "field-removed",
+                              "%d type or field line(s) %s" % (len(gone), "changed" if new else "removed"),
+                              c.head_line((new or gone)[0][1]), gone[0][0]))
+    return out
+
+
 def api_contracts(ctx, version):
     applies, covered, not_covered, signals, gaps = [], [], [], [], []
-    tool_used, openapi_seen = None, False
-    oasdiff = ctx.tool("oasdiff")
+    used, by_heuristic, openapi_seen, graphql_seen = [], False, False, False
+    oasdiff, inspector = ctx.tool("oasdiff"), ctx.tool("graphql-inspector")
     for c in ctx.changes:
         kind = contract_kind(c)
         if not kind:
@@ -799,13 +882,19 @@ def api_contracts(ctx, version):
             continue
         if kind == "graphql":
             covered.append(c.path)
-            for hunk in c.blocks():
-                gone = [(t, n) for op, t, _, n in hunk if op == "-" and not comment(t) and GRAPHQL_DEF.search(t)]
-                new = [(t, n) for op, t, _, n in hunk if op == "+" and not comment(t) and GRAPHQL_DEF.search(t)]
-                if gone:
-                    signals.append(signal(c.path, "field-changed" if new else "field-removed",
-                                          "%d type or field line(s) %s" % (len(gone), "changed" if new else "removed"),
-                                          c.head_line((new or gone)[0][1]), gone[0][0]))
+            if c.added_file:
+                continue
+            graphql_seen = True
+            if inspector:
+                found, problem = inspector_signals(c, ctx, inspector)
+                if found is not None:
+                    signals += found
+                    name = "graphql-inspector@%s" % inspector.get("version")
+                    used += [name] if name not in used else []
+                    continue
+                gaps.append("graphql-inspector failed on `%s` (%s): read by the heuristic" % (c.path, problem))
+            by_heuristic = True
+            signals += graphql_heuristic(c)
             continue
         openapi_seen = True
         if c.added_file:
@@ -816,9 +905,11 @@ def api_contracts(ctx, version):
             if found is not None:
                 covered.append(c.path)
                 signals += found
-                tool_used = "oasdiff@%s" % oasdiff.get("version")
+                name = "oasdiff@%s" % oasdiff.get("version")
+                used += [name] if name not in used else []
                 continue
             gaps.append("oasdiff failed on `%s` (%s): read by the heuristic" % (c.path, problem))
+        by_heuristic = True
         before, after = openapi_operations(c.base(), c.old), openapi_operations(c.head(), c.path)
         if before is None or after is None:
             not_covered.append({"path": c.path, "reason": "not valid JSON at the %s" % (
@@ -842,8 +933,10 @@ def api_contracts(ctx, version):
                                   " become required" % len(required), required[0][0], required[0][1]))
     if openapi_seen and not oasdiff:
         gaps.append("oasdiff not found on this machine: OpenAPI files read by the heuristic only")
-    return output("api-contracts", version, True, applies, covered, not_covered, signals, tool=tool_used,
-                  heuristic=tool_used is None, gaps=gaps)
+    if graphql_seen and not inspector:
+        gaps.append("graphql-inspector not found on this machine: GraphQL schemas read by the heuristic only")
+    return output("api-contracts", version, True, applies, covered, not_covered, signals,
+                  tool=", ".join(used) or None, heuristic=by_heuristic or not used, gaps=gaps)
 
 
 # --- Dependencies ---------------------------------------------------------------------
@@ -1079,10 +1172,10 @@ def dependencies(ctx, version):
 
 # --- Assertions -----------------------------------------------------------------------
 
-TEST_EXT = r"\.(py|js|jsx|ts|tsx|mjs|cjs|php|rb|go|java|kt|cs|ex|exs|swift|scala)$"
+TEST_EXT = r"\.(py|js|jsx|ts|tsx|mjs|cjs|mts|cts|php|rb|go|java|kt|cs|ex|exs|swift|scala)$"
 TEST_FILE = re.compile(
     r"(^|/)(tests?|__tests__|spec|specs|testing)/(.+/)?[^/]+" + TEST_EXT
-    + r"|(^|/)(test_[^/]+\.py|[^/]+_test\.(py|go|rb|exs)|[^/]+\.(test|spec)\.(js|jsx|ts|tsx|mjs|cjs)"
+    + r"|(^|/)(test_[^/]+\.py|[^/]+_test\.(py|go|rb|exs)|[^/]+\.(test|spec)\.(js|jsx|ts|tsx|mjs|cjs|mts|cts)"
       r"|[^/]+Tests?\.(php|java|kt|cs|swift|scala)|[^/]+_spec\.rb|conftest\.py)$")
 ASSERTION = re.compile(
     r"\bassert\w*\b|\bexpect\s*\(|\.should\b|\.to(Be|Equal|StrictEqual|Have|Throw|Match|Contain|Include)\w*\s*\("
@@ -1168,25 +1261,71 @@ def php_units(c):
     return c.php("base"), c.php("head"), None
 
 
+def ts_files(ctx):
+    """The changed TypeScript and JavaScript code files the TypeScript
+    adapter reads: test files left out."""
+    return [c for c in ctx.changes if (typescript.is_code(c.path) or typescript.is_code(c.old)) and not is_test(c.path)]
+
+
+def ts_units(c, api=False):
+    """(base Unit, head Unit, None), or (None, None, why it can't be read).
+    With `api`, a side that exports only through CommonJS can't be read."""
+    why = c.unreadable()
+    if why:
+        return None, None, why
+    language = "TypeScript" if typescript.language(c.path) == "typescript" else "JavaScript"
+    for side in ("base", "head"):
+        text = c.head() if side == "head" else c.base()
+        longest = typescript.minified(text) if text else None
+        if longest:
+            return None, None, "minified or bundled at the %s (a line of %d characters): not read as source" % (
+                side, longest)
+        try:
+            unit = c.ts(side)
+        except typescript.ParseError as e:
+            return None, None, "not readable as %s at the %s: %s" % (language, side, e)
+        if api and unit is not None and unit.cjs_only:
+            return None, None, ("exports through CommonJS (`module.exports`) at the %s, which this version does not"
+                                " read" % side)
+    return c.ts("base"), c.ts("head"), None
+
+
+def not_run_gap(ctx, name, what):
+    ok, why = allowed(name)
+    return None if ok else "%s not run (%s on this machine): %s; %s" % (
+        name, "found" if ctx.tool(name) else "not found", why, what)
+
+
 def public_api(ctx, version):
-    applies, covered, not_covered, signals, gaps = [], [], [], [], []
-    for c in php_files(ctx):
-        applies.append(c.path)
-        base, head, why = php_units(c)
-        if why:
-            not_covered.append({"path": c.path, "reason": why})
-            continue
-        covered.append(c.path)
-        for ch in php.api_changes(base, head):
-            signals.append(signal(c.path, ch["kind"], ch["reason"], c.head_line(ch["line"]), ch["text"]))
-    if applies:
-        name = "roave-backward-compatibility-check"
-        ok, why = allowed(name)
-        if not ok:
-            gaps.append("%s not run (%s on this machine): %s; PHP public API read by the heuristic signature diff"
-                        % (name, "found" if ctx.tool(name) else "not found", why))
+    applies, covered, not_covered, signals, gaps, languages = [], [], [], [], [], set()
+    for files, units, changes, lang, tool, what in (
+            (php_files, php_units, php.api_changes, lambda p: "php", "roave-backward-compatibility-check",
+             "PHP public API read by the heuristic signature diff"),
+            (ts_files, lambda c: ts_units(c, api=True), typescript.api_changes, typescript.language, "api-extractor",
+             "TypeScript and JavaScript exports read by the heuristic signature diff")):
+        seen = False
+        for c in files(ctx):
+            seen = True
+            applies.append(c.path)
+            languages.add(lang(c.path))
+            base, head, why = units(c)
+            if why:
+                not_covered.append({"path": c.path, "reason": why})
+                continue
+            covered.append(c.path)
+            found = changes(base, head)
+            if c.deleted and len(found) > 1:
+                names = ["`%s`" % ch["symbol"] for ch in found]
+                signals.append(signal(c.path, found[0]["kind"], "file deleted with %d public symbols: %s%s" % (
+                    len(names), ", ".join(names[:8]), ", ..." if len(names) > 8 else "")))
+                continue
+            for ch in found:
+                signals.append(signal(c.path, ch["kind"], ch["reason"], c.head_line(ch["line"]), ch["text"]))
+        gap = not_run_gap(ctx, tool, what) if seen else None
+        if gap:
+            gaps.append(gap)
     return output("public-api", version, True, applies, covered, not_covered, signals, heuristic=True, gaps=gaps,
-                  languages=["php"] if applies else [])
+                  languages=sorted(languages))
 
 
 def php_tree(root, skip=()):
@@ -1364,6 +1503,182 @@ def import_graph_php(ctx, version):
     return out
 
 
+def tree_files(root):
+    """The paths of a tree's regular files, the usual build and dependency
+    directories left out."""
+    out = []
+    for d, dirs, files in os.walk(root):
+        dirs[:] = sorted(x for x in dirs if x not in SKIP_DIRS)
+        for name in sorted(files):
+            full = os.path.join(d, name)
+            if not os.path.islink(full):
+                out.append(os.path.relpath(full, root).replace(os.sep, "/"))
+    return out
+
+
+def read_small(root, rel):
+    full = os.path.join(root, rel)
+    try:
+        if os.path.getsize(full) > MAX_BYTES:
+            return None
+        with open(full, "rb") as fh:
+            return decode(fh.read())
+    except OSError:
+        return None
+
+
+DEPCRUISE_EXCLUDE = r"(^|/)(node_modules|dist|build|coverage|out|\.next|\.nuxt)/"
+
+
+def depcruise_pairs(ctx, tool, tree, side):
+    """({source}, {(source, resolved)}) of dependency-cruiser on a tree, None),
+    or (None, why it failed): every module it read, and each dependency it
+    resolved to a file of the tree. Run in the tree with `--no-config`, its
+    report written to the work directory."""
+    report = os.path.join(ctx.work_dir, "depcruise-%s.json" % side)
+    args = ["--no-config", "--output-type", "json", "--output-to", report, "--ts-pre-compilation-deps",
+            "--exclude", DEPCRUISE_EXCLUDE]
+    if os.path.isfile(os.path.join(tree, "tsconfig.json")):
+        args += ["--ts-config", "tsconfig.json"]
+    code, out, err = run_tool(tool.get("command", "depcruise"), args + ["."], tree)
+    if code is None:
+        return None, err
+    try:
+        with open(report, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return None, first_line(err or out)
+    sources, pairs = set(), set()
+    for m in (data.get("modules") or []) if isinstance(data, dict) else []:
+        if not isinstance(m, dict) or not isinstance(m.get("source"), str):
+            continue
+        src = posix_rel(m["source"])
+        sources.add(src)
+        for d in m.get("dependencies") or []:
+            if not isinstance(d, dict) or d.get("coreModule") or d.get("couldNotResolve"):
+                continue
+            to = posix_rel(d.get("resolved") or "")
+            if to and "node_modules/" not in to and os.path.isfile(os.path.join(tree, to)):
+                pairs.add((src, to))
+    return (sources, pairs), None
+
+
+def posix_rel(path):
+    path = path.replace("\\", "/")
+    return path[2:] if path.startswith("./") else path
+
+
+def import_graph_typescript(ctx, version):
+    """The TypeScript and JavaScript import graph, in the structure step's
+    stack-neutral format: imports, re-exports, `require` and `import()` of a
+    file of another module, at the base and at the head. The changed files
+    are parsed at both sides; every other code file of the head tree is
+    scanned for its imports and stands for both sides. With
+    dependency-cruiser on the machine, its resolved dependencies are the
+    edges, when it read every changed file at both sides; otherwise the
+    parser's, resolved through relative paths, tsconfig paths and baseUrl,
+    and workspace packages. None when the diff has no such file: a
+    `package.json` beside code of another stack (tooling, assets) does not
+    make its import graph evaluated."""
+    import structure  # structure.py imports this module, so not at the top
+    applies, covered, not_covered, gaps = [], [], [], []
+    units = {}
+    for c in ts_files(ctx):
+        applies.append(c.path)
+        base, head, why = ts_units(c)
+        if why:
+            not_covered.append({"path": c.path, "reason": why})
+            continue
+        covered.append(c.path)
+        units[c.path] = (c, base, head)
+    if not applies:
+        return None
+    files = tree_files(ctx.head_dir)
+    project = typescript.Project(files, lambda rel: read_small(ctx.head_dir, rel))
+    skip = ctx.paths | {c.old for c in ctx.changes}
+    others = {}
+    for rel in files if units else ():
+        if rel in skip or not typescript.is_code(rel) or is_test(rel):
+            continue
+        text = read_small(ctx.head_dir, rel)
+        imports = typescript.quick_imports(text, rel) if text is not None else None
+        if imports is not None:
+            others[rel] = imports
+    present = {"base": set(others), "head": set(others)}
+    for c in ts_files(ctx):
+        if not c.added_file:
+            present["base"].add(c.old)
+        if not c.deleted:
+            present["head"].add(c.path)
+    sides = {name: [(rel, imps) for rel, imps in sorted(others.items())] for name in ("base", "head")}
+    for path, (c, base, head) in sorted(units.items()):
+        for name, unit, where in (("base", base, c.old), ("head", head, path)):
+            if unit is not None:
+                sides[name].append((where, unit.imports))
+
+    def parsed_side(name):
+        exists = present[name].__contains__
+        lines, pairs = {}, []
+        for path, imps in sides[name]:
+            for _, spec, line in imps:
+                to = project.resolve(path, spec, exists)
+                if to and to != path and not is_test(to):
+                    pairs.append((path, to))
+                    lines.setdefault((path, to), line)
+        return pairs, lines
+
+    parsed = {name: parsed_side(name) for name in ("base", "head")}
+    edges, tool = {name: parsed[name][0] for name in parsed}, None
+    cruiser = ctx.tool("dependency-cruiser")
+    ok, why = allowed("dependency-cruiser")
+    if units and not cruiser:
+        gaps.append("dependency-cruiser not found on this machine: imports resolved by the parser (relative paths,"
+                    " tsconfig paths, workspace packages)")
+    elif units and not ok:
+        gaps.append("dependency-cruiser not run: %s; imports resolved by the parser" % why)
+    elif units:
+        found, problem = {}, None
+        for name, tree in (("head", ctx.head_dir), ("base", ctx.base_tree())):
+            if tree is None:
+                problem = "the base tree could not be written"
+                break
+            result, err = depcruise_pairs(ctx, cruiser, tree, name)
+            if result is None:
+                problem = "it failed on the %s (%s)" % (name, first_line(err))
+                break
+            wanted = sorted((c.path if name == "head" else c.old) for c, b, h in units.values()
+                            if (h if name == "head" else b) is not None)
+            missing = [w for w in wanted if w not in result[0]]
+            if missing:
+                problem = ("it did not read `%s` at the %s (no TypeScript compiler installed beside it?)"
+                           % (missing[0], name))
+                break
+            found[name] = [(a, b) for a, b in sorted(result[1]) if typescript.is_code(a) and typescript.is_code(b)
+                           and not is_test(a) and not is_test(b)]
+        if problem:
+            gaps.append("dependency-cruiser not used: %s; imports resolved by the parser" % problem)
+        else:
+            edges, tool = found, "dependency-cruiser@%s" % cruiser.get("version")
+
+    def graph_side(name):
+        mods, out = {}, []
+        lines = parsed[name][1]
+        for a, b in edges[name]:
+            src, dst = project.module_of(a), project.module_of(b)
+            if src == dst:
+                continue
+            mods[a], mods[b] = src, dst
+            out.append({"from": a, "to": b, "line": lines.get((a, b))})
+        return {"modules": mods, "edges": out}
+
+    graph = {name: graph_side(name) for name in ("base", "head")}
+    out = structure.graph_output("import-graph-typescript", version, graph, "typescript", tool=tool, heuristic=True,
+                                 content=True, applies=applies, covered=covered, not_covered=not_covered, gaps=gaps)
+    out.update(languages=sorted({typescript.language(p) for p in applies}), modules=project.rule,
+               scanned=len(others) + len(units))
+    return out
+
+
 # --- Fan-in -----------------------------------------------------------------------------
 
 DEFS = {
@@ -1382,7 +1697,8 @@ DEFS = {
     "rs": [r"^\s*pub\s+(?:async\s+)?(?:fn|struct|enum|trait|type|const|static|mod)\s+(?P<name>[A-Za-z_]\w*)"],
     "ex": [r"^\s*def\s+(?P<name>[a-z_]\w*[?!]?)", r"^\s*defmodule\s+(?P<name>[\w.]+)"],
 }
-LANG = {"py": "py", "js": "js", "jsx": "js", "ts": "js", "tsx": "js", "mjs": "js", "cjs": "js", "php": "php",
+LANG = {"py": "py", "js": "js", "jsx": "js", "ts": "js", "tsx": "js", "mjs": "js", "cjs": "js", "mts": "js",
+        "cts": "js", "php": "php",
         "rb": "rb", "go": "go", "java": "jvm", "kt": "jvm", "kts": "jvm", "cs": "jvm", "scala": "jvm",
         "swift": "jvm", "rs": "rs", "ex": "ex", "exs": "ex"}
 DEF_RES = {k: [re.compile(p) for p in v] for k, v in DEFS.items()}
@@ -1427,13 +1743,15 @@ def fan_in(ctx, version):
         head = c.head()
         if head is None and not c.deleted:
             continue
-        if lang == "php" and php.is_code(c.path):
-            base_unit, head_unit, why = php_units(c)
+        adapter = php if lang == "php" and php.is_code(c.path) else \
+            typescript if lang == "js" and typescript.is_code(c.path) else None
+        if adapter is not None:
+            base_unit, head_unit, why = php_units(c) if adapter is php else ts_units(c, api=True)
             if why is None:
                 covered.append(c.path)
                 touched = [n for n, _ in c.added()] + [n for _, _, n in c.removed()]
-                for s in php.symbols(base_unit, head_unit, touched):
-                    symbols.append(dict(s, path=c.path, _php=True))
+                for s in adapter.symbols(base_unit, head_unit, touched):
+                    symbols.append(dict(s, path=c.path, _adapter=adapter))
                 continue
         covered.append(c.path)
         head_lines = (head or "").split("\n")
@@ -1467,24 +1785,25 @@ def fan_in(ctx, version):
             symbols.append({"path": c.path, "symbol": name, "change": change, "line": line})
     specs = {}
     for s in symbols:
-        if s.get("_php"):
-            word, rx = php.reference(s["symbol"])
-            name, key = php.member_name(s["symbol"]), "php " + s["symbol"]
+        adapter = s.get("_adapter")
+        if adapter is not None:
+            word, rx = adapter.reference(s["symbol"])
+            name, key = adapter.member_name(s["symbol"]), "%s %s" % (adapter.__name__, s["symbol"])
         else:
             word, rx, name, key = s["symbol"], None, s["symbol"], s["symbol"]
         s["_key"] = key
         if len(name) > 3 and name not in COMMON:
-            specs[key] = (word, rx, bool(s.get("_php")))
+            specs[key] = (word, rx, adapter.is_code if adapter is not None else None)
     refs, scanned = count_refs(ctx, specs)
     signals = []
     for s in symbols:
-        key, from_php = s.pop("_key"), s.pop("_php", False)
+        key, from_adapter = s.pop("_key"), s.pop("_adapter", None) is not None
         if key in refs:
             s["fan_in"], s["refs"] = refs[key]
         else:
             s["fan_in"], s["refs"] = "unknown", []
             s["why"] = "too short or too common a name to count"
-        if not from_php and s["change"] in ("removed", "signature") and s["fan_in"] not in ("unknown", 0):
+        if not from_adapter and s["change"] in ("removed", "signature") and s["fan_in"] not in ("unknown", 0):
             what = "removed" if s["change"] == "removed" else "changed its signature"
             signals.append(signal(s["path"], "symbol-removed" if s["change"] == "removed" else "symbol-signature",
                                   "public `%s` %s, %d reference(s) outside the diff" % (s["symbol"], what, s["fan_in"]),
@@ -1497,10 +1816,12 @@ def fan_in(ctx, version):
 
 def count_refs(ctx, specs):
     """({key: (references outside the diff, [path:line, ...])}, files
-    scanned) for specs {key: (word, pattern, PHP only)}: a line is searched
-    when it holds the word; a spec with no pattern matches the word alone.
-    A PHP symbol's references are only searched in PHP files: the public
-    API diff signals its break, so fan-in only counts."""
+    scanned) for specs {key: (word, pattern, file filter)}: a line is
+    searched when it holds the word; a spec with no pattern matches the word
+    alone. A stack adapter's symbol is only searched in its own files (the
+    filter): the public API diff signals its break, so fan-in only counts.
+    A TypeScript or JavaScript file is searched once lexed: a word in a
+    string or a comment is no reference."""
     specs = {k: (w, rx or re.compile(r"(?<![\w$])%s(?![\w$])" % re.escape(w)), p) for k, (w, rx, p) in specs.items()}
     counts = {k: [0, []] for k in specs}
     scanned = 0
@@ -1523,10 +1844,15 @@ def count_refs(ctx, specs):
             if text is None:
                 continue
             scanned += 1
-            here = [(k, w, rx) for k, (w, rx, only_php) in specs.items()
-                    if w in text and (not only_php or php.is_code(name))]
+            here = [(k, w, rx) for k, (w, rx, only) in specs.items()
+                    if w in text and (only is None or only(name))]
             if not here:
                 continue
+            if typescript.is_code(name):
+                try:  # comments and strings blanked, the code in JSX kept
+                    text = typescript.strip(text, typescript.jsx_allowed(name), tags=True)[0]
+                except typescript.ParseError:
+                    pass
             for n, line in enumerate(text.split("\n"), 1):
                 if comment(line):
                     continue
@@ -1545,7 +1871,8 @@ def count_refs(ctx, specs):
 
 DETECTORS = [("migrations", migrations), ("config", config), ("routes", routes),
              ("api-contracts", api_contracts), ("dependencies", dependencies), ("assertions", assertions),
-             ("public-api", public_api), ("import-graph-php", import_graph_php), ("fan-in", fan_in)]
+             ("public-api", public_api), ("import-graph-php", import_graph_php),
+             ("import-graph-typescript", import_graph_typescript), ("fan-in", fan_in)]
 
 
 def run_all(ctx, version):
