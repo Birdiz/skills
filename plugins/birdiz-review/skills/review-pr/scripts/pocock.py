@@ -256,6 +256,76 @@ def read_pr_body(text):
     return {"status": "drift" if drift else "declared", "door": door, "blast_radius": blast, "drift": drift}
 
 
+# --- The domain doc, the glossary and the ADRs ------------------------------------
+
+DOMAIN_DOC = "docs/agents/domain.md"
+GLOSSARY = "GLOSSARY.md"
+GLOSSARY_MAP = "GLOSSARY-MAP.md"
+DEFAULT_ADR_DIR = "docs/adr"
+ADR_DIR = re.compile(r"`?((?:[\w.<>-]+/)*adr)/`?")
+LEGACY_GLOSSARY = re.compile(r"\bCONTEXT(?:-MAP)?\.md\b")
+# `**Order**:` in Pocock's GLOSSARY-FORMAT, `- **Order**: ...` as a list.
+TERM_LINE = re.compile(r"^\s{0,3}(?:[-*+]\s+)?\*\*(?P<term>[^*]+?)\s*:?\s*\*\*\s*:")
+AVOID_LINE = re.compile(r"^\s{0,6}(?:[-*+]\s+)?[_*]{1,2}Avoid[_*]{1,2}\s*:?[_*]{0,2}\s*:?\s*(?P<words>.+?)\s*$", re.I)
+MAP_LINK = re.compile(r"\[[^\]]*\]\(\s*(?:\./)?(?P<path>[^)\s#]+\.md)\s*\)")
+
+
+def domain_doc(text, map_exists=False):
+    """{legacy, names_glossary, names_map, adr_dirs, glossary_drift,
+    adr_drift} of the domain doc's text. `map_exists` says whether
+    `GLOSSARY-MAP.md` exists: Pocock's doc names both files ("or
+    GLOSSARY-MAP.md if it exists"), so naming the map counts only then, or
+    when the doc names no GLOSSARY.md."""
+    text = text or ""
+    legacy = sorted(set(LEGACY_GLOSSARY.findall(text)))
+    names_glossary = GLOSSARY in text.replace(GLOSSARY_MAP, "")
+    names_map = GLOSSARY_MAP in text and (not names_glossary or map_exists)
+    adr_dirs = sorted(set(ADR_DIR.findall(text)))
+    glossary_drift, adr_drift = [], []
+    if legacy:
+        glossary_drift.append("names legacy %s; the review reads GLOSSARY.md / GLOSSARY-MAP.md" % ", ".join(legacy))
+    if not (names_glossary or names_map):
+        glossary_drift.append("names no GLOSSARY.md or GLOSSARY-MAP.md")
+    if not adr_dirs:
+        adr_drift.append("names no ADR directory (e.g. docs/adr/)")
+    return {"legacy": legacy, "names_glossary": names_glossary, "names_map": names_map, "adr_dirs": adr_dirs,
+            "glossary_drift": glossary_drift, "adr_drift": adr_drift}
+
+
+def glossary_terms(text):
+    """[{term, line, avoid}] of a glossary in Pocock's format: a term is a
+    bold `**Term**:` at the start of a line (or of a list item), and an
+    `_Avoid_:` line under it lists the words not to use for it."""
+    out, fence = [], None
+    for no, line in enumerate((text or "").splitlines(), 1):
+        m = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
+        if m:
+            mark = m.group(1)[0] * 3
+            fence = mark if fence is None else (None if mark == fence else fence)
+            continue
+        if fence is not None:
+            continue
+        m = TERM_LINE.match(line)
+        if m:
+            out.append({"term": m.group("term").strip(), "line": no, "avoid": []})
+            continue
+        m = AVOID_LINE.match(line)
+        if m and out:
+            words = re.sub(r"[_*]", "", m.group("words"))
+            out[-1]["avoid"] += [w.strip(" .") for w in words.split(",") if w.strip(" .")]
+    return out
+
+
+def glossary_map(text):
+    """The glossary files a `GLOSSARY-MAP.md` links to, relative to the root."""
+    out = []
+    for m in MAP_LINK.finditer(text or ""):
+        path = m.group("path").lstrip("/")
+        if path not in out and not path.startswith(("http:", "https:")):
+            out.append(path)
+    return out
+
+
 # --- References -----------------------------------------------------------------
 
 def closing_refs(body, repo=None):

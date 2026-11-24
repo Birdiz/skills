@@ -165,7 +165,11 @@ user-invoked one.
   the change breaks outside the diff: destructive migrations, new required
   configuration, changed routes and API contracts, edited or skipped test
   assertions, dependency changes, the fan-in of changed public symbols, and
-  the PR's declared Door against the detected one), a bucket for every changed
+  the PR's declared Door against the detected one), the structure step (new
+  files by class, new dependencies with why they look needed or not, a
+  second way of doing what the codebase already does, changes against an
+  ADR or recorded by none, domain terms the glossary lacks, and new imports
+  between modules once a stack adapter supplies the graph), a bucket for every changed
   file (`must-read`, `glance`, `skim`,
   `unproven`), the coverage gaps and a proposed verdict (`merge`, `fix`,
   `close-and-reprompt`) with its round. A file in a risk zone is never

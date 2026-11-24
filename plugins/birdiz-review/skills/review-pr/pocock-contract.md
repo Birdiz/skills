@@ -31,7 +31,10 @@ contract).
 | Artifact | Written by | Read by | Relied on |
 |---|---|---|---|
 | Tracker doc `docs/agents/issue-tracker.md` | `setup-matt-pocock-skills` | `review-setup`, `review-pr` (at the base) | title `# Issue tracker: <GitHub \| GitLab \| Local Markdown>`; a `## When a skill says "fetch the relevant ticket"` section |
-| Domain doc `docs/agents/domain.md` | `setup-matt-pocock-skills` | `review-setup` (later the structure step) | names `GLOSSARY.md` or `GLOSSARY-MAP.md`, and an ADR directory |
+| Domain doc `docs/agents/domain.md` | `setup-matt-pocock-skills` | `review-setup`, `review-pr` (structure step, at the base) | names `GLOSSARY.md` or `GLOSSARY-MAP.md`, and an ADR directory |
+| Glossary `GLOSSARY.md` | `domain-modeling` | `review-pr` (structure step, at the head) | `**Term**:` at the start of a line (or a list item); `_Avoid_:` words under it |
+| Glossary map `GLOSSARY-MAP.md` | `domain-modeling` | `review-pr` (structure step, at the head) | a Markdown link to each context's `GLOSSARY.md` |
+| ADRs `docs/adr/NNNN-slug.md` | `domain-modeling` | `review-pr` (structure step, at the head) | Markdown files in the directories the domain doc names; read as prose, no section relied on |
 | Spec | `to-spec` | `review-pr` | `## Implementation Decisions`, `## Testing Decisions`, `## Out of Scope` |
 | Ticket, issue template | `to-tickets` | `review-pr` | `## What to build`; `## Acceptance criteria` with `- [ ]` items; `## Parent` and `## Blocked by` only when not native |
 | Ticket, local file template | `to-tickets` | `review-pr` | `# <NN>: <title>`; `**What to build:**`; bare `- [ ]` items |
@@ -76,6 +79,26 @@ For a local spec, they are the files in the `issues/` directory beside it.
 The tickets the PR closes are in scope. When the spec itself was named,
 closed or found as a file, all its tickets are in scope; the others are
 siblings, read for the intent step's scope check.
+
+### Domain doc, glossary and ADRs
+
+The domain doc is read as committed at the base, like the tracker doc, so
+a branch can't move the glossary or the ADRs it names. The glossary and the
+ADRs are read at the head: a term or an ADR the diff adds counts.
+
+- A missing domain doc is not drift: the structure step reads Pocock's
+  defaults (`GLOSSARY.md` or `GLOSSARY-MAP.md` at the root, `docs/adr/`).
+  A doc that names no glossary, names only the legacy `CONTEXT.md`, or
+  names no ADR directory is drift for the area it feeds (`Glossary` or
+  `ADRs`).
+- An ADR directory template such as `src/<context>/docs/adr/` is matched
+  against the head tree, and each glossary of the map adds its own
+  `<context>/docs/adr/`.
+- A glossary or ADR directory that does not exist, or holds nothing, was
+  never created: `not-evaluable (no glossary)` or `not-evaluable (no
+  ADRs)`, never drift. A glossary that exists with no `**Term**:` line, or
+  a map that links no glossary, is drift: the review does not guess
+  another format.
 
 ### Spec
 

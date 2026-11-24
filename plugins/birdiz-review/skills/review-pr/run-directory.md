@@ -7,7 +7,8 @@ One run is one directory, written by `scripts/run.py` and checked by
 $XDG_STATE_HOME/birdiz-review/runs/<repo>/<branch>/<head short sha>/
 ├── run.json                  the run header
 ├── signals/<detector>.json   one output per detector (git-changes, migrations, config,
-│                             routes, api-contracts, dependencies, assertions, fan-in)
+│                             routes, api-contracts, dependencies, assertions, fan-in,
+│                             structure; import-graph-<stack> from a stack adapter)
 ├── findings/<axis>.md        intent.md, contracts.md, structure.md
 ├── brief.md                  the brief, a projection of the files above
 ├── sources.json              the spec, tickets and PR body read, and their contract status
@@ -161,6 +162,67 @@ fewer, or a common one, is `unknown`. A removed symbol or a changed
 signature with references outside the diff is a signal
 (`symbol-removed`, `symbol-signature`).
 
+`structure` is not a content detector and has no signals: a new file
+already has its `git-changes` signal. It records what the structure step
+reads:
+
+- `new_files`: each file added, copied or renamed (`path`, `change`,
+  `from`), its `class` by path convention, `why`, its `module` and
+  `new_module`. Classes, first match wins: `test`, `migration`, `config`
+  (environment, configuration, manifest, lockfile, CI or build file),
+  `entry point` (a route file, `main`, a CLI, a controller, a command, a
+  handler), then for code `module` (its module is new), `layer` (a new
+  directory whose name no directory at the merge base has, such as a first
+  `projections/`) or `source`, and `other` for the rest. A module is the
+  first directory under `src/`, `lib/`, `app/`, `packages/`, `plugins/` and
+  the like, else the top-level directory. `new_modules` lists the new ones.
+- `dependencies`: each dependency a changed manifest adds, `D<n>`
+  (`path`, `name`, `spec`, `line`), its `category` when it is a known
+  library (`http-client`, `validation`, `state`, `logging`, `orm`, `date`,
+  `test framework`) and `peers`, the manifest's dependencies of the same
+  category at the base.
+- `domain`: the domain doc as committed at the base (`doc`: `ok`, `drift`,
+  or `missing`, when Pocock's defaults are read: `GLOSSARY.md` or
+  `GLOSSARY-MAP.md` at the root, `docs/adr/`); the glossary at the head
+  (`glossary`: `ok`, `absent`, `drift`, its `files` with their `terms`, and
+  `map` for a `GLOSSARY-MAP.md`); the ADRs at the head (`adrs`: `ok`,
+  `absent`, `drift`, the `dirs` with their files, the ones the diff
+  `changed`). A domain doc template such as `src/<context>/docs/adr/`, and
+  `<context>/docs/adr/` beside each glossary of the map, are expanded
+  against the head tree.
+- `terms`: the type names the diff defines in code, tests left out, that
+  no glossary term names and that are new to the repository (neither the
+  name nor its domain part, `Order` of `OrderController`, is at the merge
+  base), `T<n>` with a `note` when the glossary says to avoid the word;
+  `known_terms`, the ones a term names. Technical words at either end
+  (`Repository`, `Controller`, `Abstract`) are left out of the comparison.
+- `import_graphs`: the import graph outputs of the run.
+- `areas`: the structure coverage areas the run fixes: `Import graph`
+  `not-evaluable (no stack adapter supplies an import graph)` without one,
+  `Glossary` `not-evaluable (no glossary)` and `ADRs` `not-evaluable (no
+  ADRs)` when none exists at the head (absent is not drift), and
+  `not-evaluable (contract drift: <what>)` for a domain doc that names no
+  glossary or no ADR directory, a glossary map that links no glossary, or
+  a glossary with no `**Term**:` line.
+
+An import graph comes from a stack adapter, as an output named
+`import-graph-<stack>` with a `graph` in one stack-neutral format:
+
+```json
+{"base": {"modules": {"src/Billing/Invoice.php": "Billing"},
+          "edges": [{"from": "src/Billing/Invoice.php", "to": "src/Ordering/Order.php", "line": 5}]},
+ "head": {"modules": {}, "edges": []}}
+```
+
+Each side maps files to modules and lists the file-level imports, with the
+line of the import in the importing file. `structure.py` computes, whatever
+the stack, the `new_edges` (pairs of modules the head imports in that
+direction and the base did not, with the file edges that make them) and
+the `new_cycles` (modules that import each other at the head, not within a
+cycle of the base), and signals the importing file of each
+(`import-edge-added`, `import-cycle-added`). The contracts step leaves
+these signals to the structure step.
+
 ## Review finding
 
 The finding core (evidence, finding and lead, status, severity and
@@ -204,9 +266,9 @@ reader of the brief is the verifier. `sensitive: true` keeps a finding out
 of any projection meant to be posted publicly; the brief is local.
 
 A step that did not run still writes its findings file, so that its
-coverage says why: `Axis: not-evaluable (step not in this version)`, or the
-reason its sources are not evaluable (`no spec found`, `contract drift:
-...`), or `step not run yet` for a step whose worksheet waits for it.
+coverage says why: the reason its sources are not evaluable
+(`no spec found`, `contract drift: ...`), or `step not run yet` for a
+step whose worksheet waits for it.
 
 ## Intent findings file
 
@@ -301,6 +363,51 @@ not-evaluable (step not run yet)`: `PENDING contracts`, an error with
 `--require contracts`. Once the axis is `evaluated` or `partial`, the
 validator checks the rows against the detector outputs and `sources.json`.
 
+## Structure findings file
+
+`findings/structure.md` is written by `run.py` as a worksheet on every run
+and filled by the structure step ([steps/structure.md](steps/structure.md)).
+Between `## Coverage` and `## Findings` it holds three tables, which only
+this file may have:
+
+```markdown
+## Dependencies
+
+| Dependency | Needed | Why | Finding |
+|---|---|---|---|
+| D1 `package.json:4` `got` ^14.0.0 (dependencies), http-client, beside `axios` | not needed | axios already calls HTTP | F-STR-001 |
+
+## Terms
+
+| Term | Judgment | Finding |
+|---|---|---|
+| T1 `src/billing/batch.ts:1` `InvoiceBatch` | domain term | F-STR-002 |
+| T2 `src/ordering/order.ts:2` `RetryPolicy` | not a domain term | |
+
+## Imports
+
+None.
+```
+
+- **Dependencies**: one row per `D<n>`. Needed `needed` or `not needed`,
+  and **Why** says in a few words; `not needed` cites a finding.
+- **Terms**: one row per `T<n>`, `domain term` (it cites the finding that
+  says the glossary lacks it, or that it uses a word the glossary avoids)
+  or `not a domain term`. `None.` when the glossary is not evaluable.
+- **Imports**: one row per new edge then new cycle of each import graph
+  output, `G<n>`, `fits` or `boundary`; `boundary` cites a finding.
+  `None.` without an import graph.
+- A structure finding no row cites is allowed: a new module or layer
+  nothing asks for, a pattern divergence, a change against an ADR, a
+  decision no ADR records.
+
+The worksheet has every row, with `?` where the step judges, the areas the
+run fixed already set, and `Axis: not-evaluable (step not run yet)`:
+`PENDING structure`, an error with `--require structure`. Once the axis is
+`evaluated` or `partial`, the validator checks the rows against the
+detector outputs, and that a fixed area keeps its status while the others
+are judged.
+
 ## Buckets
 
 Every changed file lands in exactly one bucket, by these rules in order:
@@ -328,20 +435,24 @@ order: Declared vs detected (the PR's Door and Blast Radius, or "Risk not
 declared" when no PR body was read or it has no `Merge Danger`; then each
 disagreement finding; then a table with the declared Door beside the
 detected one and the Blast Radius beside the risk zones the changed files
-touch and the most referenced changed public symbols), Must read (each file,
+touch and the most referenced changed public symbols), New structure (the
+new modules, the new files by class, each new dependency with its category
+and the step's judgment, the import graph, the glossary and the ADRs),
+Must read (each file,
 then each finding: `file:line`, reason, reviewer question; then the
 `must-read` findings that point at no changed file, such as a criterion
 not found), Glance (with the reason, then the `glance` findings that point
 at no changed file), Skim (with the proof), Unproven, Coverage gaps (the dimensions not
-run, the tools found and not found, what a detector did not cover, the
-spec and tickets found and any contract drift), Verdict.
+run, the structure areas the run fixed as not evaluable, the tools found
+and not found, what a detector did not cover, the spec and tickets found
+and any contract drift), Verdict.
 
 ## Verdict
 
 One line, then its reasons:
 
 ```
-Proposed verdict: fix, round 1 (attention map only: structure, gates, test integrity, adversarial not run).
+Proposed verdict: fix, round 1 (attention map only: gates, test integrity, adversarial not run).
 ```
 
 - `close-and-reprompt`: intent misread, when the intent step ran on
@@ -354,7 +465,9 @@ Proposed verdict: fix, round 1 (attention map only: structure, gates, test integ
 
 When the intent step ran, a reason line counts its tables; when the
 contracts step ran, another counts its judgments and gives the detected
-Door. A `blocks_merge` contracts finding with sound intent is a `fix`. When the intent
+Door; when the structure step ran, a third counts the new files and
+modules, the dependencies not needed, the terms judged domain terms and
+the imports across a boundary. A `blocks_merge` contracts finding with sound intent is a `fix`. When the intent
 sources are not evaluable (no spec, the user said there is none, contract
 drift), the parenthesis starts with it, as in `merge, round 1 (intent not
 checked: no spec found; contracts, structure, gates, test integrity,
