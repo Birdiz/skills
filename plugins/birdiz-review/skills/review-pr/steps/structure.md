@@ -121,7 +121,14 @@ cut): an edge between two directories of one feature can be ordinary, so
 read the codebase's own layout before calling it a `boundary`. An edge
 whose `line` is `null` came from dependency-cruiser through a resolution
 the parser did not make (a webpack or bundler alias): open the importing
-file to find it.
+file to find it. In `signals/import-graph-python.json`, a module is a
+top-level package, or the subpackages of a repository's single package
+(`shop.billing`), or the directory of code outside any package: an import
+in a function or under `if TYPE_CHECKING:` counts like any other, so open
+it before calling a cycle a boundary. A `contract-broken` signal there is
+an import the repository's own import-linter contracts forbid, new in
+this diff: it is a `boundary` when its row exists, and a finding beyond
+the rows when the edge between the two modules already existed.
 
 ## Beyond the rows
 
@@ -239,8 +246,8 @@ fixed as they are. In **Notes**, say in a few words what you judged
   term row, unless the run fixed them `not-evaluable` (no ADRs, no
   glossary, contract drift).
 - **Import graph**: fixed `not-evaluable (no stack adapter supplies an
-  import graph)` when no adapter wrote one (PHP, TypeScript and JavaScript
-  have one in this version); then `evaluated` when every row is judged, or
+  import graph)` when no adapter wrote one (PHP, TypeScript, JavaScript
+  and Python have one in this version); then `evaluated` when every row is judged, or
   `partial (<file> not read)` when the graph's `not_covered` lists a
   changed file.
 - `partial (<what>)` when part of an area could not be judged, saying

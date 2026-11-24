@@ -257,9 +257,14 @@ class TestRun(unittest.TestCase):
         self.assertNotIn("src/app.py", reasons)
         brief = read(os.path.join(root, "brief.md"))
         unproven = brief.split("## Unproven")[1].split("## ")[0]
+        glance = brief.split("## Glance")[1].split("## ")[0]
         for path in changes:
             self.assertEqual(brief.count("- `%s`" % path), 1, path)
+        for path in ("README.txt", "old.txt"):
             self.assertIn("- `%s`: no content detector reads this file type" % path, unproven)
+        self.assertIn("- `src/app.py`: function `greet()`: new required parameter `punctuation`", glance,
+                      "the Python adapter reads the code files")
+        self.assertIn("- `lib/billing/invoice.py`: added in a new directory `lib/`", glance)
         self.assertIn("## Skim\n\nNone.", brief)
 
     def test_the_base_risk_map_names_the_zone_of_each_file_in_it(self):
@@ -278,8 +283,8 @@ class TestRun(unittest.TestCase):
         self.assertEqual((rm["found"], rm["sha"], rm["rows"]), (True, base, [{"glob": "lib/billing/**", "zone": "payments"}]))
         self.assertEqual([p["line"] for p in rm["problems"]], [12])
         brief = read(os.path.join(root, "brief.md"))
-        self.assertIn("- `lib/billing/invoice.py`: no content detector reads this file type in this version;"
-                      " risk zone payments (`lib/billing/**`).", brief)
+        self.assertIn("- `lib/billing/invoice.py`: added in a new directory `lib/` (signals/git-changes.json); risk zone"
+                      " payments (`lib/billing/**`).", brief)
         self.assertIn("- Risk map: `docs/agents/review.md` at the base (%s), 1 glob(s) in 1 zone(s); left out: line 12:"
                       % base[:12], brief)
         self.assertEqual(check(root, "--require", "brief")[0], 0)

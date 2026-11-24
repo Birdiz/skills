@@ -208,8 +208,9 @@ class TestConfig(DetectorCase):
         out = self.output("config")
         self.assertEqual(sorted(out["covered"]), [".env.example", "config/app.php", "settings.py"])
         self.assertNotIn("src/pay.py", out["covered"], "a code file is scanned for variables, not covered")
-        unproven = self.brief().split("## Unproven")[1].split("## ")[0]
-        self.assertIn("- `src/pay.py`: no content detector reads this file type", unproven)
+        glance = self.brief().split("## Glance")[1].split("## ")[0]
+        self.assertIn("- `src/pay.py`: reads environment variable `STRIPE_KEY` with no default",
+                      glance, "the Python adapter reads it; the variable makes it a glance")
         self.assertValid()
 
 
@@ -338,22 +339,23 @@ class TestAssertions(DetectorCase):
 
 class TestFanIn(DetectorCase):
     def test_changed_and_removed_public_symbols_count_their_references_outside_the_diff(self):
-        self.start({"src/lib.py": "def compute_total(a):\n    return a\n\n\ndef legacy_helper():\n    return 0\n",
-                    "src/other.py": "from lib import compute_total\n\nprint(compute_total(1))\n",
-                    "src/third.py": "# legacy_helper is mentioned in a comment only\nfrom lib import legacy_helper\n"},
-                   {"src/lib.py": "def compute_total(a, b):\n    return a + b\n"})
+        # Ruby has no stack adapter: its symbols are found and counted by the generic patterns.
+        self.start({"src/lib.rb": "def compute_total(a)\n  a\nend\n\ndef legacy_helper\n  0\nend\n",
+                    "src/other.rb": "require_relative 'lib'\n\nputs compute_total(1)\nputs compute_total(2)\n",
+                    "src/third.rb": "# legacy_helper is mentioned in a comment only\nlegacy_helper\n"},
+                   {"src/lib.rb": "def compute_total(a, b)\n  a + b\nend\n"})
         out = self.output("fan-in")
         self.assertFalse(out["content"])
         symbols = {s["symbol"]: s for s in out["symbols"]}
         self.assertEqual((symbols["compute_total"]["change"], symbols["compute_total"]["fan_in"]), ("signature", 2))
-        self.assertEqual(symbols["compute_total"]["refs"], ["src/other.py:1", "src/other.py:3"])
+        self.assertEqual(symbols["compute_total"]["refs"], ["src/other.rb:3", "src/other.rb:4"])
         self.assertEqual((symbols["legacy_helper"]["change"], symbols["legacy_helper"]["fan_in"]), ("removed", 1),
                          "a comment is not a reference")
-        self.assertEqual(sorted(self.kinds("fan-in")), [("src/lib.py", "symbol-removed", None),
-                                                          ("src/lib.py", "symbol-signature", 1)])
+        self.assertEqual(sorted(self.kinds("fan-in")), [("src/lib.rb", "symbol-removed", None),
+                                                          ("src/lib.rb", "symbol-signature", 1)])
         declared = self.brief().split("## Declared vs detected")[1].split("## ")[0]
-        self.assertIn("fan-in (heuristic): `compute_total` in `src/lib.py` 2 (signature), `legacy_helper` in"
-                      " `src/lib.py` 1 (removed)", declared)
+        self.assertIn("fan-in (heuristic): `compute_total` in `src/lib.rb` 2 (signature), `legacy_helper` in"
+                      " `src/lib.rb` 1 (removed)", declared)
         self.assertValid()
 
 

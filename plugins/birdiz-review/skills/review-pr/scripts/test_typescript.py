@@ -271,8 +271,8 @@ SCHEMA = "type User {\n  id: ID!\n  name: String\n}\n\ntype Query {\n  me: User\
 
 
 class TestNoTypescript(DetectorCase):
-    def test_a_package_json_beside_python_writes_no_graph(self):
-        self.start({"package.json": PACKAGE, "app.py": "x = 1\n"}, {"app.py": "x = 2\n"})
+    def test_a_package_json_beside_ruby_writes_no_graph(self):
+        self.start({"package.json": PACKAGE, "app.rb": "x = 1\n"}, {"app.rb": "x = 2\n"})
         self.assertFalse(os.path.exists(os.path.join(self.root, "signals", "import-graph-typescript.json")))
         self.assertIn("not-evaluable (no stack adapter supplies an import graph)",
                       read(os.path.join(self.root, "findings", "structure.md")))

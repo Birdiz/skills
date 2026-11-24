@@ -28,11 +28,13 @@ Each one reads the changed files of its type and writes one output under
   with or without its manifest.
 - `assertions`: test files. Assertions changed or removed, skip and focus
   markers added, existing test code changed, a test file deleted.
-- `public-api` (PHP, TypeScript and JavaScript in this version): the
-  signature-level diff of the public API of each changed file, labelled
-  heuristic: PHP's public classes and members, TypeScript's exports. Roave's
-  BC check is never run: it installs dependencies; nor is API Extractor: it
-  needs a build (see `ADAPTERS`).
+- `public-api` (PHP, TypeScript, JavaScript and Python in this version):
+  the signature-level diff of the public API of each changed file,
+  labelled heuristic: PHP's public classes and members, TypeScript's
+  exports, Python's public module names. Roave's BC check is never run: it
+  installs dependencies; nor is API Extractor: it needs a build (see
+  `ADAPTERS`). Python packages go through `griffe check` when the machine
+  has it, in a scratch repository written from the two trees.
 - `import-graph-php`: the PHP import graph from `use` and `namespace`
   parsing, written through `structure.graph_output`, which computes the new
   edges and cycles between modules; and new `deptrac` layer violations when
@@ -43,11 +45,15 @@ Each one reads the changed files of its type and writes one output under
   resolved through relative paths, `tsconfig.json` paths and workspace
   packages; or from `dependency-cruiser` when the machine has it and it
   read every changed file. Written the same way, for the structure step.
+- `import-graph-python`: the Python import graph from `ast`, imports
+  resolved to the repository's packages; and the new violations of the
+  repository's `import-linter` contracts when it has a config and the
+  machine has import-linter. Written the same way, for the structure step.
 - `fan-in`: not a content detector. The public symbols the diff removes or
   changes in code files, and the references to each outside the diff, a
   search labelled heuristic: PHP symbols by how they are called
-  (`->total(`), TypeScript exports as a word and members as `.total`, the
-  others as a word.
+  (`->total(`), TypeScript and Python names as a word and members as
+  `.total`, the others as a word.
 
 A content detector applies to the changed files its classifier accepts
 (`applies_to` lists them, escaped), covers the ones it could read, and says
@@ -58,11 +64,13 @@ only as its adapter allows (`ADAPTERS`).
 import codecs
 import json
 import os
+import posixpath
 import re
 import shutil
 import subprocess
 
 import php
+import python
 import typescript
 
 CODE_EXT = re.compile(r"\.(py|js|jsx|ts|tsx|mjs|cjs|mts|cts|php|rb|go|java|kt|kts|cs|rs|swift|scala|ex|exs)$")
@@ -99,6 +107,17 @@ ADAPTERS = {
     "graphql-inspector": {
         "needs": "nothing", "installs": False,
         "note": "compares the two schema files it is given; given `.graphql` files, it loads no code"},
+    "griffe": {
+        "needs": "nothing", "installs": False,
+        "note": "reads packages from their source without importing them when run with `--no-inspection`; it"
+                " compares two git references by checking each out with `git worktree add`, so it runs in a scratch"
+                " repository written from the two trees, never in the reviewed one"},
+    "import-linter": {
+        "needs": "nothing", "installs": False,
+        "note": "parses the files of the root packages it finds from the directory it runs in, which it puts"
+                " first on `sys.path`, and installs nothing; so it runs in a scratch directory holding only the"
+                " config and the root packages, `PYTHONPATH` unset; a config that registers its own contract types"
+                " (`contract_types`), or names a dotted root package, imports the project's code"},
 }
 
 
@@ -190,7 +209,7 @@ class Change:
         self.hunks = hunks
         self.ctx = ctx
         self._head = self._base = False
-        self._php, self._ts = {}, {}
+        self._php, self._ts, self._py = {}, {}, {}
 
     @property
     def deleted(self):
@@ -270,6 +289,21 @@ class Change:
         unit, problem = self._ts[side]
         if problem:
             raise typescript.ParseError(problem)
+        return unit
+
+    def py(self, side):
+        """The Python Unit of the `base` or `head` side, None when that side
+        has no text; raises python.ParseError."""
+        if side not in self._py:
+            text = self.head() if side == "head" else self.base()
+            try:
+                unit = python.parse(text, self.path if side == "head" else self.old) if text is not None else None
+                self._py[side] = (unit, None)
+            except python.ParseError as e:
+                self._py[side] = (None, str(e))
+        unit, problem = self._py[side]
+        if problem:
+            raise python.ParseError(problem)
         return unit
 
     def head_line(self, n):
@@ -367,15 +401,20 @@ def signal(path, kind, reason, line=None, text=None):
     return s
 
 
-def run_tool(command, args, cwd):
+def run_tool(command, args, cwd, env=None, unset=()):
     """(return code, stdout, stderr) of a tool, or (None, "", why) when it
-    could not start or timed out."""
+    could not start or timed out. `env` adds to the environment, `unset`
+    names variables taken out of it."""
     path = shutil.which(command)
     if not path:
         return None, "", "%s not found" % command
+    full = None
+    if env or unset:
+        full = {k: v for k, v in os.environ.items() if k not in unset}
+        full.update(env or {})
     try:
         done = subprocess.run([path] + args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              stdin=subprocess.DEVNULL, timeout=TOOL_TIMEOUT)
+                              stdin=subprocess.DEVNULL, timeout=TOOL_TIMEOUT, env=full)
     except (OSError, subprocess.TimeoutExpired) as e:
         return None, "", str(e)
     return done.returncode, done.stdout.decode("utf-8", "replace"), done.stderr.decode("utf-8", "replace")
@@ -1296,6 +1335,35 @@ def not_run_gap(ctx, name, what):
         name, "found" if ctx.tool(name) else "not found", why, what)
 
 
+def py_files(ctx):
+    """The changed Python code files the Python adapter reads: test files
+    left out."""
+    return [c for c in ctx.changes if (python.is_code(c.path) or python.is_code(c.old)) and not is_test(c.path)]
+
+
+def py_units(c):
+    """(base Unit, head Unit, None), or (None, None, why it can't be read)."""
+    why = c.unreadable()
+    if why:
+        return None, None, why
+    for side in ("base", "head"):
+        try:
+            c.py(side)
+        except python.ParseError as e:
+            return None, None, "not readable as Python by %s at the %s: %s" % (python.INTERPRETER, side, e)
+    return c.py("base"), c.py("head"), None
+
+
+def api_signals(c, found, kind=None):
+    """The signals of one file's API changes; a deleted file with several
+    gets one, listing them."""
+    if c.deleted and len(found) > 1:
+        names = ["`%s`" % ch["symbol"] for ch in found]
+        return [signal(c.path, kind or found[0]["kind"], "file deleted with %d public symbols: %s%s" % (
+            len(names), ", ".join(names[:8]), ", ..." if len(names) > 8 else ""))]
+    return [signal(c.path, ch["kind"], ch["reason"], c.head_line(ch["line"]), ch["text"]) for ch in found]
+
+
 def public_api(ctx, version):
     applies, covered, not_covered, signals, gaps, languages = [], [], [], [], [], set()
     for files, units, changes, lang, tool, what in (
@@ -1313,19 +1381,158 @@ def public_api(ctx, version):
                 not_covered.append({"path": c.path, "reason": why})
                 continue
             covered.append(c.path)
-            found = changes(base, head)
-            if c.deleted and len(found) > 1:
-                names = ["`%s`" % ch["symbol"] for ch in found]
-                signals.append(signal(c.path, found[0]["kind"], "file deleted with %d public symbols: %s%s" % (
-                    len(names), ", ".join(names[:8]), ", ..." if len(names) > 8 else "")))
-                continue
-            for ch in found:
-                signals.append(signal(c.path, ch["kind"], ch["reason"], c.head_line(ch["line"]), ch["text"]))
+            signals += api_signals(c, changes(base, head))
         gap = not_run_gap(ctx, tool, what) if seen else None
         if gap:
             gaps.append(gap)
-    return output("public-api", version, True, applies, covered, not_covered, signals, heuristic=True, gaps=gaps,
-                  languages=sorted(languages))
+    heuristic = bool(applies)
+    read = {}
+    for c in py_files(ctx):
+        applies.append(c.path)
+        languages.add("python")
+        base, head, why = py_units(c)
+        if why:
+            not_covered.append({"path": c.path, "reason": why})
+            continue
+        covered.append(c.path)
+        read[c.path] = (c, base, head)
+    by_griffe, tool = griffe_signals(ctx, read, gaps) if read else ({}, None)
+    for path, (c, base, head) in read.items():
+        signals += by_griffe[path] if path in by_griffe else api_signals(c, python.api_changes(base, head))
+    heuristic = heuristic or not tool or any(path not in by_griffe for path in read)
+    return output("public-api", version, True, applies, covered, not_covered, signals, tool=tool,
+                  heuristic=heuristic, gaps=gaps, languages=sorted(languages))
+
+
+# --- griffe, on a scratch repository ------------------------------------------------------
+
+SCRATCH_IDENTITY = {"GIT_AUTHOR_NAME": "birdiz-review", "GIT_AUTHOR_EMAIL": "review@localhost",
+                    "GIT_AUTHOR_DATE": "2000-01-01T00:00:00+0000", "GIT_COMMITTER_NAME": "birdiz-review",
+                    "GIT_COMMITTER_EMAIL": "review@localhost", "GIT_COMMITTER_DATE": "2000-01-01T00:00:00+0000"}
+GIT_LOCATIONS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_COMMON_DIR",
+                 "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_NAMESPACE", "GIT_CEILING_DIRECTORIES")
+
+
+def scratch_git(args, env=None, cwd=None):
+    """(stdout, None) of git on the run's scratch repository, or (None,
+    why). The environment's git locations are dropped: only `env` names
+    one."""
+    full = {k: v for k, v in os.environ.items() if k not in GIT_LOCATIONS}
+    full.update({"GIT_TERMINAL_PROMPT": "0", "LC_ALL": "C"})
+    full.update(env or {})
+    try:
+        done = subprocess.run(["git"] + args, cwd=cwd, env=full, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              stdin=subprocess.DEVNULL, timeout=TOOL_TIMEOUT)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return None, str(e)
+    if done.returncode != 0:
+        return None, first_line(done.stderr.decode("utf-8", "replace"))
+    return done.stdout.decode("utf-8", "replace").strip(), None
+
+
+def griffe_repo(ctx, dirs):
+    """(path, None) of the scratch repository griffe compares in: a
+    `review-base` and a `review-head` commit of the package directories,
+    written from the two trees of the run, hooks off; or (None, why). The
+    reviewed repository is never touched: griffe adds and removes its
+    worktrees here."""
+    base_tree = ctx.base_tree()
+    if base_tree is None:
+        return None, "the base tree could not be written"
+    repo = os.path.join(ctx.work_dir, "griffe-repo")
+    gitdir = os.path.join(repo, ".git")
+    for args in (["init", "-q", repo], ["--git-dir", gitdir, "config", "core.hooksPath", os.devnull]):
+        out, err = scratch_git(args)
+        if out is None:
+            return None, "the scratch repository could not be written (%s)" % err
+    for side, tree in (("base", base_tree), ("head", ctx.head_dir)):
+        env = dict(SCRATCH_IDENTITY, GIT_DIR=gitdir, GIT_WORK_TREE=tree,
+                   GIT_INDEX_FILE=os.path.join(ctx.work_dir, "griffe-%s.index" % side))
+        out, err = scratch_git(["-c", "core.autocrlf=false", "-c", "core.safecrlf=false", "add", "-A", "-f", "--"]
+                               + dirs, env, tree)
+        sha = scratch_git(["write-tree"], env, tree)[0] if out is not None else None
+        commit = scratch_git(["commit-tree", "--no-gpg-sign", sha, "-m", "review " + side], env, tree)[0] \
+            if sha else None
+        done = scratch_git(["update-ref", "refs/heads/review-" + side, commit], env, tree)[0] if commit else None
+        if done is None:
+            return None, "the scratch repository could not be written (%s)" % (err or "a git command failed")
+    for d in dirs:
+        os.makedirs(os.path.join(repo, d), exist_ok=True)
+    return repo, None
+
+
+def griffe_check(tool, repo, root, top):
+    """([breakage], None) of `griffe check` on one package between the two
+    commits of the scratch repository, or (None, why it failed)."""
+    code, out, err = run_tool(tool.get("command", "griffe"), [
+        "check", top, "--against", "review-base", "--base-ref", "review-head", "--search", root or ".",
+        "--no-inspection", "--no-color", "--format", "github"], os.path.join(repo, root) if root else repo,
+        unset=GIT_LOCATIONS)
+    if code is None:
+        return None, err
+    breakages = python.griffe_breakages(err + "\n" + out)
+    if "Traceback (most recent call last)" in err or code not in (0, 1) or (code == 1 and not breakages):
+        lines = [x.strip() for x in (err or out).split("\n") if x.strip()]
+        return None, (lines[-1] if "Traceback" in err else lines[0]) if lines else "exit code %s" % code
+    return breakages, None
+
+
+def griffe_signals(ctx, read, gaps):
+    """({path: [signal]} of the changed files of the packages griffe
+    checked, griffe's name or None), with a gap for what it did not check.
+    `read` is {path: (change, base Unit, head Unit)}."""
+    griffe = ctx.tool("griffe")
+    ok, why = allowed("griffe")
+    what = "Python public API read by the heuristic signature diff"
+    if not griffe:
+        gaps.append("griffe not found on this machine: %s" % what)
+        return {}, None
+    if not ok:
+        gaps.append("griffe not run: %s; %s" % (why, what))
+        return {}, None
+    project = python.Project(tree_files(ctx.head_dir) + [c.old for c, _, _ in read.values() if not c.added_file])
+    groups, outside = {}, []
+    for path, (c, _, _) in read.items():
+        key = project.package_of(c.old if c.deleted else c.path)
+        init = posixpath.join(key[0], key[1], "__init__.py") if key else None
+        if init and os.path.isfile(os.path.join(ctx.head_dir, init)) and ctx.base_text(init) is not None:
+            groups.setdefault(key, []).append(path)
+        else:
+            outside.append(path)
+    if outside:
+        gaps.append("griffe not run on %d file(s) outside a package present at both sides (`%s`%s): %s" % (
+            len(outside), outside[0], ", ..." if len(outside) > 1 else "", what))
+    if not groups:
+        return {}, None
+    repo, problem = griffe_repo(ctx, [posixpath.join(r, t) for r, t in sorted(groups)])
+    if problem:
+        gaps.append("griffe not run: %s; %s" % (problem, what))
+        return {}, None
+    found, used, elsewhere = {}, False, 0
+    for (root, top), paths in sorted(groups.items()):
+        breakages, problem = griffe_check(griffe, repo, root, top)
+        if problem:
+            gaps.append("griffe failed on package `%s` (%s): %s" % (posixpath.join(root, top), problem, what))
+            continue
+        used = True
+        mine = {p: [] for p in paths}
+        for b in breakages:
+            owner = next((p for p in paths if b["file"] in (read[p][0].path, read[p][0].old)), None)
+            if owner is None:
+                elsewhere += 1
+            else:
+                mine[owner].append(b)
+        for p, items in mine.items():
+            c = read[p][0]
+            found[p] = api_signals(c, [{
+                "symbol": b["title"], "kind": "griffe:" + b["slug"], "text": None,
+                "line": b["line"] if b["file"] == c.path and not c.deleted else None,
+                "reason": "griffe: `%s`: %s%s" % (b["title"], b["kind"], ": " + b["change"] if b["change"] else "")}
+                for b in items], "griffe:object-removed")
+    if elsewhere:
+        gaps.append("griffe reported %d breakage(s) in files the diff does not change (a re-export of a changed"
+                    " name): not signalled" % elsewhere)
+    return found, ("griffe@%s" % griffe.get("version")) if used else None
 
 
 def php_tree(root, skip=()):
@@ -1679,6 +1886,210 @@ def import_graph_typescript(ctx, version):
     return out
 
 
+# --- The Python adapter: import graph and import-linter contracts -----------------------------
+
+LINTER_CONFIGS = ((".importlinter", r"^\[importlinter\]"), ("setup.cfg", r"^\[importlinter\]"),
+                  ("pyproject.toml", r"^\[tool\.importlinter\]"))
+
+
+def linter_options(tree, config):
+    """(root packages, None) of an import-linter config, or (None, why
+    import-linter can't run on it without importing the project's code)."""
+    text = read_small(tree, config)
+    if text is None:
+        return None, "`%s` can't be read" % config
+    session = {}
+    if config.endswith(".toml"):
+        try:
+            import tomllib
+            session = ((tomllib.loads(text).get("tool") or {}).get("importlinter")) or {}
+        except ImportError:  # Python before 3.11: the keys read from the text
+            m = re.search(r"^\[tool\.importlinter\]\s*$(.*?)(?=^\[(?!\[)|\Z)", text, re.M | re.S)
+            body = m.group(1) if m else ""
+            for key in ("root_package", "root_packages", "contract_types"):
+                v = re.search(r"^%s\s*=\s*(\[[^\]]*\]|\"[^\"]*\"|'[^']*')" % key, body, re.M)
+                if v:
+                    session[key] = re.findall(r"[\"']([^\"']+)[\"']", v.group(1))
+        except ValueError as e:
+            return None, "`%s` is not valid TOML: %s" % (config, e)
+    else:
+        import configparser
+        parser = configparser.ConfigParser(interpolation=None)
+        try:
+            parser.read_string(text)
+            if parser.has_section("importlinter"):
+                session = {k: v.split() if "\n" in v.strip() or k.endswith("s") else v
+                           for k, v in parser.items("importlinter")}
+        except configparser.Error as e:
+            return None, "`%s` can't be read: %s" % (config, first_line(e))
+    if session.get("contract_types"):
+        return None, "`%s` registers its own contract types (`contract_types`), which imports the project's code" % (
+            config)
+    roots = session.get("root_packages") or session.get("root_package") or []
+    roots = [roots] if isinstance(roots, str) else [r for r in roots if isinstance(r, str)]
+    if not roots:
+        return None, "`%s` names no root package" % config
+    dotted = [r for r in roots if "." in r]
+    if dotted:
+        return None, "root package `%s` in `%s` is dotted: finding it imports `%s`, the project's code" % (
+            dotted[0], config, dotted[0].rsplit(".", 1)[0])
+    odd = [r for r in roots if not r.isidentifier() or r in python.STDLIB]
+    if odd:
+        return None, "root package `%s` in `%s` is not a plain package name, or shadows the standard library" % (
+            odd[0], config)
+    return roots, None
+
+
+def linter_run(ctx, tool, tree, config, roots, project, side):
+    """(report, None) of lint-imports on a tree (`python.linter_report`), or
+    (None, why it failed). It puts the directory it runs in first on
+    `sys.path`, so it runs in a scratch directory of the work directory
+    that holds only the config and the root packages copied from the tree,
+    `PYTHONPATH` unset, its cache off: no other file of the project can be
+    imported in place of a module it loads."""
+    scratch = os.path.join(ctx.work_dir, "import-linter-%s" % side)
+    os.makedirs(scratch, exist_ok=True)
+    shutil.copyfile(os.path.join(tree, config), os.path.join(scratch, config))
+    for r in roots:
+        where = next((d for d in ["", "src"] + sorted(project.roots) if os.path.isdir(os.path.join(tree, d, r))), None)
+        if where is None:
+            return None, "root package `%s` not found in the tree" % r
+        shutil.copytree(os.path.join(tree, where, r), os.path.join(scratch, r), symlinks=True, dirs_exist_ok=True,
+                        ignore=shutil.ignore_patterns("__pycache__"))
+    env = {"PYTHONDONTWRITEBYTECODE": "1", "NO_COLOR": "1", "COLUMNS": "10000", "TERM": "dumb"}
+    code, out, err = run_tool(tool.get("command", "lint-imports"), ["--config", config, "--no-cache"], scratch, env,
+                              unset=("PYTHONPATH", "PYTHONHOME", "PYTHONSTARTUP", "PYTHONUSERBASE"))
+    if code is None:
+        return None, err
+    report = python.linter_report(out + "\n" + err)
+    if report is None:
+        return None, first_line(err or out)
+    return report, None
+
+
+def contract_signals(ctx, project, present, gaps):
+    """(signals, contracts, tool): the import-linter violations at the head
+    that the base does not have, on the changed files, when the head has
+    an import-linter config and the machine has import-linter."""
+    config = None
+    for name, header in LINTER_CONFIGS:
+        text = read_small(ctx.head_dir, name) if os.path.isfile(os.path.join(ctx.head_dir, name)) else None
+        if text is not None and re.search(header, text, re.M):
+            config = name
+            break
+    if config is None:
+        return [], None, None
+    contracts = {"config": config, "checked": False}
+    tool = ctx.tool("import-linter")
+    ok, why = allowed("import-linter")
+    roots, problem = linter_options(ctx.head_dir, config)
+    if not tool:
+        gaps.append("import-linter not found on this machine: the contracts of `%s` not checked" % config)
+        return [], contracts, None
+    if not ok or problem:
+        gaps.append("import-linter not run: %s; the contracts of `%s` not checked" % (why or problem, config))
+        return [], contracts, None
+    head, err = linter_run(ctx, tool, ctx.head_dir, config, roots, project, "head")
+    base = {"results": {}, "links": []}
+    base_tree = ctx.base_tree() if head is not None else None
+    if base_tree and os.path.isfile(os.path.join(base_tree, config)):
+        base_roots, problem = linter_options(base_tree, config)
+        if problem:
+            base, err = None, "the base's config can't be run: %s" % problem
+        else:
+            base, err = linter_run(ctx, tool, base_tree, config, base_roots, project, "base")
+    if head is None or base is None:
+        gaps.append("import-linter failed (%s): the contracts of `%s` not checked" % (first_line(err), config))
+        return [], contracts, None
+    before = {(c, a, b) for c, a, b, _ in base["links"]}
+    signals, seen = [], set()
+    for contract, importer, imported, line in head["links"]:
+        key = (contract, importer, imported)
+        path = project.file_of(importer, present.__contains__)
+        if key in before or key in seen or path not in ctx.paths:
+            continue
+        seen.add(key)
+        c = next(x for x in ctx.changes if x.path == path)
+        signals.append(signal(path, "contract-broken", "new import-linter violation of `%s`: `%s` imports `%s`" % (
+            contract or "a contract", importer, imported), c.head_line(line)))
+    contracts.update({"checked": True, "kept": head["kept"], "broken": head["broken"], "results": head["results"],
+                      "broken_at_base": sorted(k for k, v in base["results"].items() if v == "broken"),
+                      "new": len(signals)})
+    return signals, contracts, "import-linter@%s" % tool.get("version")
+
+
+def import_graph_python(ctx, version):
+    """The Python import graph, in the structure step's stack-neutral
+    format: the imports of a file of another module, at the base and at the
+    head, every import statement of the file (in a function or under `if
+    TYPE_CHECKING` too) read with `ast`. The changed files are parsed at
+    both sides; every other Python file of the head tree stands for both.
+    An import maps to the repository file it loads (`python.Project`): a
+    package, a module, or the submodule a `from` import names; one that maps
+    to no file (the standard library, a dependency) has no edge. None when
+    the diff has no Python file."""
+    import structure  # structure.py imports this module, so not at the top
+    applies, covered, not_covered, gaps = [], [], [], []
+    units = {}
+    for c in py_files(ctx):
+        applies.append(c.path)
+        base, head, why = py_units(c)
+        if why:
+            not_covered.append({"path": c.path, "reason": why})
+            continue
+        covered.append(c.path)
+        units[c.path] = (c, base, head)
+    if not applies:
+        return None
+    files = tree_files(ctx.head_dir)
+    olds = [c.old for c in ctx.changes if not c.added_file]
+    project = python.Project(files + [p for p in olds if python.is_code(p)])
+    skip = ctx.paths | set(olds)
+    others = {}
+    for rel in files if units else ():
+        if rel in skip or not python.is_code(rel) or is_test(rel):
+            continue
+        text = read_small(ctx.head_dir, rel)
+        imports = python.quick_imports(text, rel) if text is not None else None
+        if imports is not None:
+            others[rel] = imports
+    unchanged = {f for f in files if python.is_code(f) and f not in skip}
+    present = {"base": set(unchanged), "head": set(unchanged)}
+    for c in ctx.changes:
+        if python.is_code(c.old) and not c.added_file:
+            present["base"].add(c.old)
+        if python.is_code(c.path) and not c.deleted:
+            present["head"].add(c.path)
+    sides = {name: [(rel, imps) for rel, imps in sorted(others.items())] for name in ("base", "head")}
+    for path, (c, base, head) in sorted(units.items()):
+        for name, unit, where in (("base", base, c.old), ("head", head, path)):
+            if unit is not None:
+                sides[name].append((where, unit.imports))
+
+    def graph_side(name):
+        exists = present[name].__contains__
+        mods, out, seen = {}, [], set()
+        for path, imps in sides[name]:
+            src = project.module_of(path)
+            for level, module, names, line in imps:
+                for to in project.resolve(path, level, module, names, exists):
+                    dst = project.module_of(to)
+                    if to == path or is_test(to) or not src or not dst or src == dst or (path, to) in seen:
+                        continue
+                    seen.add((path, to))
+                    mods[path], mods[to] = src, dst
+                    out.append({"from": path, "to": to, "line": line})
+        return {"modules": mods, "edges": out}
+
+    graph = {name: graph_side(name) for name in ("base", "head")}
+    found, contracts, tool = contract_signals(ctx, project, present["head"], gaps) if units else ([], None, None)
+    out = structure.graph_output("import-graph-python", version, graph, "python", tool=tool, heuristic=True,
+                                 content=True, applies=applies, covered=covered, not_covered=not_covered, gaps=gaps)
+    out["signals"] += found
+    out.update(languages=["python"], modules=project.rule, contracts=contracts, scanned=len(others) + len(units))
+    return out
+
+
 # --- Fan-in -----------------------------------------------------------------------------
 
 DEFS = {
@@ -1744,9 +2155,11 @@ def fan_in(ctx, version):
         if head is None and not c.deleted:
             continue
         adapter = php if lang == "php" and php.is_code(c.path) else \
-            typescript if lang == "js" and typescript.is_code(c.path) else None
+            typescript if lang == "js" and typescript.is_code(c.path) else \
+            python if lang == "py" and python.is_code(c.path) else None
         if adapter is not None:
-            base_unit, head_unit, why = php_units(c) if adapter is php else ts_units(c, api=True)
+            units = {php: php_units, typescript: lambda x: ts_units(x, api=True), python: py_units}[adapter]
+            base_unit, head_unit, why = units(c)
             if why is None:
                 covered.append(c.path)
                 touched = [n for n, _ in c.added()] + [n for _, _, n in c.removed()]
@@ -1786,7 +2199,10 @@ def fan_in(ctx, version):
     specs = {}
     for s in symbols:
         adapter = s.get("_adapter")
-        if adapter is not None:
+        if adapter is python:  # its references go through the module's name, so per file
+            word, rx = python.reference(s["symbol"], s["path"])
+            name, key = python.member_name(s["symbol"]), "python %s %s" % (s["path"], s["symbol"])
+        elif adapter is not None:
             word, rx = adapter.reference(s["symbol"])
             name, key = adapter.member_name(s["symbol"]), "%s %s" % (adapter.__name__, s["symbol"])
         else:
@@ -1820,8 +2236,8 @@ def count_refs(ctx, specs):
     searched when it holds the word; a spec with no pattern matches the word
     alone. A stack adapter's symbol is only searched in its own files (the
     filter): the public API diff signals its break, so fan-in only counts.
-    A TypeScript or JavaScript file is searched once lexed: a word in a
-    string or a comment is no reference."""
+    A TypeScript, JavaScript or Python file is searched once lexed: a word
+    in a string or a comment is no reference."""
     specs = {k: (w, rx or re.compile(r"(?<![\w$])%s(?![\w$])" % re.escape(w)), p) for k, (w, rx, p) in specs.items()}
     counts = {k: [0, []] for k in specs}
     scanned = 0
@@ -1853,6 +2269,8 @@ def count_refs(ctx, specs):
                     text = typescript.strip(text, typescript.jsx_allowed(name), tags=True)[0]
                 except typescript.ParseError:
                     pass
+            elif python.is_code(name):
+                text = python.strip(text)
             for n, line in enumerate(text.split("\n"), 1):
                 if comment(line):
                     continue
@@ -1872,7 +2290,8 @@ def count_refs(ctx, specs):
 DETECTORS = [("migrations", migrations), ("config", config), ("routes", routes),
              ("api-contracts", api_contracts), ("dependencies", dependencies), ("assertions", assertions),
              ("public-api", public_api), ("import-graph-php", import_graph_php),
-             ("import-graph-typescript", import_graph_typescript), ("fan-in", fan_in)]
+             ("import-graph-typescript", import_graph_typescript), ("import-graph-python", import_graph_python),
+             ("fan-in", fan_in)]
 
 
 def run_all(ctx, version):
