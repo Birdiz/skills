@@ -86,6 +86,8 @@ class TestContracts(unittest.TestCase):
         self.fx.gh_data["issues"]["40"] = issue(40, fixture("ticket-issue-native.md"), parent=35)
         self.fx.gh_data["issues"]["41"] = issue(41, fixture("ticket-issue-body-relations.md"), parent=35)
         self.fx.save()
+        # `greet`'s new parameter gets a default: no public API signal, the migration's is the only one
+        self.fx.commit_on_branch("src/app.py", "def greet(name, punctuation=''):\n    return 'hello ' + name + punctuation\n")
         self.fx.head = self.fx.commit_on_branch(MIGRATION, "ALTER TABLE users DROP COLUMN email;\n")
 
     def pr(self, body):

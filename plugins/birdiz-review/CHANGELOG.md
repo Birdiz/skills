@@ -314,3 +314,67 @@ The TypeScript adapter ([#45](https://github.com/Birdiz/skills/issues/45)):
   build: never run), checked against their sources (dependency-cruiser
   18.9, graphql-inspector 7.0). The run header looks for `api-extractor`.
 - `.mts` and `.cts` files count as code for every detector.
+
+The Python adapter ([#46](https://github.com/Birdiz/skills/issues/46)):
+
+- `.py` files are parsed with the standard `ast` module of the interpreter
+  that runs the review: nothing of the project is imported or run. A file
+  that interpreter can't parse (newer syntax, Python 2) is not covered, so
+  `unproven`. Checked on the 1,037 files of the 3.13 standard library: no
+  parse error, and a self-diff gives no signal.
+- `public-api` now reads Python files too: the signature-level diff of each
+  module's public names, labelled heuristic. Public is a static `__all__`,
+  else no leading `_`; a `_private` module exports only its `__all__`; an
+  import is API when `__all__` lists it, it reads `import x as x`, or it is
+  a relative import of an `__init__.py`. Signals: `function-removed`,
+  `class-removed`, `name-removed` (with renames; a deleted file gets one
+  signal), `name-changed`, `signature-changed` (keyword calls count: a
+  renamed, moved, keyword-only or positional-only parameter, a default, a
+  new required one, `*args`/`**kwargs` removed, async, overloads; for
+  constructors too, dataclass and `NamedTuple` ones generated from their
+  fields), `class-changed`, `method-removed`, `property-removed` (`self.x`
+  of `__init__` included), `property-changed`, `abstract-method-added`,
+  `protocol-member-added`, `type-changed`, `enum-member-removed`,
+  `enum-member-changed` (`auto()` numbered). A type is compared only when
+  both sides have one: adding annotations is no change. A parameter that
+  `**kwargs` takes after the change is no break.
+- With `griffe` on the machine, each package the diff touches goes through
+  `griffe check --no-inspection --format github` (static, no import), and
+  its breakages are the package's signals (`griffe:<kind>`). `griffe check`
+  compares git references by checking them out with `git worktree add` in
+  the repository it is pointed at, so it runs in a scratch repository
+  written from the two trees under the run directory, hooks off: no
+  branch or worktree is ever added to the reviewed repository. A file
+  outside a package, or a package griffe fails on, gets the heuristic and a
+  gap.
+- `import-graph-python`, a content detector for the same files: every
+  import statement, in functions and under `if TYPE_CHECKING:` too,
+  resolved to the repository's files through its packages (`__init__.py`),
+  its roots (the repository root, `src/`, project directories) and the
+  modules beside a script, namespace packages under a root included; of
+  two copies of a package, the nearest, never another root's loose module
+  or a standard library name. A
+  module is a root's top-level package, or its subpackages when the root
+  has one (`shop.billing`), or the directory of code outside packages. With
+  an `import-linter` config (`.importlinter`, `setup.cfg`, `pyproject.toml`)
+  and `lint-imports` on the machine, it runs on the head and base trees,
+  each time in a scratch directory holding only the config and the root
+  packages, `PYTHONPATH` unset and cache off (it puts the directory it
+  runs in first on `sys.path`), and each newly broken import of a contract is a
+  `contract-broken` signal; the output's `contracts` reports every
+  contract. A config with `contract_types` or a dotted root package imports
+  the project's code, and a root named like a standard library module would
+  shadow it, so import-linter is not run on it, and a gap says so.
+- `fan-in` reads Python symbols with the parser (`total`,
+  `Invoice.amount`, `Invoice.__init__`) and searches them in Python files
+  with strings and comments blanked: a name counts as a word or through
+  its module (`invoice.total`), not as another object's attribute
+  (`pickle.dumps` is not `json.dumps`), a constructor as `Invoice(` or a
+  subclass. It counts; the break is the `public-api` signal.
+- Tool adapters for `griffe` and `import-linter` (both need nothing and
+  install nothing), checked against their sources (griffe 2.4, import-linter
+  2.17). A tool is found on `PATH` only, never looked up in the project's
+  `.venv/bin`. griffe runs without the environment's git location
+  variables (`GIT_DIR`...), so it can only reach the scratch repository.
+- Tests whose fixtures used Python as "a file no detector reads" now use
+  Ruby, or expect the Python adapter's coverage.

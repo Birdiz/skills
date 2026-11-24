@@ -200,7 +200,7 @@ class TestImports(DetectorCase):
             {"from": "src/Shop/Order.php", "to": "src/Shipping/Carrier.php", "line": 4}])
 
     def test_no_php_to_graph_writes_no_graph(self):
-        self.start({"app.py": "x = 1\n"}, {"app.py": "x = 2\n"})
+        self.start({"app.rb": "x = 1\n"}, {"app.rb": "x = 2\n"})
         self.assertFalse(os.path.exists(os.path.join(self.root, "signals", "import-graph-php.json")))
         self.assertIn("not-evaluable (no stack adapter supplies an import graph)",
                       read(os.path.join(self.root, "findings", "structure.md")))

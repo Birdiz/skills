@@ -32,10 +32,10 @@ STATE_SUBDIR = os.path.join("birdiz-review", "runs")
 
 # Detector tools looked for on every run: (name, command). Found ones are
 # recorded with their version, and a tool with an adapter with what it needs
-# (detectors.ADAPTERS). detectors.py has adapters for squawk, oasdiff,
-# deptrac, Roave's BC check (never run: it installs dependencies),
-# dependency-cruiser, graphql-inspector and API Extractor (never run: it
-# needs a build); griffe and import-linter come with the Python adapter.
+# (detectors.ADAPTERS). detectors.py has adapters for every one: squawk,
+# oasdiff, deptrac, Roave's BC check (never run: it installs dependencies),
+# dependency-cruiser, graphql-inspector, API Extractor (never run: it needs
+# a build), griffe and import-linter.
 TOOLS = [
     ("git", "git"),
     ("roave-backward-compatibility-check", "roave-backward-compatibility-check"),

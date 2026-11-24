@@ -28,10 +28,13 @@ the import graph between modules, with `deptrac` layers when the
 repository has a YAML config. The TypeScript adapter reads TypeScript and
 JavaScript code: the exports' signature diff (heuristic: API Extractor
 needs a build, which the review never runs) and the import graph, with
-`dependency-cruiser` resolving it when the machine has it. A file no
-content detector reads, such as Python code until its adapter lands, a
-template, a `.vue` file, a minified bundle or a file that can't be parsed,
-stays `unproven`. A
+`dependency-cruiser` resolving it when the machine has it. The Python
+adapter reads Python code with `ast`: the public names' signature diff
+(heuristic, or `griffe check` when the machine has it, run in a scratch
+repository, never in the reviewed one) and the import graph, with the
+repository's `import-linter` contracts when it has a config. A file no
+content detector reads, such as a template, a `.vue` file, a minified
+bundle or a file that can't be parsed, stays `unproven`. A
 structure detector classifies each new file (module, layer, entry point,
 migration, config, test), lists each new dependency with its category,
 and reads the glossary and the ADRs the domain doc names. Three judgment
@@ -47,9 +50,9 @@ declares with the one it detects. `structure`
 (`needed`, `not needed`), each new type name the glossary lacks, and each
 new import between modules, and flags a second way of doing what the
 codebase already does, a change against an ADR or a decision no ADR
-records. The import graph comes from the PHP and TypeScript adapters; for
-other stacks it waits for their adapter, and the brief says so with the
-dimensions that did not run.
+records. The import graph comes from the PHP, TypeScript and Python
+adapters; for other stacks it waits for their adapter, and the brief says
+so with the dimensions that did not run.
 
 ## Invariants
 

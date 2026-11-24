@@ -9,7 +9,7 @@ $XDG_STATE_HOME/birdiz-review/runs/<repo>/<branch>/<head short sha>/
 ├── signals/<detector>.json   one output per detector (git-changes, migrations, config,
 │                             routes, api-contracts, dependencies, assertions, public-api,
 │                             fan-in, structure; import-graph-<stack> from a stack adapter:
-│                             import-graph-php, import-graph-typescript)
+│                             import-graph-php, import-graph-typescript, import-graph-python)
 ├── findings/<axis>.md        intent.md, contracts.md, structure.md
 ├── brief.md                  the brief, a projection of the files above
 ├── sources.json              the spec, tickets and PR body read, and their contract status
@@ -54,10 +54,18 @@ for `execution` (ADR 0004). `roave-backward-compatibility-check` runs
 `composer install` in its own clones of the repository, with no option to
 skip it, so it is never run. `api-extractor` reads the `.d.ts` files a
 TypeScript build writes, so it is never run either. `deptrac`,
-`graphql-inspector` and `dependency-cruiser` install nothing and run;
-`dependency-cruiser` needs dependencies: it reads TypeScript through the
-TypeScript compiler installed beside it, and skips TypeScript files
-without one.
+`graphql-inspector`, `dependency-cruiser`, `griffe` and `import-linter`
+install nothing and run; `dependency-cruiser` needs dependencies: it reads
+TypeScript through the TypeScript compiler installed beside it, and skips
+TypeScript files without one. `griffe check` compares two git references
+by checking each out with `git worktree add` in the repository it is
+pointed at, so it runs in a scratch repository the run writes from the two
+trees, never in the reviewed one. `import-linter` puts the directory it
+runs in first on `sys.path`, so it runs in a scratch directory holding
+only its config and the root packages, `PYTHONPATH` unset. A tool is found
+on `PATH` only, never looked up in the project's `node_modules/.bin` or
+`.venv/bin` (an activated virtual environment is on `PATH`, by the
+reviewer's choice).
 
 Tools are detected on every run and stored nowhere else: they depend on the
 machine, not the repository.
@@ -186,7 +194,7 @@ detectors ran; nothing is checked out in the repository.
 
 - `public-api`: the signature-level diff of each file's public API between
   the base and the head, labelled heuristic (`languages`: the languages of
-  the files it applies to, `php`, `typescript`, `javascript`).
+  the files it applies to, `php`, `typescript`, `javascript`, `python`).
   Public means public, or protected in a class that is not final; a class
   or member marked `@internal` is left out. `class-removed` (naming the
   class that appears in its place, a rename), `class-changed` (became
@@ -282,6 +290,94 @@ head ...`): both are `unproven`.
   compiler beside it) and the parser's resolution stands. The output also
   holds `languages` and `scanned`. Its signals feed the structure step.
 
+The Python adapter's content detectors apply to changed `.py` files, test
+files left out (`.pyi` stubs are read by none). Each file is parsed with
+the standard `ast` module of the interpreter that runs the review; a file
+it can't parse (syntax newer than that interpreter, Python 2) is
+`not_covered` (`not readable as Python by Python 3.<n> at the head: ...`),
+so `unproven`. No project code is imported or run.
+
+- `public-api`, for these files: the signature-level diff of each
+  module's public names, labelled heuristic. Public means listed in a
+  static `__all__` (a list or tuple of strings, `+=`, `.append`,
+  `.extend`), else not starting with `_`; a module under a `_private`
+  part of its path exports only its `__all__`; an import is API only when
+  `__all__` lists it, it is written `import x as x`, or it is a relative
+  import of an `__init__.py`. A class member is public unless it starts
+  with a single `_` (dunders are public: `__init__` is the constructor).
+  Python passes arguments by keyword, so a renamed parameter is a change,
+  except a positional-only one; one taken by `**kwargs` or `*args` after
+  the change is not. A type is compared as written, and only when both
+  sides have one: an annotation added or removed is no change.
+  `function-removed`, `class-removed`, `name-removed` (a variable, a type
+  alias or a re-export; also a name dropped from `__all__`), all naming
+  what appears in their place (a rename; a deleted file gets one signal
+  listing its names), `name-changed` (a function became a class, a value's
+  type), `signature-changed` (a parameter removed, renamed, moved, made
+  keyword-only or positional-only, made required, its default or type
+  changed, a new required one, `*args` or `**kwargs` removed, the return
+  type, became or stopped being async, an overload removed; for functions,
+  methods and constructors, a dataclass's or a `NamedTuple`'s generated
+  one included), `class-changed` (no longer inherits a class, became
+  `@final`), `method-removed`, `property-removed` (an attribute, a
+  property, or `self.x` set in `__init__`), `property-changed` (its type,
+  a property that lost its setter, a method that became a property),
+  `abstract-method-added`, `protocol-member-added` (a member added to a
+  `Protocol`), `type-changed` (a `type` alias), `enum-member-removed`,
+  `enum-member-changed` (its value, `auto()` numbered as Python 3.13
+  does). With `griffe` on
+  the machine, each package the diff touches that exists at both sides
+  goes through `griffe check --no-inspection --format github` between a
+  `review-base` and a `review-head` commit of that package, in a scratch
+  repository written from the two trees under the run directory (hooks
+  off); its breakages are the package's signals (`griffe:object-removed`,
+  `griffe:parameter-removed`, `griffe:parameter-moved`,
+  `griffe:parameter-kind-changed`, `griffe:parameter-default-changed`,
+  `griffe:parameter-required`, `griffe:parameter-added-required`,
+  `griffe:return-type-changed`, `griffe:object-kind-changed`,
+  `griffe:attribute-type-changed`, `griffe:base-removed`,
+  `griffe:attribute-value-changed`), `tool` names it, and a breakage in a
+  file the diff does not change (a re-export) is counted in a gap. A file
+  outside such a package, a package griffe fails on, or griffe missing:
+  the heuristic, and a gap.
+- `import-graph-python`: the import graph, in the same stack-neutral
+  format, from every `import` and `from ... import` statement, in a
+  function or under `if TYPE_CHECKING:` too. Written only when the diff has
+  a Python file. A file in a package (a directory with `__init__.py`) is
+  named from the directory above its topmost package, or from the closest
+  root above a namespace package (`src/acme/billing/` with no
+  `src/acme/__init__.py` is `acme.billing`); any other from the closest
+  root above it (the repository root, a directory with
+  `pyproject.toml`, `setup.py` or `setup.cfg`, or its `src/`), and a
+  script also imports the modules beside it. An import maps to the file it
+  loads: the deepest module of `import a.b.c`, the submodule a `from`
+  import names, else the module it imports from; of two copies of a
+  package, the one under the importer's root, else the nearest package
+  (never a loose module of another root, nor a name of the standard
+  library); a relative import above the top-level package has none. An
+  import of no file in the repository (the standard library, a dependency) has
+  no edge. A module is a root's top-level package, or its first
+  subpackage when the root has one top-level package (`tests`, `docs`,
+  `scripts` and the like aside), named by its dotted path (`shop.billing`),
+  after `<root>:` outside the repository root and `src/`; a file outside
+  any package belongs to its directory (`/` for the root). With an
+  import-linter config at the head (`.importlinter`, or `setup.cfg` with
+  `[importlinter]`, or `pyproject.toml` with `[tool.importlinter]`) and
+  import-linter on the machine, `lint-imports --config <file> --no-cache`
+  runs on the head tree and, when it has the config, the base tree, each
+  time in a scratch directory holding only the config and the root
+  packages copied from that tree, `PYTHONPATH` unset (it puts the
+  directory it runs in first on `sys.path`, so no other file of the
+  project can stand in for a module it loads); each
+  import of a broken contract the base does not have is a
+  `contract-broken` signal on its changed file. A config with
+  `contract_types`, or a dotted root package, imports the project's code,
+  and a root package named like a standard library module would shadow
+  it: import-linter is not run on it, and a gap says so. The output also holds
+  `contracts` (`config`, `checked`, `kept`, `broken`, `results` per
+  contract, `broken_at_base`, `new`), `languages` and `scanned`. Its
+  signals feed the structure step.
+
 `fan-in` is not a content detector. It lists the public symbols the diff
 removes or changes in code files, test files left out (`symbols`: `path`,
 `symbol`, `change` `removed`, `signature` or `body`, `line`, `fan_in`, the
@@ -297,15 +393,22 @@ lexed first so a word in a string or a comment is none (a JSX tag name, and
 the code inside JSX, are references): an export as a
 word that is not a property (`total`, not `.total`), a member as `.member`
 or `?.member` whatever the receiver, a constructor as `new Class(` or
-`extends Class`. A PHP symbol comes from the PHP
+`extends Class`. A Python symbol comes from the Python parser: a public
+name, `Class.member`, `Class.__init__`, a `body` change being a function or
+a public method or property the base already had whose lines a hunk
+touches. Its references are searched in Python files with strings and
+comments blanked (the code inside an f-string's fields is kept): a name
+as a word or through its module's name (`total`, `invoice.total`), not as
+another object's attribute, a member as `.member`, a constructor as
+`Class(` or a class inheriting it. A PHP symbol comes from the PHP
 parser: `Class::method`, `Class::CONST`, `Class::$property`, or a class or
 function name, a `body` change being a public method the base already had
 whose lines a hunk touches. Its references are searched in PHP files by how
 it is used (`->method(`, `::method(`, `::CONST`, `new Class(` for a
 constructor, the class name as a word), whatever the receiver. Other symbols are searched as a word in every code file. A
 removed symbol or a changed signature with references outside the diff is
-a signal (`symbol-removed`, `symbol-signature`), except for PHP, TypeScript
-and JavaScript, whose break is the `public-api` signal.
+a signal (`symbol-removed`, `symbol-signature`), except for PHP,
+TypeScript, JavaScript and Python, whose break is the `public-api` signal.
 
 `structure` is not a content detector and has no signals: a new file
 already has its `git-changes` signal. It records what the structure step
