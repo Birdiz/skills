@@ -173,6 +173,14 @@ The `birdiz-review` plugin's own vocabulary.
 - **Worksheet**: the findings file `run.py` writes for a judgment step,
   with every row the step must fill and `?` where it judges, so that no
   criterion, file, signal, dependency or term can be left out.
+- **Evaluation corpus**: real PRs, each with its hand-labelled
+  **must-read items** (the changed files a reviewer must read) and the
+  files the labeller judged unnecessary. It comes from private
+  repositories, so it lives outside this one; `tools/eval_review.py`
+  replays it after a change to a review skill and reports **recall** (the
+  items the brief puts in Must read), any item classified `skim` (a
+  failure), and **noise** (the brief's must-read files labelled
+  unnecessary).
 - **Contracts**: what a change breaks outside the diff, judged by the
   contracts step from the detectors' signals and the code: each signal is
   **one-way** (reverting the merge does not undo it: data dropped, a

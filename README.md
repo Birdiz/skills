@@ -239,6 +239,22 @@ python3 -I -m unittest discover -s plugins/birdiz-review/skills/review-pr/script
 python3 -I -m unittest discover -s plugins/birdiz-review/skills/review-setup/scripts -p 'test_*.py'
 ```
 
+After a change to a review skill, a step file or a detector, replay the
+evaluation corpus, a directory of real PRs with hand-labelled must-read
+items kept outside this repository (never commit one):
+
+```
+python3 -I tools/eval_review.py run <corpus> --compare <earlier report.json>
+python3 -I tools/eval_review.py score <corpus> <out>
+```
+
+`run` replays each case as `review-pr` does, its judgment steps through
+`claude -p` (`--agent` takes another command, `none` runs the detectors
+only), and reports recall of the must-read items, any item classified
+`skim` (a failure) and the noise; `score` scores the same runs again after
+you label the must-read files it listed. The case format is in the
+script's help.
+
 Changes are listed in each plugin's changelog:
 [birdiz-audit](plugins/birdiz-audit/CHANGELOG.md),
 [birdiz-review](plugins/birdiz-review/CHANGELOG.md).

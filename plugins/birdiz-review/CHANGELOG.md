@@ -378,3 +378,27 @@ The Python adapter ([#46](https://github.com/Birdiz/skills/issues/46)):
   variables (`GIT_DIR`...), so it can only reach the scratch repository.
 - Tests whose fixtures used Python as "a file no detector reads" now use
   Ruby, or expect the Python adapter's coverage.
+
+The evaluation harness ([#47](https://github.com/Birdiz/skills/issues/47)),
+in the repository's `tools/`, not in the plugin:
+
+- `tools/eval_review.py run <corpus>` replays an evaluation corpus, a
+  directory of real PRs kept outside this repository, one `<name>.json`
+  per case: the clone, the target (`base..head` or a PR number), the spec
+  or `no_spec`, the hand-labelled `must_read` files and the `unnecessary`
+  ones. Each case runs as `review-pr` does: `run.py`, each judgment step
+  through an agent command (`claude -p` by default, `--agent` for another,
+  `none` for the detectors alone), `brief.py`, `validate.py` and
+  `check-pointers.py`, under its own state directory so every case is
+  round 1.
+- It reports recall of the must-read items (primary), every must-read item
+  classified `skim` as a failure, and noise: the brief's must-read files
+  the labeller marked unnecessary, with the unlabelled ones listed to
+  label. A refused run, a failed step or a defect of the run fails its
+  case too. `score` scores the same runs again after relabelling, and
+  `--compare` lists the items an earlier report recalled and this one
+  misses.
+- It refuses a corpus or an output directory inside this repository, and
+  a case file with an unknown key or a path labelled twice. Its tests
+  replay a synthetic corpus generated in a temporary directory, with a
+  fake agent filling the worksheets.
