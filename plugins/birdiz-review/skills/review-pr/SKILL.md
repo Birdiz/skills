@@ -21,8 +21,13 @@ the Pocock contract ([pocock-contract.md](pocock-contract.md)) when it is
 read. The stack-agnostic content detectors read migrations, configuration
 and environment templates, routes, OpenAPI and GraphQL contracts,
 dependency manifests and lockfiles, and test assertions, with `squawk` and
-`oasdiff` when the machine has them; a file no content detector reads, such
-as source code until the stack adapters land, stays `unproven`. A
+`oasdiff` when the machine has them. The PHP adapter reads PHP code: the
+public API diff (a heuristic signature diff: Roave's BC check installs
+dependencies, which the review never does) and the import graph between
+modules, with `deptrac` layers when the repository has a YAML config. A
+file no content detector reads, such as TypeScript or Python code until
+their adapters land, a template or a PHP file that can't be parsed, stays
+`unproven`. A
 structure detector classifies each new file (module, layer, entry point,
 migration, config, test), lists each new dependency with its category,
 and reads the glossary and the ADRs the domain doc names. Three judgment
@@ -38,8 +43,9 @@ declares with the one it detects. `structure`
 (`needed`, `not needed`), each new type name the glossary lacks, and each
 new import between modules, and flags a second way of doing what the
 codebase already does, a change against an ADR or a decision no ADR
-records. The import graph waits for a stack adapter, and the brief says so
-with the dimensions that did not run.
+records. The import graph comes from the PHP adapter for PHP files; for
+other stacks it waits for their adapter, and the brief says so with the
+dimensions that did not run.
 
 ## Invariants
 

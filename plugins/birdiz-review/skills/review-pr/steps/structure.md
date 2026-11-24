@@ -111,7 +111,10 @@ relationships allow it; `boundary` when it crosses a boundary the codebase
 keeps, or makes a cycle. Raise a finding for each `boundary`. With no
 adapter, the section is `None.` and the area is fixed. Imports between
 files of one module are not structure: they have no row, and need no
-finding.
+finding. A `layer-violation` signal in `signals/import-graph-php.json` is
+a dependency the repository's own deptrac rules forbid, new in this diff:
+it is a `boundary` when its row exists, and a finding beyond the rows
+when the edge between the two modules already existed.
 
 ## Beyond the rows
 

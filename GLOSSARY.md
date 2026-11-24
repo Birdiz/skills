@@ -111,7 +111,12 @@ The `birdiz-review` plugin's own vocabulary.
   configuration and environment templates, routes, OpenAPI and GraphQL
   contracts, dependency manifests and lockfiles, and test assertions. Each
   uses its tool (`squawk`, `oasdiff`) when the machine has it, and its
-  heuristic otherwise, saying so in its coverage.
+  heuristic otherwise, saying so in its coverage. A **stack adapter**
+  reads a language's code: the PHP adapter's content detectors are the
+  public API diff and the import graph. A **tool adapter** records what its
+  tool needs (installed dependencies, a build) and whether it installs
+  them itself; the review never builds or installs, so a tool that would
+  is not used and its detector's heuristic runs instead.
 - **Signal**: a detector's note that a file changed in a way worth a look
   (added, renamed, a changed public symbol). Not a finding: a judgment step
   decides whether it is one.
