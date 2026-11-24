@@ -33,7 +33,7 @@ contract).
 | Tracker doc `docs/agents/issue-tracker.md` | `setup-matt-pocock-skills` | `review-setup`, `review-pr` (at the base) | title `# Issue tracker: <GitHub \| GitLab \| Local Markdown>`; a `## When a skill says "fetch the relevant ticket"` section |
 | Domain doc `docs/agents/domain.md` | `setup-matt-pocock-skills` | `review-setup`, `review-pr` (structure step, at the base) | names `GLOSSARY.md` or `GLOSSARY-MAP.md`, and an ADR directory |
 | Glossary `GLOSSARY.md` | `domain-modeling` | `review-pr` (structure step, at the head) | `**Term**:` at the start of a line (or a list item); `_Avoid_:` words under it |
-| Glossary map `GLOSSARY-MAP.md` | `domain-modeling` | `review-pr` (structure step, at the head) | links `[Context](./path/GLOSSARY.md)` to each context's glossary |
+| Glossary map `GLOSSARY-MAP.md` | `domain-modeling` | `review-pr` (structure step, at the head) | a Markdown link to each context's `GLOSSARY.md` |
 | ADRs `docs/adr/NNNN-slug.md` | `domain-modeling` | `review-pr` (structure step, at the head) | Markdown files in the directories the domain doc names; read as prose, no section relied on |
 | Spec | `to-spec` | `review-pr` | `## Implementation Decisions`, `## Testing Decisions`, `## Out of Scope` |
 | Ticket, issue template | `to-tickets` | `review-pr` | `## What to build`; `## Acceptance criteria` with `- [ ]` items; `## Parent` and `## Blocked by` only when not native |
